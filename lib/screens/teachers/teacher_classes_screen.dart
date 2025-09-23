@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/api_service.dart';
-import '../models/classroom.dart';
-import '../models/student.dart';
-import '../constants/app_colors.dart';
+import '../../services/api_service.dart';
+import '../../models/classroom.dart';
+import '../../models/student.dart';
+import '../../constants/app_colors.dart';
 import 'teacher_home_screen.dart';
 
 class TeacherClassesScreen extends StatefulWidget {

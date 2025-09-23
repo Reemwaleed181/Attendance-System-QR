@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/student.dart';
-import '../models/classroom.dart';
-import '../services/api_service.dart';
-import '../widgets/custom_button.dart';
+import '../../models/student.dart';
+import '../../models/classroom.dart';
+import '../../services/api_service.dart';
+import '../../widgets/custom_button.dart';
 
 class ClassAttendanceScreen extends StatefulWidget {
   const ClassAttendanceScreen({super.key});

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:school_qr/screens/parents/parent_home_screen.dart';
+import 'package:school_qr/screens/teachers/teacher_classes_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
 import '../constants/app_colors.dart';
-import 'teacher_classes_screen.dart';
-import 'parent_home_screen.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

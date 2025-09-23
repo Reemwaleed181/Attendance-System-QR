@@ -170,11 +170,7 @@ backend/
 - **Historical Data**: Access attendance history and patterns
 - **Communication**: Stay informed about child's school attendance
 
-### **For Administrators**
-- **System Overview**: Monitor overall attendance patterns
-- **User Management**: Manage teachers, parents, and students
-- **Analytics**: Generate comprehensive reports and insights
-- **System Configuration**: Customize settings and preferences
+
 
 ## 🚀 Getting Started
 
@@ -327,23 +323,6 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 - Add comments for complex logic
 - Maintain consistent formatting
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **Flutter Team**: For the amazing framework
-- **Material Design**: For design inspiration and guidelines
-- **Open Source Community**: For various packages and tools
-- **Beta Testers**: For valuable feedback and suggestions
-
-## 📞 Support
-
-- **Documentation**: [Wiki](https://github.com/yourusername/school-attendance-system/wiki)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/school-attendance-system/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/school-attendance-system/discussions)
-- **Email**: support@schoolattendance.com
 
 ## 📊 Project Status
 

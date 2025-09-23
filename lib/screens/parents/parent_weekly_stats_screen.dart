@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/api_service.dart';
-import '../models/student.dart';
-import '../constants/app_colors.dart';
+import '../../services/api_service.dart';
+import '../../models/student.dart';
+import '../../constants/app_colors.dart';
 
 class ParentWeeklyStatsScreen extends StatefulWidget {
   const ParentWeeklyStatsScreen({super.key});

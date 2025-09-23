@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
-import '../widgets/custom_button.dart';
-import '../constants/app_colors.dart';
+import '../../widgets/custom_button.dart';
+import '../../constants/app_colors.dart';
 
 import 'teacher_classes_screen.dart';
 import 'teacher_reports_screen.dart';

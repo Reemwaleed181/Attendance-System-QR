@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:school_qr/screens/parent_home_screen.dart';
+import 'package:school_qr/screens/parents/parent_home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/login_screen.dart';
-import 'screens/teacher_home_screen.dart';
-import 'screens/teacher_attendance_history_screen.dart';
-import 'screens/teacher_reports_screen.dart';
+import 'screens/teachers/teacher_home_screen.dart';
+import 'screens/teachers/teacher_attendance_history_screen.dart';
+import 'screens/teachers/teacher_reports_screen.dart';
 import 'constants/app_colors.dart';
 
 void main() {

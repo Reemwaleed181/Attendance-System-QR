@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/api_service.dart';
-import '../models/parent.dart';
-import '../models/student.dart';
-import '../models/notification.dart';
-import '../widgets/custom_button.dart';
-import '../constants/app_colors.dart';
+import '../../services/api_service.dart';
+import '../../models/parent.dart';
+import '../../models/student.dart';
+import '../../models/notification.dart';
+import '../../widgets/custom_button.dart';
+import '../../constants/app_colors.dart';
 import 'parent_weekly_stats_screen.dart';
 import 'parent_notifications_screen.dart';
 import 'parent_reports_screen.dart';
