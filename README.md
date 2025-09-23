@@ -78,21 +78,31 @@ This version introduces a complete visual overhaul that transforms the app from 
 ### **Frontend (Flutter)**
 ```
 lib/
-├── main.dart                 # App entry point with enhanced theme
-├── screens/                  # UI screens
-│   ├── login_screen.dart    # Modern authentication interface
-│   ├── teacher_home_screen.dart    # Teacher dashboard
-│   ├── parent_home_screen.dart     # Parent dashboard
+├── main.dart                       # App entry with theme and routes
+├── screens/                        # UI screens
+│   ├── login_screen.dart          # Authentication interface
+│   ├── parents/                   # Parent-facing screens
+│   │   ├── parent_home_screen.dart
+│   │   ├── parent_notifications_screen.dart
+│   │   ├── parent_reports_screen.dart
+│   │   └── parent_weekly_stats_screen.dart
+│   ├── teachers/                  # Teacher-facing screens
+│   │   ├── teacher_home_screen.dart
+│   │   ├── teacher_classes_screen.dart
+│   │   ├── teacher_reports_screen.dart
+│   │   ├── teacher_attendance_history_screen.dart
+│   │   └── class_attendance_screen.dart
 │   ├── qr_scanner_screen.dart     # Mobile QR scanning
 │   └── web_qr_scanner_screen.dart # Web QR scanning
-├── widgets/                  # Custom UI components
-│   ├── gradient_card.dart   # Gradient card widgets
-│   ├── custom_button.dart   # Animated buttons
-│   └── custom_text_field.dart # Enhanced form fields
-├── models/                   # Data models
-├── services/                 # API and business logic
-└── utils/                    # Helper functions
+├── widgets/                        # Reusable UI components
+│   ├── custom_button.dart
+│   └── custom_text_field.dart
+├── models/                         # Data models
+├── services/                       # API and business logic
+└── utils/                          # Helpers
 ```
+
+Note: Screens are now grouped by audience under `screens/parents/` and `screens/teachers/`.
 
 ### **Backend (Python/Django)**
 ```
