@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
+import 'utils/platform_utils.dart';
+import 'utils/dev_defaults.dart';
+import 'utils/runtime_config.dart';
 import 'package:school_qr/screens/parents/parent_home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/login_screen.dart';
 import 'screens/teachers/teacher_home_screen.dart';
 import 'screens/teachers/teacher_attendance_history_screen.dart';
 import 'screens/teachers/teacher_reports_screen.dart';
+import 'screens/students/student_attendance_request_screen.dart';
 import 'constants/app_colors.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await RuntimeConfig.instance.load();
+  // Force the app to use the configured LAN URL to avoid stale overrides
+  await RuntimeConfig.instance.setApiBaseUrlOverride(DevDefaults.apiBaseUrl);
+  // Debug: print chosen base URL
+  // ignore: avoid_print
+  print('API Base URL: ${DevDefaults.apiBaseUrl}');
   runApp(const SchoolAttendanceApp());
 }
 
@@ -17,7 +28,7 @@ class SchoolAttendanceApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'School Attendance System',
+      title: 'QR Attendance',
       initialRoute: '/',
       theme: ThemeData(
         useMaterial3: true,
@@ -96,6 +107,7 @@ class SchoolAttendanceApp extends StatelessWidget {
         '/parent': (context) => const ParentHomeScreen(),
         '/teacher/history': (context) => const TeacherAttendanceHistoryScreen(),
         '/teacher/reports': (context) => const TeacherReportsScreen(),
+        '/student/request-attendance': (context) => const StudentAttendanceRequestScreen(),
       },
     );
   }
@@ -231,7 +243,7 @@ class _SplashScreenState extends State<SplashScreen>
                     child: Column(
                       children: [
                         const Text(
-                          'School Attendance',
+                          'QR Attendance',
                           style: TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.w800,

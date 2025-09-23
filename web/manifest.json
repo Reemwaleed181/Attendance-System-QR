@@ -1,6 +1,6 @@
 {
-    "name": "school_qr",
-    "short_name": "school_qr",
+    "name": "QR Attendance",
+    "short_name": "QR Attendance",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

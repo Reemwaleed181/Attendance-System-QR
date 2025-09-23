@@ -3,6 +3,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../widgets/custom_button.dart';
+import '../utils/responsive.dart';
 
 class WebQRScannerScreen extends StatefulWidget {
   const WebQRScannerScreen({super.key});
@@ -259,10 +260,15 @@ class _WebQRScannerScreenState extends State<WebQRScannerScreen>
                   child: SlideTransition(
                     position: _slideAnimation,
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
+                      padding: Responsive.pagePadding(context),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: Responsive.maxContentWidth(context),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
                           // Current Status Card
                           if (_currentClassroom != null || _currentStudent != null)
                             Container(
@@ -309,7 +315,7 @@ class _WebQRScannerScreenState extends State<WebQRScannerScreen>
                                   const SizedBox(height: 20),
                                   if (_currentClassroom != null)
                                     Container(
-              padding: const EdgeInsets.all(16),
+                                      padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFF10B981).withOpacity(0.1),
                                         borderRadius: BorderRadius.circular(16),
@@ -326,12 +332,12 @@ class _WebQRScannerScreenState extends State<WebQRScannerScreen>
                                           ),
                                           const SizedBox(width: 12),
                                           Expanded(
-                child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Text(
                                                   'Classroom',
-                    style: TextStyle(
+                                                  style: TextStyle(
                                                     fontSize: 14,
                                                     fontWeight: FontWeight.w600,
                                                     color: Color(0xFF10B981),
@@ -340,7 +346,7 @@ class _WebQRScannerScreenState extends State<WebQRScannerScreen>
                                                 Text(
                                                   _currentClassroom!,
                                                   style: const TextStyle(
-                      fontSize: 16,
+                                                    fontSize: 16,
                                                     fontWeight: FontWeight.w700,
                                                     color: Color(0xFF1F2937),
                                                   ),
@@ -400,7 +406,6 @@ class _WebQRScannerScreenState extends State<WebQRScannerScreen>
                       ],
                               ),
                             ),
-                          
                           if (_currentClassroom != null || _currentStudent != null)
                             const SizedBox(height: 24),
                           
@@ -596,7 +601,7 @@ class _WebQRScannerScreenState extends State<WebQRScannerScreen>
               ),
             ),
           ),
-        ],
+                ))],
           ),
         ),
       ),

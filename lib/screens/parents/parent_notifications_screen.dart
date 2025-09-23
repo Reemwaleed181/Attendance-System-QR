@@ -4,6 +4,7 @@ import '../../services/api_service.dart';
 import '../../models/notification.dart';
 import '../../widgets/custom_button.dart';
 import '../../constants/app_colors.dart';
+import '../../utils/responsive.dart';
 
 class ParentNotificationsScreen extends StatefulWidget {
   const ParentNotificationsScreen({super.key});
@@ -213,19 +214,6 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen>
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Icon(
-                        Icons.notifications,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
                     const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -242,9 +230,9 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen>
                           Opacity(
                             opacity: 0.9,
                             child: Text(
-                              'Real-time attendance alerts and teacher reports',
+                              'Daily absence alert\nand teacher reports',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.white,
                               ),
@@ -255,21 +243,6 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen>
                     ),
                     Row(
                       children: [
-                        IconButton(
-                          onPressed: _loadNotifications,
-                          icon: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.refresh,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                        ),
                         if (_notifications.any((n) => !n.isRead))
                           IconButton(
                             onPressed: _markAllAsRead,
@@ -309,10 +282,15 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen>
                             color: AppColors.secondary,
                             child: SingleChildScrollView(
                               physics: const AlwaysScrollableScrollPhysics(),
-                              padding: const EdgeInsets.all(24.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
+                              padding: Responsive.pagePadding(context),
+                              child: Center(
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth: Responsive.maxContentWidth(context),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
                                   // Unread Count Badge
                                   if (_notifications.any((n) => !n.isRead))
                                     Container(
@@ -422,7 +400,9 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen>
                                     )
                                   else
                                     ..._getFilteredNotifications().map((notification) => _buildNotificationCard(notification)).toList(),
-                                ],
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ),

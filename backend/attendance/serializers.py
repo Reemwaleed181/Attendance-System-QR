@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ClassRoom, Student, Parent, Teacher, Attendance, Notification
+from .models import ClassRoom, Student, Parent, Teacher, Attendance, Notification, AttendanceRequest
 
 
 class ClassRoomSerializer(serializers.ModelSerializer):
@@ -41,6 +41,41 @@ class AttendanceSerializer(serializers.ModelSerializer):
                  'teacher', 'teacher_name', 'timestamp', 'is_present']
 
 
+class AttendanceRequestCreateSerializer(serializers.Serializer):
+    student_qr = serializers.CharField(max_length=255)
+    class_qr = serializers.CharField(max_length=255)
+    method = serializers.ChoiceField(choices=['gps', 'qr', 'wifi'], default='gps')
+    student_lat = serializers.DecimalField(max_digits=9, decimal_places=6, required=False, allow_null=True)
+    student_lng = serializers.DecimalField(max_digits=9, decimal_places=6, required=False, allow_null=True)
+    metadata = serializers.JSONField(required=False)
+
+    def validate(self, data):
+        # Validate referenced entities exist
+        try:
+            data['student'] = Student.objects.get(qr_code=data['student_qr'])
+        except Student.DoesNotExist:
+            raise serializers.ValidationError({'student_qr': ['Student with this QR does not exist.']})
+        try:
+            data['classroom'] = ClassRoom.objects.get(qr_code=data['class_qr'])
+        except ClassRoom.DoesNotExist:
+            raise serializers.ValidationError({'class_qr': ['Classroom with this QR does not exist.']})
+        return data
+
+
+class AttendanceRequestSerializer(serializers.ModelSerializer):
+    student_name = serializers.CharField(source='student.name', read_only=True)
+    classroom_name = serializers.CharField(source='classroom.name', read_only=True)
+    approved_by_name = serializers.CharField(source='approved_by.name', read_only=True)
+
+    class Meta:
+        model = AttendanceRequest
+        fields = [
+            'id', 'student', 'student_name', 'classroom', 'classroom_name',
+            'status', 'method', 'student_lat', 'student_lng', 'metadata',
+            'created_at', 'expires_at', 'approved_by', 'approved_by_name', 'approved_at'
+        ]
+
+
 class AttendanceMarkSerializer(serializers.Serializer):
     student_qr = serializers.CharField(max_length=255)
     class_qr = serializers.CharField(max_length=255)
@@ -65,16 +100,46 @@ class ParentLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     phone = serializers.CharField(max_length=20)
     
+    def validate_phone(self, value):
+        # Allow only digits, optional leading + not stored; normalize by stripping spaces
+        raw = value.strip()
+        digits = ''.join(ch for ch in raw if ch.isdigit())
+        if not digits:
+            raise serializers.ValidationError("Phone number is required.")
+        if len(digits) < 7 or len(digits) > 15:
+            raise serializers.ValidationError("Phone number must be 7-15 digits.")
+        if not raw.replace('+', '').isdigit():
+            raise serializers.ValidationError("Phone number must contain digits only.")
+        return raw
+
     def validate(self, data):
-        try:
-            parent = Parent.objects.get(
-                name=data['name'],
-                email=data['email'],
-                phone=data['phone']
-            )
-            data['parent'] = parent
-        except Parent.DoesNotExist:
-            raise serializers.ValidationError("Parent with these credentials does not exist.")
+        # Stepwise checks to provide precise error messages
+        email_qs = Parent.objects.filter(email=data['email'])
+        if not email_qs.exists():
+            raise serializers.ValidationError({
+                'email': ["No parent found with this email address."],
+                'name': [],
+                'phone': [],
+            })
+
+        name_qs = email_qs.filter(name=data['name'])
+        if not name_qs.exists():
+            raise serializers.ValidationError({
+                'name': ["Name does not match our records for this email."],
+                'email': [],
+                'phone': [],
+            })
+
+        phone_qs = name_qs.filter(phone=data['phone'])
+        if not phone_qs.exists():
+            raise serializers.ValidationError({
+                'phone': ["Phone number is incorrect."],
+                'name': [],
+                'email': [],
+            })
+
+        parent = phone_qs.first()
+        data['parent'] = parent
         return data
 
 

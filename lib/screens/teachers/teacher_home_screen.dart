@@ -8,6 +8,7 @@ import 'teacher_classes_screen.dart';
 import 'teacher_reports_screen.dart';
 import 'teacher_attendance_history_screen.dart';
 import 'class_attendance_screen.dart';
+import '../../utils/responsive.dart';
 
 class TeacherHomeScreen extends StatefulWidget {
   const TeacherHomeScreen({super.key});
@@ -182,10 +183,15 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen>
                   child: SlideTransition(
                     position: _slideAnimation,
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
+                      padding: Responsive.pagePadding(context),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: Responsive.maxContentWidth(context),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
                           // Class Attendance Card
                           Container(
                             padding: const EdgeInsets.all(24),
@@ -356,7 +362,9 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen>
                                 ),
                               ),
 
-                              const SizedBox(height: 20),
+                              // Pending Requests card removed as requested
+
+                              const SizedBox(height: 10),
 
                               // History Card - Full Width
                               Container(
@@ -449,7 +457,9 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen>
                               ),
                             ],
                           ),
-                        ],
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),

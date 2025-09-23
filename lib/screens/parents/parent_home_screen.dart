@@ -6,6 +6,7 @@ import '../../models/student.dart';
 import '../../models/notification.dart';
 import '../../widgets/custom_button.dart';
 import '../../constants/app_colors.dart';
+import '../../utils/responsive.dart';
 import 'parent_weekly_stats_screen.dart';
 import 'parent_notifications_screen.dart';
 import 'parent_reports_screen.dart';
@@ -24,6 +25,7 @@ class _ParentHomeScreenState extends State<ParentHomeScreen>
   List<Map<String, dynamic>> _childrenData = [];
   List<NotificationModel> _notifications = [];
   bool _isLoading = true;
+  String? _errorMessage;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -80,13 +82,27 @@ class _ParentHomeScreenState extends State<ParentHomeScreen>
               .map((json) => NotificationModel.fromJson(json))
               .toList();
           _isLoading = false;
+          _errorMessage = null;
         });
       } catch (e) {
-        setState(() => _isLoading = false);
+        String message = 'Failed to load data. Pull to retry.';
+        if (e is ApiException) {
+          if (e.statusCode == 404 && (e.code == 'parent_not_found')) {
+            message = 'Parent profile not found.';
+          } else if (e.statusCode >= 500) {
+            message = 'Server error. Please try again later.';
+          } else {
+            message = e.message;
+          }
+        }
+        setState(() {
+          _isLoading = false;
+          _errorMessage = message;
+        });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error loading data: $e'),
+              content: Text(message),
               backgroundColor: Colors.red.shade400,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -151,7 +167,7 @@ class _ParentHomeScreenState extends State<ParentHomeScreen>
                       child: const Icon(
                         Icons.family_restroom,
                         color: Colors.white,
-                        size: 28,
+                        size: 24,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -170,9 +186,9 @@ class _ParentHomeScreenState extends State<ParentHomeScreen>
                           ),
                           if (_parent != null)
                             Text(
-                              'Welcome back, ${_parent!.name}!',
+                              'Welcome back, \n${_parent!.name}!',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.white.withValues(alpha: 0.9),
                               ),
@@ -235,21 +251,6 @@ class _ParentHomeScreenState extends State<ParentHomeScreen>
                           ],
                         ),
                         IconButton(
-                          onPressed: _refreshData,
-                          icon: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.refresh,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                        IconButton(
                           onPressed: () async {
                             final prefs = await SharedPreferences.getInstance();
                             await prefs.clear();
@@ -293,10 +294,42 @@ class _ParentHomeScreenState extends State<ParentHomeScreen>
                             color: AppColors.secondary,
                             child: SingleChildScrollView(
                               physics: const AlwaysScrollableScrollPhysics(),
-                              padding: const EdgeInsets.all(24.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
+                              padding: Responsive.pagePadding(context),
+                              child: Center(
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth: Responsive.maxContentWidth(context),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                  if (_errorMessage != null) ...[
+                                    Container(
+                                      margin: const EdgeInsets.only(bottom: 16),
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFFFF1F2),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: const Color(0xFFFCA5A5)),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.error_outline, color: Color(0xFFDC2626)),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              _errorMessage!,
+                                              style: const TextStyle(color: Color(0xFFB91C1C), fontWeight: FontWeight.w600),
+                                            ),
+                                          ),
+                                          TextButton(
+                                            onPressed: _refreshData,
+                                            child: const Text('Retry'),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                   // ----------------- Notification Alert Card ----------------- //
                                   if (_notifications.any((n) => !n.isRead))
                                     Container(
@@ -326,7 +359,7 @@ class _ParentHomeScreenState extends State<ParentHomeScreen>
                                             child: const Icon(
                                               Icons.warning,
                                               color: Colors.white,
-                                              size: 24,
+                                              size: 22,
                                             ),
                                           ),
                                           const SizedBox(width: 16),
@@ -337,7 +370,7 @@ class _ParentHomeScreenState extends State<ParentHomeScreen>
                                                 Text(
                                                   '${_notifications.where((n) => !n.isRead).length} New Notification${_notifications.where((n) => !n.isRead).length == 1 ? '' : 's'}',
                                                   style: const TextStyle(
-                                                    fontSize: 16,
+                                                    fontSize: 14,
                                                     fontWeight: FontWeight.w600,
                                                     color: Colors.white,
                                                   ),
@@ -346,7 +379,7 @@ class _ParentHomeScreenState extends State<ParentHomeScreen>
                                                 Text(
                                                   'Tap to view attendance alerts',
                                                   style: TextStyle(
-                                                    fontSize: 14,
+                                                    fontSize: 12,
                                                     color: Colors.white.withValues(alpha: 0.9),
                                                   ),
                                                 ),
@@ -598,7 +631,7 @@ class _ParentHomeScreenState extends State<ParentHomeScreen>
                                             ),
                                             child: const Icon(
                                               Icons.analytics,
-                                                    size: 32,
+                                                    size: 30,
                                               color: AppColors.secondary,
                                             ),
                                           ),
@@ -615,7 +648,6 @@ class _ParentHomeScreenState extends State<ParentHomeScreen>
                                                 const SizedBox(height: 16),
                                           CustomButton(
                                                   text: 'View',
-                                            icon: Icons.analytics,
                                             onPressed: () {
                                               Navigator.push(
                                                 context,
@@ -675,7 +707,6 @@ class _ParentHomeScreenState extends State<ParentHomeScreen>
                                                 const SizedBox(height: 16),
                                                 CustomButton(
                                                   text: 'View',
-                                                  icon: Icons.assessment,
                                                   onPressed: () {
                                                     Navigator.push(
                                                       context,
@@ -751,7 +782,9 @@ class _ParentHomeScreenState extends State<ParentHomeScreen>
                                       ),
                                     ),
                                   ],
-                                ],
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ),

@@ -1,4 +1,4 @@
-# 🎓 School Attendance System - QR Code Based Management
+# 🎓 QR Attendance — QR Code Based Attendance Management
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.9+-blue.svg)](https://flutter.dev/)
 [![Dart](https://img.shields.io/badge/Dart-3.9+-blue.svg)](https://dart.dev/)
@@ -6,7 +6,7 @@
 
 ## ✨ Overview
 
-The **School Attendance System** is a modern, feature-rich Flutter application designed to revolutionize how educational institutions manage student attendance. Built with cutting-edge UI/UX principles and powered by QR code technology, this app provides an intuitive, efficient, and visually stunning solution for teachers, parents, and administrators.
+**QR Attendance** is a modern, feature-rich Flutter application for managing attendance using QR codes. It is designed to be general-purpose and suitable for both schools and colleges. Built with cutting-edge UI/UX principles and powered by QR code technology, it provides an intuitive, efficient, and visually polished solution for teachers, parents, and administrators.
 
 ### 🎯 Key Features
 
@@ -55,7 +55,16 @@ Add your UI screenshots into `docs/screenshots/` using the suggested filenames b
 
 Tip: If you prefer different filenames, update the `<img>` paths above accordingly.
 
-## 🚀 What's New in This Version
+## 🚀 What’s New
+
+### ✅ Renaming and Generalization
+- App renamed to **QR Attendance** (more general for schools and colleges)
+- Updated display names across platforms:
+  - Android: `android:label` → "QR Attendance"
+  - iOS: `CFBundleDisplayName` and `CFBundleName` → "QR Attendance"
+  - Web: `manifest.json` `name`/`short_name` and page `<title>` → "QR Attendance"
+  - Flutter: `MaterialApp.title` and splash title → "QR Attendance"
+- Codebase folder name remains `school_qr` to avoid breaking tooling; can be changed later if required
 
 ### 🎨 **Revolutionary UI Transformation**
 This version introduces a complete visual overhaul that transforms the app from a basic functional interface to a **commercial-grade, visually stunning application**:
@@ -78,21 +87,31 @@ This version introduces a complete visual overhaul that transforms the app from 
 ### **Frontend (Flutter)**
 ```
 lib/
-├── main.dart                 # App entry point with enhanced theme
-├── screens/                  # UI screens
-│   ├── login_screen.dart    # Modern authentication interface
-│   ├── teacher_home_screen.dart    # Teacher dashboard
-│   ├── parent_home_screen.dart     # Parent dashboard
+├── main.dart                       # App entry with theme and routes
+├── screens/                        # UI screens
+│   ├── login_screen.dart          # Authentication interface
+│   ├── parents/                   # Parent-facing screens
+│   │   ├── parent_home_screen.dart
+│   │   ├── parent_notifications_screen.dart
+│   │   ├── parent_reports_screen.dart
+│   │   └── parent_weekly_stats_screen.dart
+│   ├── teachers/                  # Teacher-facing screens
+│   │   ├── teacher_home_screen.dart
+│   │   ├── teacher_classes_screen.dart
+│   │   ├── teacher_reports_screen.dart
+│   │   ├── teacher_attendance_history_screen.dart
+│   │   └── class_attendance_screen.dart
 │   ├── qr_scanner_screen.dart     # Mobile QR scanning
 │   └── web_qr_scanner_screen.dart # Web QR scanning
-├── widgets/                  # Custom UI components
-│   ├── gradient_card.dart   # Gradient card widgets
-│   ├── custom_button.dart   # Animated buttons
-│   └── custom_text_field.dart # Enhanced form fields
-├── models/                   # Data models
-├── services/                 # API and business logic
-└── utils/                    # Helper functions
+├── widgets/                        # Reusable UI components
+│   ├── custom_button.dart
+│   └── custom_text_field.dart
+├── models/                         # Data models
+├── services/                       # API and business logic
+└── utils/                          # Helpers
 ```
+
+Note: Screens are now grouped by audience under `screens/parents/` and `screens/teachers/`.
 
 ### **Backend (Python/Django)**
 ```
@@ -171,6 +190,94 @@ backend/
 - **Communication**: Stay informed about child's school attendance
 
 
+## 🧭 Interfaces & Detailed Workflows
+
+This application provides three role-based interfaces. Each role exposes only the actions relevant to that user while maintaining a consistent design language and navigation model.
+
+### 👩‍🏫 Teacher Interface
+
+**Purpose**: Set up classes/sessions, control when attendance can be recorded, scan QR codes, and review/report results.
+
+**How teachers take attendance (two modes after selecting a class/session)**
+1) Teacher-managed recording (after scanning the class QR)
+   - Teacher decides the baseline state for the class:
+     - Mark all Present, then manually mark absent students; or
+     - Mark all Absent, then manually mark present students
+   - Late students are only those who scan their QR during the open window after the baseline is set
+   - Duplicate scans during the same window are ignored and do not change prior decisions
+
+2) Student self-service window (after scanning the class QR)
+   - Teacher taps “Enable Attendance” to open the window
+   - Teacher optionally displays the session QR; students scan it or submit via their student screen
+   - Each student submission is validated against the active class/session and recorded
+   - Submissions outside the open window/classroom are rejected with a clear message
+
+**Daily Records & History**
+- Daily view shows per-class counts (present/absent/late) and individual student statuses
+- History view provides filters by class/date range and supports exporting summaries
+
+**Reporting to Parents**
+- Teachers can send reports/notices to parents when a child’s absences reach a selected threshold (e.g., 3, 5, or 7 absences)
+- Reports can include per-day breakdowns and overall attendance rates
+
+**Typical Teacher Workflow**
+1. Log in as Teacher
+2. Select the class/session from `Teacher Home`
+3. Scan or open the class QR, then tap “Enable Attendance”
+4. Choose a mode:
+   - Teacher-managed: set baseline (all present/absent) and adjust individuals; or
+   - Self-service: keep window open so students record themselves
+5. Monitor live counts (present/absent/late)
+6. Tap “Close Attendance” when done
+7. Review `History` and use `Reports` to export/share; optionally notify parents above the absence threshold
+
+### 🎓 Student Interface
+
+**Purpose**: Allow students to record their attendance during the teacher’s open window.
+
+**Key Capabilities**
+- After login, the student sees their details; one tap records attendance
+- Receive immediate feedback (recorded, not-open-yet, closed, invalid)
+- Attempts outside the open window are rejected with a clear message
+
+**Typical Student Workflow**
+1. Log in as Student
+2. Review your displayed class/session info
+3. Tap “Record Attendance” (one button) if your class window is open
+4. See a confirmation on success, then return attention to class
+
+**Validation & Rules**
+- Submissions are accepted only for the specific class with an active window
+- Duplicate submissions in the same session are deduplicated
+- Camera permission required for scanning on supported devices
+
+### 👨‍👩‍👧 Parent Interface
+
+**Purpose**: Give parents visibility into their children’s attendance and provide timely notifications.
+
+**Key Capabilities**
+- Dashboard with daily counters (present/absent/late) per child
+- Weekly trends and per-day drill-downs
+- Notifications when the teacher sends reports for repeated absences and the child absences (daily)
+
+**Typical Parent Workflow**
+1. Log in as Parent
+2. On `Parent Home`, pick a child to view today’s status and weekly trend
+3. Tap into a date to see class-level details
+4. Receive teacher-sent absence reports when thresholds are exceeded
+
+**Validation & Rules**
+- Parents only see linked children
+- Read-only data; parents cannot modify records
+
+### Access & Navigation Map
+- Role-based login routes to `Teacher Home`, `Parent Home`, or `Login` for students/guests
+- Core routes in the app:
+  - `/teacher`, `/teacher/history`, `/teacher/reports`
+  - `/parent`
+  - `/student/request-attendance`
+
+
 
 ## 🚀 Getting Started
 
@@ -180,6 +287,42 @@ backend/
 - Python 3.8+ (for backend)
 - Django 4.0+
 - PostgreSQL/MySQL database
+
+### **Run on real Android devices (LAN)**
+
+If you run the backend on your PC and test on physical Android phones, point the app to your PC's LAN IP and allow HTTP or HTTPS accordingly.
+
+1. Backend reachable on LAN
+   - Start Django bound to all interfaces:
+     ```bash
+     cd backend
+     python manage.py runserver 0.0.0.0:8000
+     ```
+   - In `backend/school_attendance/settings.py`:
+     - Add your PC IP to `ALLOWED_HOSTS`, e.g. `ALLOWED_HOSTS = ['192.168.x.y', 'localhost']`
+     - If you use CORS, allow your app origins.
+
+2. Run Flutter with your LAN IP
+   - Replace `192.168.x.y` with your PC/server IP:
+     ```bash
+     flutter run --dart-define=API_BASE_URL=http://192.168.x.y:8000/api
+     ```
+   - For web:
+     ```bash
+     flutter run -d chrome --dart-define=API_BASE_URL=http://192.168.x.y:8000/api
+     ```
+
+3. Android cleartext HTTP (if using http://)
+   - If you hit a cleartext error, enable HTTP in `android/app/src/main/AndroidManifest.xml` on the `<application>` tag:
+     ```xml
+     <application
+         android:usesCleartextTraffic="true">
+     ```
+   - Or use HTTPS for the backend.
+
+Notes:
+- Android emulator uses `http://10.0.2.2:8000/api` by default; iOS simulator/desktop/web use `http://localhost:8000/api` by default.
+- You can always override with `--dart-define=API_BASE_URL=...`.
 
 ### **Installation**
 

@@ -6,6 +6,7 @@ import '../../models/classroom.dart';
 import '../../models/student.dart';
 import '../../constants/app_colors.dart';
 import 'teacher_home_screen.dart';
+import '../../utils/responsive.dart';
 
 class TeacherClassesScreen extends StatefulWidget {
   const TeacherClassesScreen({super.key});
@@ -23,6 +24,7 @@ class _TeacherClassesScreenState extends State<TeacherClassesScreen>
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   bool _isLoading = true;
+  String? _errorMessage;
   late AnimationController _animationController;
   late AnimationController _buttonAnimationController;
   late Animation<double> _fadeAnimation;
@@ -98,16 +100,30 @@ class _TeacherClassesScreenState extends State<TeacherClassesScreen>
             .toList();
         _allStudents = students;
         _isLoading = false;
+        _errorMessage = null;
       });
 
       // Load previously selected classes
       await _loadSelectedClasses();
     } catch (e) {
-      setState(() => _isLoading = false);
+      String message = 'Failed to load data. Pull to retry.';
+      if (e is ApiException) {
+        if (e.statusCode == 401) {
+          message = 'Session expired. Please sign in again.';
+        } else if (e.statusCode >= 500) {
+          message = 'Server error. Please try again later.';
+        } else {
+          message = e.message;
+        }
+      }
+      setState(() {
+        _isLoading = false;
+        _errorMessage = message;
+      });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error loading data: $e'),
+            content: Text(message),
             backgroundColor: const Color(0xFFEF4444),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -242,19 +258,6 @@ class _TeacherClassesScreenState extends State<TeacherClassesScreen>
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Icon(
-                        Icons.class_,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
                     const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -273,28 +276,13 @@ class _TeacherClassesScreenState extends State<TeacherClassesScreen>
                             child: Text(
                               'Select your classes and view QR codes',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.white,
                               ),
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: _loadData,
-                      icon: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.refresh,
-                          color: Colors.white,
-                          size: 20,
-                        ),
                       ),
                     ),
                   ],
@@ -318,10 +306,42 @@ class _TeacherClassesScreenState extends State<TeacherClassesScreen>
                             color: AppColors.accent,
                             child: SingleChildScrollView(
                               physics: const AlwaysScrollableScrollPhysics(),
-                              padding: const EdgeInsets.all(24.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
+                              padding: Responsive.pagePadding(context),
+                              child: Center(
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth: Responsive.maxContentWidth(context),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                  if (_errorMessage != null) ...[
+                                    Container(
+                                      margin: const EdgeInsets.only(bottom: 16),
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFFFF1F2),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: const Color(0xFFFCA5A5)),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.error_outline, color: Color(0xFFDC2626)),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              _errorMessage!,
+                                              style: const TextStyle(color: Color(0xFFB91C1C), fontWeight: FontWeight.w600),
+                                            ),
+                                          ),
+                                          TextButton(
+                                            onPressed: _loadData,
+                                            child: const Text('Retry'),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                   // Search bar
                                   Container(
                                     margin: const EdgeInsets.only(bottom: 16),
@@ -346,7 +366,7 @@ class _TeacherClassesScreenState extends State<TeacherClassesScreen>
                                           child: TextField(
                                             controller: _searchController,
                                             decoration: const InputDecoration(
-                                              hintText: 'Search by QR or name (student or class)',
+                                              hintText: 'Student or Classroom',
                                               border: InputBorder.none,
                                             ),
                                             onChanged: (value) {
@@ -878,7 +898,9 @@ class _TeacherClassesScreenState extends State<TeacherClassesScreen>
                                       ),
                                     ),
                                   ],
-                                ],
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ),

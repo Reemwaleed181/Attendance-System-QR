@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../services/api_service.dart';
 import '../../constants/app_colors.dart';
+import '../../utils/responsive.dart';
 
 class TeacherAttendanceHistoryScreen extends StatefulWidget {
   const TeacherAttendanceHistoryScreen({super.key});
@@ -64,16 +65,6 @@ class _TeacherAttendanceHistoryScreenState extends State<TeacherAttendanceHistor
   // Helper to format date consistently for API communication
   String _formatDateForApi(DateTime date) {
     return date.toIso8601String().split('T')[0];
-  }
-  
-  // Helper to get device timezone info
-  String _getDeviceTimezoneInfo() {
-    final now = DateTime.now();
-    final offset = now.timeZoneOffset;
-    final offsetHours = offset.inHours;
-    final offsetMinutes = offset.inMinutes % 60;
-    final sign = offsetHours >= 0 ? '+' : '-';
-    return 'Local Time: ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} (UTC${sign}${offsetHours.abs().toString().padLeft(2, '0')}:${offsetMinutes.toString().padLeft(2, '0')})';
   }
 
   // Helpers to normalize/extract ids, names and timestamps safely
@@ -292,19 +283,6 @@ class _TeacherAttendanceHistoryScreenState extends State<TeacherAttendanceHistor
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Icon(
-                        Icons.history,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
                     const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,22 +310,7 @@ class _TeacherAttendanceHistoryScreenState extends State<TeacherAttendanceHistor
                         ],
                       ),
                     ),
-                    IconButton(
-                      onPressed: _loadAttendanceHistory,
-                      icon: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.refresh,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                                      ),
-                                    ),
-                                  ],
+                  ],
                 ),
               ),
               
@@ -368,10 +331,15 @@ class _TeacherAttendanceHistoryScreenState extends State<TeacherAttendanceHistor
                             color: AppColors.accent,
                             child: SingleChildScrollView(
                               physics: const AlwaysScrollableScrollPhysics(),
-                              padding: const EdgeInsets.all(24.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
+                              padding: Responsive.pagePadding(context),
+                              child: Center(
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth: Responsive.maxContentWidth(context),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
                                   if (_attendanceData == null)
                                     Container(
                                       padding: const EdgeInsets.all(32),
@@ -554,7 +522,9 @@ class _TeacherAttendanceHistoryScreenState extends State<TeacherAttendanceHistor
                                       ),
                                     ),
                                   ],
-                                ],
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -971,25 +941,23 @@ class _TeacherAttendanceHistoryScreenState extends State<TeacherAttendanceHistor
           }
         }
 
-        // Consider a student late if they arrive more than 5 minutes after the earliest student
-        // or after 8:00 AM (assuming school starts at 8:00 AM)
+        // Consider a student late only if they arrive more than 5 minutes after the earliest
+        // on-time student in this class for the selected day. Do NOT use a hardcoded school
+        // start time because teachers may submit bulk presence later in the day.
         const lateSkew = Duration(minutes: 5);
-        final schoolStartTime = DateTime(earliestPresent?.year ?? DateTime.now().year, 
-                                       earliestPresent?.month ?? DateTime.now().month, 
-                                       earliestPresent?.day ?? DateTime.now().day, 8, 0);
         for (final rec in latestByStudent.values) {
           final bool isPresent = rec['is_present'] ?? false;
           if (isPresent) {
             final ts = _parseTimestamp(rec).toLocal();
-            // Check if student is late based on either:
-            // 1. More than 5 minutes after the earliest student, OR
-            // 2. After 8:00 AM school start time
-            bool isLate = false;
-            if (earliestPresent != null && ts.isAfter(earliestPresent.add(lateSkew))) {
-              isLate = true;
-            } else if (ts.isAfter(schoolStartTime)) {
-              isLate = true;
-            }
+            // Late if more than 5 minutes after earliest present
+            bool isLate = earliestPresent != null && ts.isAfter(earliestPresent.add(lateSkew));
+            // Optional: if backend includes GPS fields for student self-mark, prefer that as
+            // an indicator of real arrival vs bulk teacher submission. If no GPS, treat as on time.
+            try {
+              if ((rec['student_lat'] == null && rec['student_lng'] == null)) {
+                isLate = false;
+              }
+            } catch (_) {}
             
             if (isLate) {
               lateStudents.add(rec);
@@ -1047,18 +1015,6 @@ class _TeacherAttendanceHistoryScreenState extends State<TeacherAttendanceHistor
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.class_,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
@@ -1074,20 +1030,11 @@ class _TeacherAttendanceHistoryScreenState extends State<TeacherAttendanceHistor
                             ),
                           ),
                           Text(
-                            '${_currentDate.day}/${_currentDate.month}/${_currentDate.year} Summary - ${presentStudents.length} on time, ${lateStudents.length} late, ${absentStudents.length} absent',
+                            'Summary:\n${presentStudents.length} on time, \n${lateStudents.length} late, \n${absentStudents.length} absent.',
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.white.withValues(alpha: 0.9),
                               fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _getDeviceTimezoneInfo(),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.7),
-                              fontWeight: FontWeight.w400,
                             ),
                           ),
                         ],
@@ -1106,12 +1053,6 @@ class _TeacherAttendanceHistoryScreenState extends State<TeacherAttendanceHistor
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
-                            Icons.list_alt,
-                            color: Colors.white,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 6),
                           Text(
                             '${_computeDisplayClassSize(classroomId, classroomName, latestByStudent)} students',
                             style: const TextStyle(
@@ -1160,19 +1101,6 @@ class _TeacherAttendanceHistoryScreenState extends State<TeacherAttendanceHistor
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.check_circle_rounded,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1254,19 +1182,6 @@ class _TeacherAttendanceHistoryScreenState extends State<TeacherAttendanceHistor
                     children: [
                       Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.cancel_rounded,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
                           Text(
                             'Absent Students',
                             style: const TextStyle(
@@ -1440,7 +1355,9 @@ class _TeacherAttendanceHistoryScreenState extends State<TeacherAttendanceHistor
                           
                           if (record['timestamp'] is String) {
                             final timestamp = DateTime.parse(record['timestamp']).toLocal();
-                            arrivalTime = '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')} Local';
+                            final hour = timestamp.hour == 0 ? 12 : (timestamp.hour > 12 ? timestamp.hour - 12 : timestamp.hour);
+                            final period = timestamp.hour < 12 ? 'AM' : 'PM';
+                            arrivalTime = '${hour}:${timestamp.minute.toString().padLeft(2, '0')} $period';
                           }
                         } catch (e) {
                           print('Error extracting student data: $e');
@@ -1609,7 +1526,7 @@ class _TeacherAttendanceHistoryScreenState extends State<TeacherAttendanceHistor
                 const SizedBox(height: 20),
                 // Calendar
                 SizedBox(
-                  height: 350,
+                  height: 400, // Increased from 350 to 400 to give more space for cells
                   child: TableCalendar<String>(
                     firstDay: DateTime.utc(2020, 1, 1),
                     lastDay: DateTime.utc(2030, 12, 31),
@@ -1648,7 +1565,8 @@ class _TeacherAttendanceHistoryScreenState extends State<TeacherAttendanceHistor
                         shape: BoxShape.circle,
                       ),
                       markersMaxCount: 1,
-                      markerSize: 6,
+                      markerSize: 4, // Reduced from 6 to 4 to prevent overflow
+                      markerMargin: const EdgeInsets.only(top: 2), // Add margin to prevent overflow
                     ),
                     headerStyle: const HeaderStyle(
                       formatButtonVisible: false,

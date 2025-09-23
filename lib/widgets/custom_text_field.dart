@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CustomTextField extends StatefulWidget {
   final String label;
@@ -7,6 +8,8 @@ class CustomTextField extends StatefulWidget {
   final IconData? suffixIcon;
   final TextEditingController? controller;
   final TextInputType? keyboardType;
+  final TextCapitalization textCapitalization;
+  final List<TextInputFormatter>? inputFormatters;
   final bool obscureText;
   final bool enabled;
   final String? Function(String?)? validator;
@@ -28,6 +31,8 @@ class CustomTextField extends StatefulWidget {
     this.suffixIcon,
     this.controller,
     this.keyboardType,
+    this.textCapitalization = TextCapitalization.none,
+    this.inputFormatters,
     this.obscureText = false,
     this.enabled = true,
     this.validator,
@@ -52,10 +57,12 @@ class _CustomTextFieldState extends State<CustomTextField>
   late Animation<double> _scaleAnimation;
   late FocusNode _focusNode;
   bool _isFocused = false;
+  bool _isObscured = false;
 
   @override
   void initState() {
     super.initState();
+    _isObscured = widget.obscureText;
     _controller = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
@@ -81,6 +88,16 @@ class _CustomTextFieldState extends State<CustomTextField>
   }
 
   @override
+  void didUpdateWidget(covariant CustomTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.obscureText != widget.obscureText) {
+      setState(() {
+        _isObscured = widget.obscureText;
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     _focusNode.dispose();
@@ -103,7 +120,9 @@ class _CustomTextFieldState extends State<CustomTextField>
           child: TextFormField(
             controller: widget.controller,
             keyboardType: widget.keyboardType,
-            obscureText: widget.obscureText,
+            textCapitalization: widget.textCapitalization,
+            inputFormatters: widget.inputFormatters,
+            obscureText: _isObscured,
             enabled: widget.enabled,
             validator: widget.validator,
             onTap: widget.onTap,
@@ -135,7 +154,20 @@ class _CustomTextFieldState extends State<CustomTextField>
                         size: 24,
                       ),
                     )
-                  : null,
+                  : (widget.obscureText
+                      ? IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _isObscured = !_isObscured;
+                            });
+                          },
+                          icon: Icon(
+                            _isObscured ? Icons.visibility_off : Icons.visibility,
+                            color: _isFocused ? defaultFocusedBorderColor : defaultLabelColor,
+                            size: 24,
+                          ),
+                        )
+                      : null),
               labelStyle: TextStyle(
                 color: _isFocused ? defaultFocusedBorderColor : defaultLabelColor,
                 fontSize: 16,

@@ -4,6 +4,7 @@ import 'package:table_calendar/table_calendar.dart';
 import '../../services/api_service.dart';
 import '../../widgets/custom_button.dart';
 import '../../constants/app_colors.dart';
+import '../../utils/responsive.dart';
 
 
 class TeacherReportsScreen extends StatefulWidget {
@@ -143,10 +144,15 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
     try {
       final studentIds = _studentsWithAbsences.map((student) => student['id'].toString()).toList();
       
+      final fromDateStr = '${_fromDate!.year}-${_fromDate!.month.toString().padLeft(2, '0')}-${_fromDate!.day.toString().padLeft(2, '0')}';
+      final toDateStr = '${_toDate!.year}-${_toDate!.month.toString().padLeft(2, '0')}-${_toDate!.day.toString().padLeft(2, '0')}';
+      
       await ApiService.sendAbsenceReportsToParents(
         _teacherToken!,
         studentIds: studentIds,
         absenceThreshold: _selectedAbsenceThreshold,
+        fromDate: fromDateStr,
+        toDate: toDateStr,
       );
       
       if (mounted) {
@@ -235,19 +241,6 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
                         ),
                       ),
                     const SizedBox(width: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Icon(
-                        Icons.analytics,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
                     const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,21 +268,6 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
                               ],
                             ),
                           ),
-                    IconButton(
-                      onPressed: _refreshReports,
-                      icon: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.refresh,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
                       ],
                     ),
                   ),
@@ -305,13 +283,19 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
                       color: AppColors.accent,
                       child: SingleChildScrollView(
                         physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.all(24.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
+                        padding: Responsive.pagePadding(context),
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: Responsive.maxContentWidth(context),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
                           // Date Range Selection Card
                           if (_fromDate == null || _toDate == null)
                             Container(
+
                               padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
                                 color: Colors.white,
@@ -372,61 +356,67 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
                             ),
                           
                           if (_fromDate != null && _toDate != null) ...[
-                            // Date Range Display
-                            Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xFF10B981), Color(0xFF059669)],
-                                ),
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF10B981).withValues(alpha: 0.3),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-                              child: Row(
-          children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.2),
-                                      borderRadius: BorderRadius.circular(16),
+                            // Date Range Display (click to change)
+                            MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: GestureDetector(
+                                onTap: _selectDateRange,
+                                child: Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFF10B981), Color(0xFF059669)],
                                     ),
-                                    child: const Icon(
-                                      Icons.calendar_today,
-                                      color: Colors.white,
-                                      size: 24,
-                                    ),
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 10),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 16),
-            Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'Selected Date Range',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white,
-                                          ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(alpha: 0.2),
+                                          borderRadius: BorderRadius.circular(16),
                                         ),
-                                        Text(
-                                          '${_fromDate!.day}/${_fromDate!.month}/${_fromDate!.year} - ${_toDate!.day}/${_toDate!.month}/${_toDate!.year}',
-                                          style: const TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w700,
-                                            color: Colors.white,
-              ),
-            ),
-          ],
-        ),
+                                        child: const Icon(
+                                          Icons.calendar_today,
+                                          color: Colors.white,
+                                          size: 24,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Selected Date Range',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            Text(
+                                              '${_fromDate!.day}/${_fromDate!.month}/${_fromDate!.year} - ${_toDate!.day}/${_toDate!.month}/${_toDate!.year}',
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w700,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
                             ),
                             
@@ -435,7 +425,9 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
                             // Parent Report Content
                             _buildParentReportSection(),
                           ],
-                          ],
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -803,8 +795,8 @@ class _DateRangePickerDialogState extends State<_DateRangePickerDialog> {
         borderRadius: BorderRadius.circular(24),
       ),
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.9,
-        height: MediaQuery.of(context).size.height * 0.8,
+        width: MediaQuery.of(context).size.width * 0.85,
+        height: MediaQuery.of(context).size.height * 0.6,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
@@ -813,7 +805,7 @@ class _DateRangePickerDialogState extends State<_DateRangePickerDialog> {
           children: [
             // Header - Fixed at top
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(16),
               decoration: const BoxDecoration(
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(24),
@@ -839,7 +831,7 @@ class _DateRangePickerDialogState extends State<_DateRangePickerDialog> {
                     child: Text(
                       'Select Date Range',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF1F2937),
                       ),
@@ -867,7 +859,7 @@ class _DateRangePickerDialogState extends State<_DateRangePickerDialog> {
             // Scrollable content
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   children: [
             
@@ -879,18 +871,22 @@ class _DateRangePickerDialogState extends State<_DateRangePickerDialog> {
               calendarFormat: _calendarFormat,
               rangeSelectionMode: _rangeSelectionMode,
               startingDayOfWeek: StartingDayOfWeek.monday,
+              rowHeight: 48, // Increased from 36 to 48 to prevent overflow
               calendarStyle: CalendarStyle(
                 outsideDaysVisible: false,
                 weekendTextStyle: const TextStyle(
                   color: Color(0xFF6B7280),
+                  fontSize: 14,
                 ),
                 defaultTextStyle: const TextStyle(
                   color: Color(0xFF1F2937),
                   fontWeight: FontWeight.w500,
+                  fontSize: 14,
                 ),
                 selectedTextStyle: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
+                  fontSize: 14,
                 ),
                 rangeHighlightColor: AppColors.accent.withValues(alpha: 0.3),
                 rangeStartDecoration: BoxDecoration(
@@ -908,10 +904,11 @@ class _DateRangePickerDialogState extends State<_DateRangePickerDialog> {
                 todayTextStyle: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
+                  fontSize: 14,
                 ),
               ),
               headerStyle: HeaderStyle(
-                formatButtonVisible: true,
+                formatButtonVisible: false,
                 titleCentered: true,
                 formatButtonShowsNext: false,
                 formatButtonDecoration: BoxDecoration(
@@ -991,33 +988,33 @@ class _DateRangePickerDialogState extends State<_DateRangePickerDialog> {
               },
             ),
             
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             
             // Selected Date Range Display
             if (_selectedFromDate != null && _selectedToDate != null)
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [Color(0xFF10B981), Color(0xFF059669)],
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
                     const Icon(
                       Icons.calendar_today,
                       color: Colors.white,
-                      size: 20,
+                      size: 18,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         '${_selectedFromDate!.day}/${_selectedFromDate!.month}/${_selectedFromDate!.year} - ${_selectedToDate!.day}/${_selectedToDate!.month}/${_selectedToDate!.year}',
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
-                          fontSize: 16,
+                          fontSize: 14,
                         ),
                       ),
                     ),
@@ -1025,7 +1022,7 @@ class _DateRangePickerDialogState extends State<_DateRangePickerDialog> {
                 ),
               ),
             
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -1033,7 +1030,7 @@ class _DateRangePickerDialogState extends State<_DateRangePickerDialog> {
             
             // Action Buttons - Fixed at bottom
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               decoration: const BoxDecoration(
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(24),

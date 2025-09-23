@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:table_calendar/table_calendar.dart';
 import '../../services/api_service.dart';
 import '../../constants/app_colors.dart';
+import '../../utils/responsive.dart';
 
 class ParentReportsScreen extends StatefulWidget {
   const ParentReportsScreen({super.key});
@@ -19,6 +21,16 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
   bool _hasError = false;
   String? _errorMessage;
   
+  // Period selection
+  String _selectedPeriod = 'current_week'; // 'current_week', 'today', 'custom'
+  DateTime? _customFromDate;
+  DateTime? _customToDate;
+  
+  // Table calendar state
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _rangeStart;
+  DateTime? _rangeEnd;
+  
   // Animation controllers
   late AnimationController _mainAnimationController;
   late AnimationController _cardAnimationController;
@@ -28,8 +40,6 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
   // Constants
   static const Duration _animationDuration = Duration(milliseconds: 1200);
   static const Duration _cardAnimationDuration = Duration(milliseconds: 300);
-  static const double _cardSpacing = 24.0;
-  static const double _borderRadius = 28.0;
 
   @override
   void initState() {
@@ -100,7 +110,7 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
     });
     
     try {
-      final dateRange = _getCurrentWeekDateRange();
+      final dateRange = _getDateRange();
       final data = await ApiService.getParentDetailedReports(
         _parentId!,
         fromDate: dateRange['from'],
@@ -126,15 +136,45 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
     });
   }
 
-  Map<String, String> _getCurrentWeekDateRange() {
+  Map<String, String> _getDateRange() {
     final now = DateTime.now();
-    // Calculate start of week (Sunday) - consistent with weekly stats
-    // weekday returns 1=Monday, 2=Tuesday, ..., 7=Sunday
-    // We need to go back to the previous Sunday
-    final daysSinceSunday = (now.weekday % 7); // 0=Sunday, 1=Monday, ..., 6=Saturday
+    
+    switch (_selectedPeriod) {
+      case 'today':
+        return {
+          'from': '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
+          'to': '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
+        };
+      case 'custom':
+        if (_customFromDate != null && _customToDate != null) {
+          return {
+            'from': '${_customFromDate!.year}-${_customFromDate!.month.toString().padLeft(2, '0')}-${_customFromDate!.day.toString().padLeft(2, '0')}',
+            'to': '${_customToDate!.year}-${_customToDate!.month.toString().padLeft(2, '0')}-${_customToDate!.day.toString().padLeft(2, '0')}',
+          };
+        }
+        // Fallback to current week if custom dates not set
+        break;
+      case 'current_week':
+      default:
+        // Calculate start of week (Sunday) - consistent with weekly stats
+        // weekday returns 1=Monday, 2=Tuesday, ..., 7=Sunday
+        // We need to go back to the previous Sunday
+        final daysSinceSunday = (now.weekday % 7); // 0=Sunday, 1=Monday, ..., 6=Saturday
+        final startOfWeek = now.subtract(Duration(days: daysSinceSunday));
+        // End of week is Thursday (4 days after Sunday) - consistent with weekly stats
+        // But extend to include today to catch reports sent recently
+        final endOfWeek = now;
+        
+        return {
+          'from': '${startOfWeek.year}-${startOfWeek.month.toString().padLeft(2, '0')}-${startOfWeek.day.toString().padLeft(2, '0')}',
+          'to': '${endOfWeek.year}-${endOfWeek.month.toString().padLeft(2, '0')}-${endOfWeek.day.toString().padLeft(2, '0')}',
+        };
+    }
+    
+    // Fallback to current week
+    final daysSinceSunday = (now.weekday % 7);
     final startOfWeek = now.subtract(Duration(days: daysSinceSunday));
-    // End of week is Thursday (4 days after Sunday) - consistent with weekly stats
-    final endOfWeek = startOfWeek.add(const Duration(days: 4));
+    final endOfWeek = now; // Include today to catch recent reports
     
     return {
       'from': '${startOfWeek.year}-${startOfWeek.month.toString().padLeft(2, '0')}-${startOfWeek.day.toString().padLeft(2, '0')}',
@@ -142,41 +182,483 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
     };
   }
 
-  String _formatAbsenceDateTime(Map<String, dynamic> absence) {
-    try {
-      // Try to parse the date and time from the absence record
-      final dateStr = absence['date']?.toString() ?? '';
-      final timeStr = absence['time']?.toString() ?? '';
-      
-      if (dateStr.isNotEmpty && timeStr.isNotEmpty) {
-        // Parse the date and time, assuming they're in UTC from the backend
-        final dateTimeStr = '${dateStr}T${timeStr}Z'; // Add Z to indicate UTC
-        final utcDateTime = DateTime.parse(dateTimeStr);
-        final localDateTime = utcDateTime.toLocal();
-        
-        // Format as "Sep. 23, 2024, 12:57 AM" (matching backend format)
-        final months = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'Jun.',
-                       'Jul.', 'Aug.', 'Sep.', 'Oct.', 'Nov.', 'Dec.'];
-        final month = months[localDateTime.month - 1];
-        final day = localDateTime.day;
-        final year = localDateTime.year;
-        final hour = localDateTime.hour;
-        final minute = localDateTime.minute;
-        
-        // Convert to 12-hour format
-        final period = hour >= 12 ? 'PM' : 'AM';
-        final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
-        final displayMinute = minute.toString().padLeft(2, '0');
-        
-        return '$month $day, $year, $displayHour:$displayMinute $period';
-      }
-    } catch (e) {
-      print('Error formatting absence date/time: $e');
+  String _getCurrentPeriodDisplay() {
+    switch (_selectedPeriod) {
+      case 'today':
+        final now = DateTime.now();
+        return 'Today (${now.day}/${now.month}/${now.year})';
+      case 'custom':
+        if (_customFromDate != null && _customToDate != null) {
+          return '${_customFromDate!.day}/${_customFromDate!.month}/${_customFromDate!.year} - ${_customToDate!.day}/${_customToDate!.month}/${_customToDate!.year}';
+        }
+        return 'Custom Period';
+      case 'current_week':
+      default:
+        final now = DateTime.now();
+        final daysSinceSunday = (now.weekday % 7);
+        final startOfWeek = now.subtract(Duration(days: daysSinceSunday));
+        final endOfWeek = now;
+        return 'This Week (${startOfWeek.day}/${startOfWeek.month} - ${endOfWeek.day}/${endOfWeek.month})';
     }
-    
-    // Fallback to original format if parsing fails
-    return '${absence['date']} at ${absence['time']}';
   }
+
+  void _showPeriodSelector() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Title
+            const Text(
+              'Select Period',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1F2937),
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Period options
+            _buildPeriodOption(
+              'Today',
+              'View reports sent today',
+              'today',
+              Icons.today_rounded,
+            ),
+            _buildPeriodOption(
+              'This Week',
+              'View reports from this week',
+              'current_week',
+              Icons.calendar_view_week_rounded,
+            ),
+            _buildPeriodOption(
+              'Custom Period',
+              'Select your own date range',
+              'custom',
+              Icons.date_range_rounded,
+            ),
+            
+            const SizedBox(height: 24),
+            
+            // Current period display
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.secondary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.secondary.withValues(alpha: 0.2),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline_rounded,
+                    color: AppColors.secondary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Current Period:',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF6B7280),
+                          ),
+                        ),
+                        Text(
+                          _getCurrentPeriodDisplay(),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1F2937),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPeriodOption(String title, String subtitle, String value, IconData icon) {
+    final isSelected = _selectedPeriod == value;
+    
+    return GestureDetector(
+      onTap: () async {
+        if (value == 'custom') {
+          Navigator.pop(context);
+          await _showCustomPeriodSelector();
+        } else {
+          setState(() {
+            _selectedPeriod = value;
+          });
+          Navigator.pop(context);
+          _loadReportsData();
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected 
+              ? AppColors.secondary.withValues(alpha: 0.1)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected 
+                ? AppColors.secondary
+                : const Color(0xFFE5E7EB),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isSelected 
+                    ? AppColors.secondary
+                    : const Color(0xFFF3F4F6),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: isSelected 
+                    ? Colors.white
+                    : const Color(0xFF6B7280),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected 
+                          ? AppColors.secondary
+                          : const Color(0xFF1F2937),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF6B7280),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              Icon(
+                Icons.check_circle_rounded,
+                color: AppColors.secondary,
+                size: 20,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showCustomPeriodSelector() async {
+    // Initialize calendar state
+    _rangeStart = _customFromDate;
+    _rangeEnd = _customToDate;
+    _focusedDay = _rangeStart ?? DateTime.now();
+    
+    final result = await showDialog<Map<String, DateTime>>(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Container(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.8,
+                  maxWidth: MediaQuery.of(context).size.width * 0.9,
+                ),
+                padding: const EdgeInsets.all(24),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                    // Header
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.secondary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.date_range_rounded,
+                            color: AppColors.secondary,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            'Select Period',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1F2937),
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(
+                            Icons.close,
+                            color: Color(0xFF6B7280),
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Table Calendar
+                    Flexible(
+                      child: SizedBox(
+                        height: 350,
+                        child: TableCalendar<dynamic>(
+                        firstDay: DateTime.now().subtract(const Duration(days: 365)),
+                        lastDay: DateTime.now(),
+                        focusedDay: _focusedDay,
+                        calendarFormat: CalendarFormat.month,
+                        rangeSelectionMode: RangeSelectionMode.enforced,
+                        startingDayOfWeek: StartingDayOfWeek.sunday,
+                        rangeStartDay: _rangeStart,
+                        rangeEndDay: _rangeEnd,
+                        calendarStyle: CalendarStyle(
+                          outsideDaysVisible: false,
+                          weekendTextStyle: const TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontWeight: FontWeight.w600,
+                          ),
+                          defaultTextStyle: const TextStyle(
+                            color: Color(0xFF374151),
+                            fontWeight: FontWeight.w600,
+                          ),
+                          selectedTextStyle: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          todayTextStyle: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          rangeHighlightColor: AppColors.secondary.withValues(alpha: 0.3),
+                          rangeStartDecoration: BoxDecoration(
+                            color: AppColors.secondary,
+                            shape: BoxShape.circle,
+                          ),
+                          rangeEndDecoration: BoxDecoration(
+                            color: AppColors.secondary,
+                            shape: BoxShape.circle,
+                          ),
+                          withinRangeDecoration: BoxDecoration(
+                            color: AppColors.secondary.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          todayDecoration: BoxDecoration(
+                            color: const Color(0xFF10B981),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        headerStyle: HeaderStyle(
+                          formatButtonVisible: false,
+                          titleCentered: true,
+                          titleTextStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1F2937),
+                          ),
+                          leftChevronIcon: Icon(
+                            Icons.chevron_left,
+                            color: AppColors.secondary,
+                            size: 24,
+                          ),
+                          rightChevronIcon: Icon(
+                            Icons.chevron_right,
+                            color: AppColors.secondary,
+                            size: 24,
+                          ),
+                        ),
+                        onDaySelected: (selectedDay, focusedDay) {
+                          setState(() {
+                            _focusedDay = focusedDay;
+                            if (_rangeStart == null || _rangeEnd != null) {
+                              // Start new range
+                              _rangeStart = selectedDay;
+                              _rangeEnd = null;
+                            } else {
+                              // Complete the range
+                              if (selectedDay.isBefore(_rangeStart!)) {
+                                _rangeEnd = _rangeStart;
+                                _rangeStart = selectedDay;
+                              } else {
+                                _rangeEnd = selectedDay;
+                              }
+                            }
+                          });
+                        },
+                        onRangeSelected: (start, end, focusedDay) {
+                          setState(() {
+                            _rangeStart = start;
+                            _rangeEnd = end;
+                            _focusedDay = focusedDay;
+                          });
+                        },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Selected Range Display
+                    if (_rangeStart != null && _rangeEnd != null)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.secondary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppColors.secondary.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.check_circle_rounded,
+                              color: AppColors.secondary,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Selected: ${_rangeStart!.day}/${_rangeStart!.month}/${_rangeStart!.year} - ${_rangeEnd!.day}/${_rangeEnd!.month}/${_rangeEnd!.year}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF374151),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 16),
+                    
+                    // Action Buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: const BorderSide(color: Color(0xFFE5E7EB)),
+                              ),
+                            ),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: (_rangeStart != null && _rangeEnd != null)
+                                ? () {
+                                    Navigator.of(context).pop({
+                                      'from': _rangeStart,
+                                      'to': _rangeEnd,
+                                    });
+                                  }
+                                : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.secondary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text(
+                              'Apply',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+    
+    if (result != null) {
+      setState(() {
+        _selectedPeriod = 'custom';
+        _customFromDate = result['from'];
+        _customToDate = result['to'];
+      });
+      _loadReportsData();
+    }
+  }
+
 
 
   @override
@@ -227,15 +709,10 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
                                   letterSpacing: -0.8,
                                 ),
                               ),
-                              const SizedBox(height: 4),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
                                 child: const Text(
-                                  'Detailed reports sent by teachers',
+                                  'Reports sent by teachers',
                               style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
@@ -289,11 +766,103 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
                       topRight: Radius.circular(32),
                     ),
                   ),
-                  child: _isLoading
-          ? _buildLoadingState()
-          : _hasError
-              ? _buildErrorState()
-              : _buildReportsContent(),
+                  child: Padding(
+                    padding: Responsive.pagePadding(context),
+                    child: Column(
+                      children: [
+                        _buildPeriodIndicator(),
+                        const SizedBox(height: 16),
+                        Expanded(
+                          child: _isLoading
+                              ? _buildLoadingState()
+                              : _hasError
+                                  ? _buildErrorState()
+                                  : _buildReportsContent(),
+                        ),
+                      ],
+                    ),
+                  ),
+    );
+  }
+
+  Widget _buildPeriodIndicator() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.secondary.withValues(alpha: 0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.secondary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              _selectedPeriod == 'today' 
+                  ? Icons.today_rounded
+                  : _selectedPeriod == 'custom'
+                      ? Icons.date_range_rounded
+                      : Icons.calendar_view_week_rounded,
+              color: AppColors.secondary,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Viewing Reports For:',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF6B7280),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _getCurrentPeriodDisplay(),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1F2937),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: _showPeriodSelector,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.secondary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.edit_rounded,
+                color: AppColors.secondary,
+                size: 16,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -334,7 +903,7 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(_borderRadius),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.08),
@@ -444,7 +1013,7 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(_borderRadius),
+              borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.08),
@@ -506,9 +1075,11 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'No detailed reports have been sent by teachers this week. All children are doing well!',
-                  style: TextStyle(
+                Text(
+                  _selectedPeriod == 'today' 
+                      ? 'No detailed reports have been sent by teachers today. All children are doing well!'
+                      : 'No detailed reports have been sent by teachers for the selected period. All children are doing well!',
+                  style: const TextStyle(
                     fontSize: 16,
                     color: Color(0xFF6B7280),
                     height: 1.5,
@@ -544,242 +1115,36 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
   }
 
   Widget _buildAbsenceReportCard(Map<String, dynamic> absenceReport, int index) {
-          return TweenAnimationBuilder<double>(
-            duration: Duration(milliseconds: 300 + (index * 100)),
-            tween: Tween(begin: 0.0, end: 1.0),
-            builder: (context, value, child) {
-              return Transform.translate(
-                offset: Offset(0, 20 * (1 - value)),
-                child: Opacity(
-                  opacity: value,
-                  child: Container(
-              margin: const EdgeInsets.only(bottom: _cardSpacing),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                borderRadius: BorderRadius.circular(_borderRadius),
-                      boxShadow: [
-                BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 24,
-                          offset: const Offset(0, 12),
-                        ),
-                        BoxShadow(
-                          color: const Color(0xFFEF4444).withValues(alpha: 0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                  _buildStudentHeader(absenceReport),
-                  const SizedBox(height: 20),
-                  _buildWarningMessage(absenceReport),
-                  const SizedBox(height: 20),
-                  if (_hasAbsenceDates(absenceReport)) ...[
-                    _buildAbsenceDates(absenceReport),
-                    const SizedBox(height: 20),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildStudentHeader(Map<String, dynamic> absenceReport) {
     return Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                const Color(0xFFEF4444).withValues(alpha: 0.1),
-                                const Color(0xFFFEE2E2).withValues(alpha: 0.8),
-                              ],
-                            ),
-                            borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(_borderRadius),
-          topRight: Radius.circular(_borderRadius),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-          _buildStudentAvatar(),
-                              const SizedBox(width: 20),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      absenceReport['student_name'] ?? 'Unknown Student',
-                                      style: const TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.w800,
-                    color: Color(0xFF1F2937),
-                                        letterSpacing: -0.5,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFEF4444).withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: Text(
-                                        'Class: ${absenceReport['classroom_name'] ?? 'Unknown'}',
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: Color(0xFFDC2626),
-                                        ),
-                                      ),
-                ),
-              ],
-            ),
-                              ),
-          _buildAbsenceCountBadge(absenceReport),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStudentAvatar() {
-    return Container(
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFEF4444).withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: const Icon(
-        Icons.person_rounded,
         color: Colors.white,
-        size: 28,
-      ),
-    );
-  }
-
-  Widget _buildAbsenceCountBadge(Map<String, dynamic> absenceReport) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
-        ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFEF4444).withValues(alpha: 0.3),
-            blurRadius: 8,
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '${absenceReport['absent_days'] ?? 0}',
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 2),
-          const Text(
-            'Absent Days',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWarningMessage(Map<String, dynamic> absenceReport) {
-    return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Color(0xFFFEF3C7),
-                                Color(0xFFFDE68A),
-            Color(0xFFFCD34D),
-                              ],
-                            ),
-        borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-          color:  Colors.transparent,
-                              width: 2,
-                            ),
-            boxShadow: [
-              BoxShadow(
-            color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          // Student Info Header
+          Row(
             children: [
-          // Header with warning icon and title
-              Row(
-                children: [
-                  Container(
+              Container(
                 padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFFF59E0B),
-                      Color(0xFFD97706),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                    ),
-                    child: const Icon(
-                                      Icons.warning_amber_rounded,
-                  color: Colors.white,
-                  size: 28,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.person,
+                  color: Color(0xFFEF4444),
+                  size: 24,
                 ),
               ),
               const SizedBox(width: 16),
@@ -787,239 +1152,104 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                                  const Text(
-                                    'Teacher Warning',
-                                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                                      color: Color(0xFF92400E),
-                        letterSpacing: -0.5,
-                                    ),
-                                  ),
-                    const SizedBox(height: 4),
-                              Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                decoration: BoxDecoration(
-                        color: const Color(0xFF92400E).withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                      child: const Text(
-                        'Attendance Alert',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                                    color: Color(0xFF92400E),
-                                  ),
-                    ),
-                  ),
-                ],
-                          ),
-                        ),
-            ],
-          ),
-                        const SizedBox(height: 20),
-                        
-          // Warning message content
-                        Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                colors: [
-                  Colors.white,
-                  Color(0xFFFEFBF3),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  absenceReport['warning_message'] ?? 'No warning message available',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Color(0xFF92400E),
-                    height: 1.6,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                
-                // Teacher information section - simple format
-                Row(
-                  children: [
-                    Icon(
-                      Icons.person_rounded,
-                      color: const Color(0xFF92400E).withValues(alpha: 0.7),
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
                     Text(
-                      'Reported by: ',
-                      style: TextStyle(
-                        fontSize: 14,
+                      absenceReport['student_name'] ?? 'Unknown Student',
+                      style: const TextStyle(
+                        fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF92400E).withValues(alpha: 0.8),
+                        color: Color(0xFF1F2937),
                       ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
-                      absenceReport['teacher_name'] ?? 'Unknown Teacher',
+                      'Class: ${absenceReport['classroom_name'] ?? 'Unknown'}',
                       style: const TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF92400E),
-                    ),
-                  ),
-                ],
-                          ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-
-  bool _hasAbsenceDates(Map<String, dynamic> absenceReport) {
-    final absenceDates = absenceReport['absence_dates'];
-    return absenceDates != null && (absenceDates as List).isNotEmpty;
-  }
-
-  Widget _buildAbsenceDates(Map<String, dynamic> absenceReport) {
-    return Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                                        color: const Color(0xFFEF4444).withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const Icon(
-                                        Icons.calendar_today_rounded,
-                                        color: Color(0xFFEF4444),
-                                        size: 20,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    const Text(
-                                      'Absence Dates',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w800,
-                                        color: Color(0xFF1F2937),
-                                        letterSpacing: -0.3,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                ...(absenceReport['absence_dates'] as List).asMap().entries.map<Widget>((entry) {
-                                  final index = entry.key;
-                                  final absence = entry.value;
-            return _buildAbsenceDateItem(absence, index);
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAbsenceDateItem(Map<String, dynamic> absence, int index) {
-                                  return TweenAnimationBuilder<double>(
-                                    duration: Duration(milliseconds: 200 + (index * 50)),
-                                    tween: Tween(begin: 0.0, end: 1.0),
-                                    builder: (context, value, child) {
-                                      return Transform.scale(
-                                        scale: 0.8 + (0.2 * value),
-                                        child: Opacity(
-                                          opacity: value,
-                                          child: Container(
-                                            margin: const EdgeInsets.only(bottom: 12),
-                                            padding: const EdgeInsets.all(16),
-                                            decoration: BoxDecoration(
-                                              gradient: const LinearGradient(
-                                                begin: Alignment.topLeft,
-                                                end: Alignment.bottomRight,
-                  colors: [Color(0xFFFEF2F2), Color(0xFFFEE2E2)],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                                              border: Border.all(
-                                                color: const Color(0xFFFECACA).withValues(alpha: 0.5),
-                                                width: 1,
-                                              ),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: const Color(0xFFEF4444).withValues(alpha: 0.05),
-                                                  blurRadius: 8,
-                                                  offset: const Offset(0, 2),
-                                                ),
-                                              ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                                                  padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                                                    color: const Color(0xFFEF4444).withValues(alpha: 0.1),
-                                                    borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                                                    Icons.event_rounded,
-                                                    color: Color(0xFFEF4444),
-                                                    size: 18,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                                                      Text(
-                                                        _formatAbsenceDateTime(absence),
-                                                        style: const TextStyle(
-                                                          fontSize: 15,
-                                                          color: Color(0xFF991B1B),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                                                      const SizedBox(height: 2),
-                          Text(
-                                                        'Teacher: ${absence['teacher'] ?? 'Unknown'}',
-                            style: const TextStyle(
-                                                          fontSize: 13,
-                                                          color: Color(0xFF6B7280),
-                                                          fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                        color: Color(0xFF6B7280),
                       ),
                     ),
                   ],
                 ),
               ),
-                                        ),
-                                      );
-                                    },
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF4444),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${absenceReport['absent_days'] ?? 0} absences',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Warning Message
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEF3C7),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Color(0xFFF59E0B),
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    absenceReport['warning_message'] ?? 'No message available',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF92400E),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // Teacher Info
+          Row(
+            children: [
+              const Icon(
+                Icons.person_rounded,
+                color: Color(0xFF6B7280),
+                size: 16,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Reported by: ${absenceReport['teacher_name'] ?? 'Unknown Teacher'}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF6B7280),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
+
 
   Widget _buildNoAbsencesMessage(String message) {
     return Container(

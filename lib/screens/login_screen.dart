@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:school_qr/screens/parents/parent_home_screen.dart';
 import 'package:school_qr/screens/teachers/teacher_classes_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,6 +7,7 @@ import '../services/api_service.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
 import '../constants/app_colors.dart';
+import '../utils/responsive.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -18,7 +20,8 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  bool _isTeacher = true;
+  bool _isTeacher = true; // when false, currently Parent; we'll add Student tab
+  bool _isStudent = false;
   bool _isLoading = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -32,6 +35,10 @@ class _LoginScreenState extends State<LoginScreen>
   final _parentNameController = TextEditingController();
   final _parentEmailController = TextEditingController();
   final _parentPhoneController = TextEditingController();
+
+  // Student fields
+  final _studentUsernameController = TextEditingController();
+  final _studentPasswordController = TextEditingController();
 
   @override
   void initState() {
@@ -64,6 +71,8 @@ class _LoginScreenState extends State<LoginScreen>
     _parentNameController.dispose();
     _parentEmailController.dispose();
     _parentPhoneController.dispose();
+    _studentUsernameController.dispose();
+    _studentPasswordController.dispose();
     super.dispose();
   }
 
@@ -94,6 +103,25 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           );
         }
+      } else if (_isStudent) {
+        response = await ApiService.studentLogin(
+          _studentUsernameController.text,
+          _studentPasswordController.text,
+        );
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('student_token', response['token']);
+        await prefs.setString('student_id', response['student']['id']);
+        await prefs.setString('student_class_id', response['classroom']['id']);
+        await prefs.setString('student_name', response['student']['name'] ?? '');
+        await prefs.setString('student_class_name', response['classroom']['name'] ?? '');
+        await prefs.setString('student_qr', response['student']['qr_code'] ?? '');
+        await prefs.setString('student_class_qr', response['classroom']['qr_code'] ?? '');
+        await prefs.setString('user_type', 'student');
+
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/student/request-attendance');
+        }
       } else {
         response = await ApiService.parentLogin(
           _parentNameController.text,
@@ -114,10 +142,65 @@ class _LoginScreenState extends State<LoginScreen>
         }
       }
     } catch (e) {
+      String message = 'Login failed. Please try again.';
+      if (e is ApiException) {
+        // Friendly messages based on error code/status
+        switch (e.code) {
+          case 'missing_credentials':
+            message = 'Please enter your username and password.';
+            break;
+          case 'invalid_username':
+            message = 'Incorrect username. Please check and try again.';
+            break;
+          case 'invalid_password':
+            message = 'Incorrect password. Please try again.';
+            break;
+          case 'not_teacher':
+            message = 'This account is not registered as a teacher.';
+            break;
+          case 'invalid_input':
+            // Keep it simple: show the first specific field error if provided
+            if (e.fields is Map) {
+              final f = e.fields as Map;
+              String? firstErr(String key) {
+                final v = f[key];
+                if (v is List && v.isNotEmpty) return v.first.toString();
+                return null;
+              }
+              final fieldOrder = [
+                ['username', 'Username'],
+                ['password', 'Password'],
+                ['name', 'Full Name'],
+                ['email', 'Email'],
+                ['phone', 'Phone'],
+              ];
+              String? picked;
+              String label = '';
+              for (final pair in fieldOrder) {
+                final err = firstErr(pair[0]);
+                if (err != null && err.isNotEmpty) {
+                  picked = err;
+                  label = pair[1];
+                  break;
+                }
+              }
+              message = picked != null ? '$label: $picked' : 'Invalid input.';
+            } else {
+              message = 'Invalid input.';
+            }
+            break;
+          default:
+            if (e.statusCode >= 500) {
+              message = 'Server error. Please try again later.';
+            } else if (e.statusCode == 0) {
+              message = 'Network error. Check your connection.';
+            }
+        }
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Login failed: $e'),
+            content: Text(message),
             backgroundColor: Colors.red.shade400,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -136,6 +219,10 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Login'),
+        actions: const [],
+      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -146,12 +233,17 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
+            padding: Responsive.pagePadding(context),
             child: FadeTransition(
               opacity: _fadeAnimation,
               child: SlideTransition(
                 position: _slideAnimation,
-                child: Column(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: Responsive.maxContentWidth(context),
+                    ),
+                    child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: 40),
@@ -218,7 +310,7 @@ class _LoginScreenState extends State<LoginScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // User type selector
+                          // User type selector: Teacher, Parent, Student
                           Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
@@ -236,8 +328,7 @@ class _LoginScreenState extends State<LoginScreen>
                               children: [
                                 Expanded(
                                   child: GestureDetector(
-                                    onTap: () =>
-                                        setState(() => _isTeacher = true),
+                                    onTap: () => setState(() { _isTeacher = true; _isStudent = false; }),
                                     child: AnimatedContainer(
                                       duration: const Duration(
                                         milliseconds: 300,
@@ -267,8 +358,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 ),
                                 Expanded(
                                   child: GestureDetector(
-                                    onTap: () =>
-                                        setState(() => _isTeacher = false),
+                                    onTap: () => setState(() { _isTeacher = false; _isStudent = false; }),
                                     child: AnimatedContainer(
                                       duration: const Duration(
                                         milliseconds: 300,
@@ -277,7 +367,7 @@ class _LoginScreenState extends State<LoginScreen>
                                         vertical: 16,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: !_isTeacher
+                                        color: (!_isTeacher && !_isStudent)
                                             ? AppColors.primary
                                             : Colors.transparent,
                                         borderRadius: BorderRadius.circular(12),
@@ -287,9 +377,31 @@ class _LoginScreenState extends State<LoginScreen>
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
-                                          color: !_isTeacher
+                                          color: (!_isTeacher && !_isStudent)
                                               ? AppColors.textOnPrimary
                                               : AppColors.textSecondary,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () => setState(() { _isTeacher = false; _isStudent = true; }),
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 300),
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      decoration: BoxDecoration(
+                                        color: _isStudent ? AppColors.primary : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        'Student',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: _isStudent ? AppColors.textOnPrimary : AppColors.textSecondary,
                                         ),
                                         textAlign: TextAlign.center,
                                       ),
@@ -302,7 +414,7 @@ class _LoginScreenState extends State<LoginScreen>
 
                           const SizedBox(height: 32),
 
-                          // Login form
+                    // Login form
                           Container(
                             padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
@@ -319,6 +431,7 @@ class _LoginScreenState extends State<LoginScreen>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
+                          // Error banner removed: errors are shown via SnackBar only
                                 Row(
                                   children: [
                                     Container(
@@ -332,7 +445,9 @@ class _LoginScreenState extends State<LoginScreen>
                                       child: Icon(
                                         _isTeacher
                                             ? Icons.person
-                                            : Icons.family_restroom,
+                                            : _isStudent
+                                                ? Icons.school
+                                                : Icons.family_restroom,
                                         color: AppColors.primary,
                                         size: 24,
                                       ),
@@ -341,7 +456,9 @@ class _LoginScreenState extends State<LoginScreen>
                                     Text(
                                       _isTeacher
                                           ? 'Teacher Login'
-                                          : 'Parent Login',
+                                          : _isStudent
+                                              ? 'Student Login'
+                                              : 'Parent Login',
                                       style: const TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.w700,
@@ -378,14 +495,28 @@ class _LoginScreenState extends State<LoginScreen>
                                       return null;
                                     },
                                   ),
-                                ] else ...[
+                                ] else if (!_isTeacher && !_isStudent) ...[
                                   CustomTextField(
                                     controller: _parentNameController,
                                     label: 'Full Name',
                                     prefixIcon: Icons.person_outline,
+                                    textCapitalization: TextCapitalization.words,
+                                    inputFormatters: [
+                                      // Allow letters and single spaces, collapse multiple spaces
+                                      FilteringTextInputFormatter.allow(RegExp(r"[A-Za-z\s]")),
+                                      _TwoWordNameFormatter(),
+                                    ],
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
                                         return 'Please enter your full name';
+                                      }
+                                      final parts = value.trim().split(RegExp(r"\s+"));
+                                      if (parts.length < 2) {
+                                        return 'Please enter first and last name';
+                                      }
+                                      if (!RegExp(r"^[A-Z][a-zA-Z]*").hasMatch(parts[0]) ||
+                                          !RegExp(r"^[A-Z][a-zA-Z]*").hasMatch(parts[1])) {
+                                        return 'Capitalize first letters (e.g., John Doe)';
                                       }
                                       return null;
                                     },
@@ -419,15 +550,38 @@ class _LoginScreenState extends State<LoginScreen>
                                       return null;
                                     },
                                   ),
+                                ] else ...[
+                                  CustomTextField(
+                                    controller: _studentUsernameController,
+                                    label: 'Username',
+                                    prefixIcon: Icons.person_outline,
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Please enter username';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  const SizedBox(height: 20),
+                                  CustomTextField(
+                                    controller: _studentPasswordController,
+                                    label: 'Password',
+                                    prefixIcon: Icons.lock_outline,
+                                    obscureText: true,
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Please enter password';
+                                      }
+                                      return null;
+                                    },
+                                  ),
                                 ],
 
                                 const SizedBox(height: 32),
 
                                 CustomButton(
-                                  text: _isTeacher ? 'Sign In' : 'Register',
-                                  icon: _isTeacher
-                                      ? Icons.login
-                                      : Icons.person_add,
+                                  text: _isTeacher ? 'Sign In' : (_isStudent ? 'Sign In' : 'Register'),
+                                  icon: Icons.login,
                                   onPressed: _isLoading ? null : _login,
                                   isLoading: _isLoading,
                                   backgroundColor: AppColors.primary,
@@ -440,13 +594,47 @@ class _LoginScreenState extends State<LoginScreen>
                         ],
                       ),
                     ),
-                  ],
-                ),
+                ]),
               ),
             ),
           ),
         ),
       ),
+    )));
+  }
+}
+
+class _TwoWordNameFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    String text = newValue.text;
+
+    // Collapse multiple spaces to single
+    text = text.replaceAll(RegExp(r"\s+"), ' ');
+
+    // Limit to two words max
+    final parts = text.trimLeft().split(' ');
+    if (parts.length > 2) {
+      text = parts.take(2).join(' ');
+    }
+
+    // Title-case first two words
+    List<String> tokens = text.split(' ');
+    for (int i = 0; i < tokens.length && i < 2; i++) {
+      final t = tokens[i];
+      if (t.isEmpty) continue;
+      if (t.length == 1) {
+        tokens[i] = t.toUpperCase();
+      } else {
+        tokens[i] = t[0].toUpperCase() + t.substring(1).toLowerCase();
+      }
+    }
+    text = tokens.join(' ');
+
+    return TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+      composing: TextRange.empty,
     );
   }
 }

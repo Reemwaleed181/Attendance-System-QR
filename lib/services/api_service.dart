@@ -5,8 +5,129 @@ import '../models/classroom.dart';
 import '../utils/platform_utils.dart';
 
 class ApiService {
+  // Consistent API error type
+  static ApiException _errorFromResponse(http.Response response) {
+    try {
+      final dynamic body = jsonDecode(response.body);
+      final message = (body is Map && body['message'] is String)
+          ? body['message'] as String
+          : 'Request failed';
+      final code = (body is Map && body['code'] is String) ? body['code'] as String : null;
+      final fields = (body is Map && body['fields'] != null) ? body['fields'] : null;
+      return ApiException(
+        statusCode: response.statusCode,
+        message: message,
+        code: code,
+        fields: fields,
+        rawBody: response.body,
+      );
+    } catch (_) {
+      return ApiException(
+        statusCode: response.statusCode,
+        message: 'Request failed with status ${response.statusCode}',
+        rawBody: response.body,
+      );
+    }
+  }
+
   // Use platform-specific base URL
   static String get baseUrl => PlatformUtils.baseUrl;
+  
+  // Check if self-attendance window is active for a class (student-facing)
+  static Future<Map<String, dynamic>> getSelfAttendanceStatus({required String studentToken, required String classQr}) async {
+    final uri = Uri.parse('$baseUrl/student/self-attendance/status/').replace(queryParameters: {
+      'class_qr': classQr,
+    });
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Student-Token': studentToken,
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw _errorFromResponse(response);
+    }
+  }
+  
+  // Attendance request workflow (student-initiated)
+  static Future<Map<String, dynamic>> createAttendanceRequest({
+    required String studentQr,
+    required String classQr,
+    String method = 'gps',
+    double? studentLat,
+    double? studentLng,
+    Map<String, dynamic>? metadata,
+    required String token,
+  }) async {
+    final payload = <String, dynamic>{
+      'student_qr': studentQr,
+      'class_qr': classQr,
+      'method': method,
+    };
+    if (studentLat != null) payload['student_lat'] = double.parse(studentLat.toStringAsFixed(6));
+    if (studentLng != null) payload['student_lng'] = double.parse(studentLng.toStringAsFixed(6));
+    if (metadata != null) payload['metadata'] = metadata;
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/attendance/requests/create/'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $token',
+      },
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw _errorFromResponse(response);
+    }
+  }
+
+  static Future<Map<String, dynamic>> getPendingAttendanceRequests(String token) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/attendance/requests/pending/'),
+      headers: {
+        'Authorization': 'Token $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw _errorFromResponse(response);
+    }
+  }
+
+  static Future<Map<String, dynamic>> approveAttendanceRequest({required String requestId, required String token}) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/attendance/requests/$requestId/approve/'),
+      headers: {
+        'Authorization': 'Token $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw _errorFromResponse(response);
+    }
+  }
+
+  static Future<Map<String, dynamic>> denyAttendanceRequest({required String requestId, required String token}) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/attendance/requests/$requestId/deny/'),
+      headers: {
+        'Authorization': 'Token $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw _errorFromResponse(response);
+    }
+  }
   
   // Teacher login
   static Future<Map<String, dynamic>> teacherLogin(String username, String password) async {
@@ -22,7 +143,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Login failed: ${response.body}');
+      throw _errorFromResponse(response);
     }
   }
   
@@ -41,7 +162,24 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Login failed: ${response.body}');
+      throw _errorFromResponse(response);
+    }
+  }
+  
+  // Student login with username/password
+  static Future<Map<String, dynamic>> studentLogin(String username, String password) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/login/student/'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'username': username,
+        'password': password,
+      }),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw _errorFromResponse(response);
     }
   }
   
@@ -63,7 +201,88 @@ class ApiService {
     if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to mark attendance: ${response.body}');
+      throw _errorFromResponse(response);
+    }
+  }
+
+  // Teacher opens a self-attendance window for a classroom
+  static Future<Map<String, dynamic>> openSelfAttendanceWindow({required String classQr, required String token, int minutes = 10}) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/teacher/self-attendance/open/'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $token',
+      },
+      body: jsonEncode({
+        'class_qr': classQr,
+        'minutes': minutes,
+      }),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw _errorFromResponse(response);
+    }
+  }
+  
+  static Future<Map<String, dynamic>> closeSelfAttendanceWindow({required String classQr, required String token}) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/teacher/self-attendance/close/'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $token',
+      },
+      body: jsonEncode({
+        'class_qr': classQr,
+      }),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw _errorFromResponse(response);
+    }
+  }
+
+  // Student marks own attendance during active window
+  static Future<Map<String, dynamic>> studentSelfMark({required String studentToken, required String classQr, double? lat, double? lng}) async {
+    final payload = <String, dynamic>{
+      'class_qr': classQr,
+    };
+    if (lat != null) payload['student_lat'] = double.parse(lat.toStringAsFixed(6));
+    if (lng != null) payload['student_lng'] = double.parse(lng.toStringAsFixed(6));
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/student/self-attendance/mark/'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Student-Token': studentToken,
+      },
+      body: jsonEncode(payload),
+    );
+    
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw _errorFromResponse(response);
+    }
+  }
+  
+  // Teacher live class attendance snapshot (real-time polling)
+  static Future<Map<String, dynamic>> getLiveClassAttendance({required String token, required String classQr}) async {
+    final uri = Uri.parse('$baseUrl/teacher/class-attendance/live/').replace(queryParameters: {
+      'class_qr': classQr,
+    });
+    final response = await http.get(
+      uri,
+      headers: {
+        'Authorization': 'Token $token',
+        'Content-Type': 'application/json',
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw _errorFromResponse(response);
     }
   }
   
@@ -88,7 +307,7 @@ class ApiService {
         // Check if there's a next page
         nextUrl = responseData['next'];
       } else {
-        throw Exception('Failed to fetch classrooms: ${response.body}');
+        throw _errorFromResponse(response);
       }
     }
     
@@ -116,7 +335,7 @@ class ApiService {
         // Check if there's a next page
         nextUrl = responseData['next'];
       } else {
-        throw Exception('Failed to fetch students: ${response.body}');
+        throw _errorFromResponse(response);
       }
     }
     
@@ -132,7 +351,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to fetch parent data: ${response.body}');
+      throw _errorFromResponse(response);
     }
   }
   
@@ -145,7 +364,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to fetch attendance history: ${response.body}');
+      throw _errorFromResponse(response);
     }
   }
   
@@ -200,7 +419,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to fetch teacher reports: ${response.body}');
+      throw _errorFromResponse(response);
     }
   }
   
@@ -213,7 +432,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to fetch student weekly stats: ${response.body}');
+      throw _errorFromResponse(response);
     }
   }
   
@@ -243,7 +462,7 @@ class ApiService {
   }
   
   // Send absence reports to parents
-  static Future<Map<String, dynamic>> sendAbsenceReportsToParents(String token, {required List<String> studentIds, required int absenceThreshold}) async {
+  static Future<Map<String, dynamic>> sendAbsenceReportsToParents(String token, {required List<String> studentIds, required int absenceThreshold, String? fromDate, String? toDate}) async {
     final response = await http.post(
       Uri.parse('$baseUrl/teacher/send-absence-reports/'),
       headers: {
@@ -253,6 +472,8 @@ class ApiService {
       body: jsonEncode({
         'student_ids': studentIds,
         'absence_threshold': absenceThreshold,
+        'from_date': fromDate,
+        'to_date': toDate,
       }),
     );
     
@@ -275,7 +496,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to get notifications: ${response.body}');
+      throw _errorFromResponse(response);
     }
   }
 
@@ -290,7 +511,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to mark notification as read: ${response.body}');
+      throw _errorFromResponse(response);
     }
   }
 
@@ -305,7 +526,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to mark all notifications as read: ${response.body}');
+      throw _errorFromResponse(response);
     }
   }
 
@@ -326,7 +547,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to get detailed reports: ${response.body}');
+      throw _errorFromResponse(response);
     }
   }
 
@@ -349,7 +570,7 @@ class ApiService {
     if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to send daily absence notifications: ${response.body}');
+      throw _errorFromResponse(response);
     }
   }
 
@@ -372,7 +593,26 @@ class ApiService {
     if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to send teacher report notifications: ${response.body}');
+      throw _errorFromResponse(response);
     }
   }
+}
+
+class ApiException implements Exception {
+  final int statusCode;
+  final String message;
+  final String? code;
+  final dynamic fields;
+  final String? rawBody;
+
+  ApiException({
+    required this.statusCode,
+    required this.message,
+    this.code,
+    this.fields,
+    this.rawBody,
+  });
+
+  @override
+  String toString() => 'ApiException($statusCode, $code, $message)';
 }

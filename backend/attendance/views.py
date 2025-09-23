@@ -1,4 +1,5 @@
 from rest_framework import status, generics, permissions
+import uuid
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
@@ -6,11 +7,11 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import datetime, date, timedelta
-from .models import ClassRoom, Student, Parent, Teacher, Attendance, Notification
+from .models import ClassRoom, Student, Parent, Teacher, Attendance, Notification, AttendanceRequest, StudentAuth, SelfAttendanceWindow
 from .serializers import (
     ClassRoomSerializer, StudentSerializer, ParentSerializer, 
     TeacherSerializer, AttendanceSerializer, AttendanceMarkSerializer,
-    ParentLoginSerializer, NotificationSerializer
+    ParentLoginSerializer, NotificationSerializer, AttendanceRequestCreateSerializer, AttendanceRequestSerializer
 )
 
 def get_local_date_key(timestamp, timezone_offset=None):
@@ -27,6 +28,45 @@ def get_local_date_key(timestamp, timezone_offset=None):
         local_timestamp = timezone.localtime(timestamp)
     
     return local_timestamp.date().isoformat()
+
+
+def api_error(message, http_status, *, code=None, details=None, fields=None):
+    """
+    Unified API error response helper.
+    """
+    payload = {
+        'message': message,
+        'status': http_status,
+    }
+    if code is not None:
+        payload['code'] = code
+    if details is not None:
+        payload['details'] = details
+    if fields is not None:
+        payload['fields'] = fields
+    return Response(payload, status=http_status)
+
+
+def _haversine_distance_meters(lat1, lon1, lat2, lon2):
+    """
+    Calculate distance between two lat/lng points in meters.
+    """
+    from math import radians, sin, cos, sqrt, atan2
+    R = 6371000.0
+    dlat = radians(float(lat2) - float(lat1))
+    dlon = radians(float(lon2) - float(lon1))
+    a = sin(dlat/2)**2 + cos(radians(float(lat1))) * cos(radians(float(lat2))) * sin(dlon/2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    return R * c
+
+
+def _within_geofence(classroom: ClassRoom, lat, lng) -> bool:
+    if classroom.latitude is None or classroom.longitude is None:
+        return True  # No geofence configured; allow by default
+    if lat is None or lng is None:
+        return False
+    distance = _haversine_distance_meters(classroom.latitude, classroom.longitude, lat, lng)
+    return distance <= max(10, classroom.radius_meters)
 
 
 class ClassRoomListView(generics.ListAPIView):
@@ -98,13 +138,159 @@ def mark_attendance(request):
             }, status=status.HTTP_201_CREATED)
             
         except Student.DoesNotExist:
-            return Response({'error': 'Student not found'}, status=status.HTTP_404_NOT_FOUND)
+            return api_error('Student not found', status.HTTP_404_NOT_FOUND, code='student_not_found')
         except ClassRoom.DoesNotExist:
-            return Response({'error': 'Classroom not found'}, status=status.HTTP_404_NOT_FOUND)
+            return api_error('Classroom not found', status.HTTP_404_NOT_FOUND, code='classroom_not_found')
         except Teacher.DoesNotExist:
-            return Response({'error': 'Teacher profile not found'}, status=status.HTTP_404_NOT_FOUND)
+            return api_error('Teacher profile not found', status.HTTP_404_NOT_FOUND, code='teacher_not_found')
     
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return api_error('Invalid data', status.HTTP_400_BAD_REQUEST, code='invalid_input', fields=serializer.errors)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def create_attendance_request(request):
+    """
+    Student creates an attendance request for a classroom (by QR) with optional GPS.
+    """
+    serializer = AttendanceRequestCreateSerializer(data=request.data)
+    if not serializer.is_valid():
+        return api_error('Invalid data', status.HTTP_400_BAD_REQUEST, code='invalid_input', fields=serializer.errors)
+
+    data = serializer.validated_data
+    student = data['student']
+    classroom = data['classroom']
+    method = data.get('method', 'gps')
+    student_lat = data.get('student_lat')
+    student_lng = data.get('student_lng')
+    metadata = data.get('metadata')
+
+    # Prevent multiple active pending requests for the same student/classroom today
+    today = timezone.now().date()
+    existing = AttendanceRequest.objects.filter(
+        student=student, classroom=classroom, status=AttendanceRequest.STATUS_PENDING,
+        created_at__date=today
+    ).first()
+    if existing:
+        return Response({'message': 'Existing pending request found', 'request': AttendanceRequestSerializer(existing).data}, status=status.HTTP_200_OK)
+
+    # Simple geofence validation at request time (informative; final validation on approval)
+    geofence_ok = _within_geofence(classroom, student_lat, student_lng)
+    if method == 'gps' and not geofence_ok:
+        return api_error('Location is outside classroom geofence', status.HTTP_400_BAD_REQUEST, code='outside_geofence')
+
+    # Create request with short expiry window (e.g., 10 minutes)
+    expires_at = timezone.now() + timedelta(minutes=10)
+    attendance_request = AttendanceRequest.objects.create(
+        student=student,
+        classroom=classroom,
+        method=method,
+        student_lat=student_lat,
+        student_lng=student_lng,
+        metadata=metadata,
+        expires_at=expires_at,
+    )
+
+    return Response({'message': 'Attendance request created', 'request': AttendanceRequestSerializer(attendance_request).data}, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def list_pending_attendance_requests(request):
+    """
+    Teacher lists pending attendance requests for their classrooms (today).
+    """
+    try:
+        teacher = Teacher.objects.get(user=request.user)
+    except Teacher.DoesNotExist:
+        return api_error('Teacher not found', status.HTTP_404_NOT_FOUND, code='teacher_not_found')
+
+    today = timezone.now().date()
+    pending = AttendanceRequest.objects.filter(
+        classroom__attendances__teacher=teacher,
+        status=AttendanceRequest.STATUS_PENDING,
+        created_at__date=today
+    ).select_related('student', 'classroom').distinct().order_by('-created_at')
+
+    return Response({'requests': AttendanceRequestSerializer(pending, many=True).data}, status=status.HTTP_200_OK)
+
+
+def _approve_request(attendance_request: AttendanceRequest, teacher: Teacher):
+    # Final geofence recheck on approval if GPS
+    if attendance_request.method == AttendanceRequest.METHOD_GPS and attendance_request.classroom.latitude is not None:
+        if not _within_geofence(attendance_request.classroom, attendance_request.student_lat, attendance_request.student_lng):
+            return False, 'Location outside geofence at approval time'
+
+    # Create attendance record if not already created today
+    today = timezone.now().date()
+    existing_attendance = Attendance.objects.filter(
+        student=attendance_request.student,
+        classroom=attendance_request.classroom,
+        teacher=teacher,
+        timestamp__date=today
+    ).first()
+    if existing_attendance is None:
+        Attendance.objects.create(
+            student=attendance_request.student,
+            classroom=attendance_request.classroom,
+            teacher=teacher,
+            is_present=True,
+        )
+
+    attendance_request.status = AttendanceRequest.STATUS_APPROVED
+    attendance_request.approved_by = teacher
+    attendance_request.approved_at = timezone.now()
+    attendance_request.save()
+    return True, None
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def approve_attendance_request(request, request_id):
+    try:
+        teacher = Teacher.objects.get(user=request.user)
+    except Teacher.DoesNotExist:
+        return api_error('Teacher not found', status.HTTP_404_NOT_FOUND, code='teacher_not_found')
+
+    try:
+        attendance_request = AttendanceRequest.objects.select_related('student', 'classroom').get(id=request_id)
+    except AttendanceRequest.DoesNotExist:
+        return api_error('Request not found', status.HTTP_404_NOT_FOUND, code='request_not_found')
+
+    if attendance_request.status != AttendanceRequest.STATUS_PENDING:
+        return api_error('Request is not pending', status.HTTP_400_BAD_REQUEST, code='invalid_status')
+
+    if attendance_request.expires_at and attendance_request.expires_at < timezone.now():
+        attendance_request.status = AttendanceRequest.STATUS_EXPIRED
+        attendance_request.save()
+        return api_error('Request expired', status.HTTP_400_BAD_REQUEST, code='expired')
+
+    ok, err = _approve_request(attendance_request, teacher)
+    if not ok:
+        return api_error(err or 'Approval failed', status.HTTP_400_BAD_REQUEST, code='approval_failed')
+
+    return Response({'message': 'Request approved', 'request': AttendanceRequestSerializer(attendance_request).data}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def deny_attendance_request(request, request_id):
+    try:
+        Teacher.objects.get(user=request.user)
+    except Teacher.DoesNotExist:
+        return api_error('Teacher not found', status.HTTP_404_NOT_FOUND, code='teacher_not_found')
+
+    try:
+        attendance_request = AttendanceRequest.objects.get(id=request_id)
+    except AttendanceRequest.DoesNotExist:
+        return api_error('Request not found', status.HTTP_404_NOT_FOUND, code='request_not_found')
+
+    if attendance_request.status != AttendanceRequest.STATUS_PENDING:
+        return api_error('Request is not pending', status.HTTP_400_BAD_REQUEST, code='invalid_status')
+
+    attendance_request.status = AttendanceRequest.STATUS_DENIED
+    attendance_request.save()
+    return Response({'message': 'Request denied', 'request': AttendanceRequestSerializer(attendance_request).data}, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -155,13 +341,13 @@ def mark_absence(request):
             }, status=status.HTTP_201_CREATED)
             
         except Student.DoesNotExist:
-            return Response({'error': 'Student not found'}, status=status.HTTP_404_NOT_FOUND)
+            return api_error('Student not found', status.HTTP_404_NOT_FOUND, code='student_not_found')
         except ClassRoom.DoesNotExist:
-            return Response({'error': 'Classroom not found'}, status=status.HTTP_404_NOT_FOUND)
+            return api_error('Classroom not found', status.HTTP_404_NOT_FOUND, code='classroom_not_found')
         except Teacher.DoesNotExist:
-            return Response({'error': 'Teacher profile not found'}, status=status.HTTP_404_NOT_FOUND)
+            return api_error('Teacher profile not found', status.HTTP_404_NOT_FOUND, code='teacher_not_found')
     
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return api_error('Invalid data', status.HTTP_400_BAD_REQUEST, code='invalid_input', fields=serializer.errors)
 
 
 @api_view(['POST'])
@@ -174,17 +360,36 @@ def teacher_login(request):
     password = request.data.get('password')
     
     if not username or not password:
-        return Response({'error': 'Username and password required'}, status=status.HTTP_400_BAD_REQUEST)
+        return api_error('Username and password required', status.HTTP_400_BAD_REQUEST, code='missing_credentials', fields={
+            'username': ['This field is required.'] if not username else [],
+            'password': ['This field is required.'] if not password else [],
+        })
     
+    # Distinguish username vs password errors
+    try:
+        user_obj = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return api_error('Invalid username', status.HTTP_401_UNAUTHORIZED, code='invalid_username', fields={
+            'username': ['Invalid username'],
+            'password': [],
+        })
+
+    # Check password
     user = authenticate(username=username, password=password)
-    if user and hasattr(user, 'teacher'):
+    if user is None:
+        return api_error('Invalid password', status.HTTP_401_UNAUTHORIZED, code='invalid_password', fields={
+            'username': [],
+            'password': ['Invalid password'],
+        })
+
+    if hasattr(user, 'teacher'):
         token, created = Token.objects.get_or_create(user=user)
         return Response({
             'token': token.key,
             'teacher': TeacherSerializer(user.teacher).data
         }, status=status.HTTP_200_OK)
     
-    return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    return api_error('Account is not a teacher', status.HTTP_403_FORBIDDEN, code='not_teacher')
 
 
 @api_view(['POST'])
@@ -201,8 +406,217 @@ def parent_login(request):
             'parent': ParentSerializer(parent).data
         }, status=status.HTTP_200_OK)
     
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # Pass through field-specific messages from serializer
+    return api_error('Invalid parent credentials', status.HTTP_400_BAD_REQUEST, code='invalid_input', fields=serializer.errors)
 
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def student_login(request):
+    """Student username/password login. Returns short-lived token stored on StudentAuth."""
+    username = request.data.get('username')
+    password = request.data.get('password')
+    if not username or not password:
+        return api_error('Username and password required', status.HTTP_400_BAD_REQUEST, code='missing_credentials', fields={
+            'username': ['Required'] if not username else [],
+            'password': ['Required'] if not password else [],
+        })
+    try:
+        auth = StudentAuth.objects.select_related('student__classroom').get(username=username)
+    except StudentAuth.DoesNotExist:
+        return api_error('Invalid username', status.HTTP_401_UNAUTHORIZED, code='invalid_username')
+    if auth.password != password:
+        return api_error('Invalid password', status.HTTP_401_UNAUTHORIZED, code='invalid_password')
+
+    # Issue a simple token (UUID) for client use
+    if not auth.token:
+        auth.token = uuid.uuid4().hex
+    else:
+        # rotate token on login
+        auth.token = uuid.uuid4().hex
+    auth.save()
+
+    return Response({
+        'token': auth.token,
+        'student': StudentSerializer(auth.student).data,
+        'classroom': ClassRoomSerializer(auth.student.classroom).data,
+    }, status=status.HTTP_200_OK)
+
+
+def _get_active_window_for_class(classroom: ClassRoom):
+    now = timezone.now()
+    return SelfAttendanceWindow.objects.filter(classroom=classroom, is_active=True, expires_at__gt=now).order_by('-opened_at').first()
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def self_attendance_status(request):
+    """Return whether self-attendance is currently enabled for a classroom for a given student token."""
+    token = request.headers.get('X-Student-Token') or request.GET.get('student_token')
+    class_qr = request.GET.get('class_qr')
+    if not token or not class_qr:
+        return api_error('Missing token or class_qr', status.HTTP_400_BAD_REQUEST, code='missing_parameters')
+    try:
+        auth = StudentAuth.objects.select_related('student__classroom').get(token=token)
+    except StudentAuth.DoesNotExist:
+        return api_error('Invalid token', status.HTTP_401_UNAUTHORIZED, code='invalid_token')
+    try:
+        classroom = ClassRoom.objects.get(qr_code=class_qr)
+    except ClassRoom.DoesNotExist:
+        return api_error('Classroom not found', status.HTTP_404_NOT_FOUND, code='classroom_not_found')
+    window = _get_active_window_for_class(classroom)
+    return Response({
+        'enabled': bool(window),
+        'expires_at': window.expires_at.isoformat() if window else None,
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def open_self_attendance_window(request):
+    """Teacher enables student self-recording for a classroom for a short time window."""
+    class_qr = request.data.get('class_qr')
+    minutes = int(request.data.get('minutes', 10))
+    if not class_qr:
+        return api_error('class_qr required', status.HTTP_400_BAD_REQUEST, code='missing_parameters', fields={'class_qr': ['Required']})
+    try:
+        teacher = Teacher.objects.get(user=request.user)
+        classroom = ClassRoom.objects.get(qr_code=class_qr)
+    except (Teacher.DoesNotExist, ClassRoom.DoesNotExist):
+        return api_error('Teacher or classroom not found', status.HTTP_404_NOT_FOUND, code='not_found')
+
+    # Close any previous active window for this class
+    SelfAttendanceWindow.objects.filter(classroom=classroom, is_active=True).update(is_active=False)
+    window = SelfAttendanceWindow.objects.create(
+        classroom=classroom,
+        teacher=teacher,
+        expires_at=timezone.now() + timedelta(minutes=max(1, min(30, minutes))),
+        is_active=True,
+    )
+    return Response({
+        'message': 'Self attendance enabled',
+        'expires_at': window.expires_at.isoformat(),
+    }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def close_self_attendance_window(request):
+    """Teacher closes any active window for a classroom immediately."""
+    class_qr = request.data.get('class_qr')
+    if not class_qr:
+        return api_error('class_qr required', status.HTTP_400_BAD_REQUEST, code='missing_parameters', fields={'class_qr': ['Required']})
+    try:
+        Teacher.objects.get(user=request.user)
+        classroom = ClassRoom.objects.get(qr_code=class_qr)
+    except (Teacher.DoesNotExist, ClassRoom.DoesNotExist):
+        return api_error('Teacher or classroom not found', status.HTTP_404_NOT_FOUND, code='not_found')
+    updated = SelfAttendanceWindow.objects.filter(classroom=classroom, is_active=True).update(is_active=False, expires_at=timezone.now())
+    return Response({'message': 'Self attendance disabled', 'closed': updated}, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def student_self_mark(request):
+    """Student marks own attendance during an active window, with optional GPS geofence check."""
+    token = request.headers.get('X-Student-Token') or request.data.get('student_token')
+    class_qr = request.data.get('class_qr')
+    student_lat = request.data.get('student_lat')
+    student_lng = request.data.get('student_lng')
+    if not token or not class_qr:
+        return api_error('Missing token or class_qr', status.HTTP_400_BAD_REQUEST, code='missing_parameters')
+    try:
+        auth = StudentAuth.objects.select_related('student__classroom').get(token=token)
+    except StudentAuth.DoesNotExist:
+        return api_error('Invalid token', status.HTTP_401_UNAUTHORIZED, code='invalid_token')
+    student = auth.student
+    if not student.classroom:
+        return api_error('Student not linked to a classroom', status.HTTP_400_BAD_REQUEST, code='student_no_class')
+    try:
+        classroom = ClassRoom.objects.get(qr_code=class_qr)
+    except ClassRoom.DoesNotExist:
+        return api_error('Classroom not found', status.HTTP_404_NOT_FOUND, code='classroom_not_found')
+    if classroom.id != student.classroom.id:
+        return api_error('Student not in this classroom', status.HTTP_403_FORBIDDEN, code='wrong_class')
+
+    window = _get_active_window_for_class(classroom)
+    if not window:
+        return api_error('Self attendance window not active', status.HTTP_403_FORBIDDEN, code='no_active_window')
+
+    # Geofence: use classroom geofence if defined
+    if not _within_geofence(classroom, student_lat, student_lng):
+        return api_error('Outside of teacher location', status.HTTP_403_FORBIDDEN, code='outside_geofence')
+
+    # Record attendance under the teacher who opened the window
+    today = timezone.now().date()
+    existing = Attendance.objects.filter(
+        student=student,
+        classroom=classroom,
+        teacher=window.teacher,
+        timestamp__date=today
+    ).first()
+    if existing:
+        # Ensure marked present and bump timestamp to reflect the current action
+        changed = False
+        if not existing.is_present:
+            existing.is_present = True
+            changed = True
+        # Update timestamp so live feed during the window can include it
+        existing.timestamp = timezone.now()
+        existing.save(update_fields=['is_present', 'timestamp'] if changed else ['timestamp'])
+        return Response({'message': 'Attendance already recorded', 'attendance': AttendanceSerializer(existing).data}, status=status.HTTP_200_OK)
+
+    attendance = Attendance.objects.create(
+        student=student,
+        classroom=classroom,
+        teacher=window.teacher,
+        is_present=True,
+        student_lat=student_lat,
+        student_lng=student_lng,
+    )
+    return Response({'message': 'Attendance recorded successfully', 'attendance': AttendanceSerializer(attendance).data}, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def teacher_live_class_attendance(request):
+    """Return latest present attendance records for a class today to support lightweight polling."""
+    class_qr = request.GET.get('class_qr')
+    if not class_qr:
+        return api_error('class_qr required', status.HTTP_400_BAD_REQUEST, code='missing_parameters', fields={'class_qr': ['Required']})
+    try:
+        teacher = Teacher.objects.get(user=request.user)
+        classroom = ClassRoom.objects.get(qr_code=class_qr)
+    except (Teacher.DoesNotExist, ClassRoom.DoesNotExist):
+        return api_error('Teacher or classroom not found', status.HTTP_404_NOT_FOUND, code='not_found')
+
+    # Only return records created during the CURRENT active self-attendance window
+    now = timezone.now()
+    window = SelfAttendanceWindow.objects.filter(
+        classroom=classroom, teacher=teacher, is_active=True, expires_at__gt=now
+    ).order_by('-opened_at').first()
+
+    if not window:
+        return Response({'records': []}, status=status.HTTP_200_OK)
+
+    # Only today, only marked present by this teacher, and created after the window opened
+    today = now.date()
+    records = Attendance.objects.filter(
+        classroom=classroom,
+        teacher=teacher,
+        timestamp__date=today,
+        timestamp__gte=window.opened_at,
+        is_present=True,
+    ).select_related('student').order_by('-timestamp')[:100]
+
+    payload = []
+    for rec in records:
+        payload.append({
+            'student_id': str(rec.student.id),
+            'student_name': rec.student.name,
+            'timestamp': rec.timestamp.isoformat(),
+        })
+
+    return Response({'records': payload}, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
@@ -242,7 +656,7 @@ def parent_children_attendance(request, parent_id):
         }, status=status.HTTP_200_OK)
         
     except Parent.DoesNotExist:
-        return Response({'error': 'Parent not found'}, status=status.HTTP_404_NOT_FOUND)
+        return api_error('Parent not found', status.HTTP_404_NOT_FOUND, code='parent_not_found')
 
 
 @api_view(['GET'])
@@ -263,7 +677,7 @@ def student_attendance_history(request, student_id):
         }, status=status.HTTP_200_OK)
         
     except Student.DoesNotExist:
-        return Response({'error': 'Student not found'}, status=status.HTTP_404_NOT_FOUND)
+        return api_error('Student not found', status.HTTP_404_NOT_FOUND, code='student_not_found')
 
 
 @api_view(['GET'])
@@ -324,12 +738,9 @@ def teacher_attendance_history(request):
         }, status=status.HTTP_200_OK)
         
     except Teacher.DoesNotExist:
-        return Response({'error': 'Teacher not found'}, status=status.HTTP_404_NOT_FOUND)
+        return api_error('Teacher not found', status.HTTP_404_NOT_FOUND, code='teacher_not_found')
     except Exception as e:
-        return Response({
-            'error': 'An error occurred while fetching attendance history',
-            'details': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return api_error('An error occurred while fetching attendance history', status.HTTP_500_INTERNAL_SERVER_ERROR, code='server_error', details=str(e))
 
 
 @api_view(['GET'])
@@ -347,17 +758,13 @@ def teacher_reports(request):
         to_date = request.GET.get('to_date')
         
         if not from_date or not to_date:
-            return Response({
-                'error': 'Both from_date and to_date parameters are required'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return api_error('Both from_date and to_date parameters are required', status.HTTP_400_BAD_REQUEST, code='missing_parameters', fields={'from_date': ['Required'] if not from_date else [], 'to_date': ['Required'] if not to_date else []})
         
         try:
             from_date = datetime.strptime(from_date, '%Y-%m-%d').date()
             to_date = datetime.strptime(to_date, '%Y-%m-%d').date()
         except ValueError:
-            return Response({
-                'error': 'Invalid date format. Use YYYY-MM-DD format'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return api_error('Invalid date format. Use YYYY-MM-DD format', status.HTTP_400_BAD_REQUEST, code='invalid_date_format')
         
         # Get attendance records in date range
         attendance_records = Attendance.objects.filter(
@@ -407,7 +814,7 @@ def teacher_reports(request):
         }, status=status.HTTP_200_OK)
         
     except Teacher.DoesNotExist:
-        return Response({'error': 'Teacher not found'}, status=status.HTTP_404_NOT_FOUND)
+        return api_error('Teacher not found', status.HTTP_404_NOT_FOUND, code='teacher_not_found')
 
 
 @api_view(['GET'])
@@ -490,17 +897,13 @@ def teacher_students_with_absences(request):
         to_date = request.GET.get('to_date')
         
         if not from_date or not to_date:
-            return Response({
-                'error': 'Both from_date and to_date parameters are required'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return api_error('Both from_date and to_date parameters are required', status.HTTP_400_BAD_REQUEST, code='missing_parameters', fields={'from_date': ['Required'] if not from_date else [], 'to_date': ['Required'] if not to_date else []})
         
         try:
             from_date = datetime.strptime(from_date, '%Y-%m-%d').date()
             to_date = datetime.strptime(to_date, '%Y-%m-%d').date()
         except ValueError:
-            return Response({
-                'error': 'Invalid date format. Use YYYY-MM-DD format'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return api_error('Invalid date format. Use YYYY-MM-DD format', status.HTTP_400_BAD_REQUEST, code='invalid_date_format')
         
         # Get attendance records in date range for this teacher
         attendance_records = Attendance.objects.filter(
@@ -547,12 +950,9 @@ def teacher_students_with_absences(request):
         }, status=status.HTTP_200_OK)
         
     except Teacher.DoesNotExist:
-        return Response({'error': 'Teacher not found'}, status=status.HTTP_404_NOT_FOUND)
+        return api_error('Teacher not found', status.HTTP_404_NOT_FOUND, code='teacher_not_found')
     except Exception as e:
-        return Response({
-            'error': 'An error occurred while fetching students with absences',
-            'details': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return api_error('An error occurred while fetching students with absences', status.HTTP_500_INTERNAL_SERVER_ERROR, code='server_error', details=str(e))
 
 
 @api_view(['POST'])
@@ -568,11 +968,25 @@ def teacher_send_absence_reports(request):
         # Get request data
         student_ids = request.data.get('student_ids', [])
         absence_threshold = request.data.get('absence_threshold', 3)
+        from_date = request.data.get('from_date')
+        to_date = request.data.get('to_date')
         
         if not student_ids:
-            return Response({
-                'error': 'No student IDs provided'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return api_error('No student IDs provided', status.HTTP_400_BAD_REQUEST, code='missing_parameters', fields={'student_ids': ['Required']})
+        
+        # Use provided date range or fallback to current week
+        if from_date and to_date:
+            try:
+                from_date = datetime.strptime(from_date, '%Y-%m-%d').date()
+                to_date = datetime.strptime(to_date, '%Y-%m-%d').date()
+            except ValueError:
+                return api_error('Invalid date format. Use YYYY-MM-DD format', status.HTTP_400_BAD_REQUEST, code='invalid_date_format')
+        else:
+            # Fallback to current week calculation
+            today = timezone.now().date()
+            days_since_sunday = (today.weekday() + 1) % 7
+            from_date = today - timedelta(days=days_since_sunday)
+            to_date = from_date + timedelta(days=4)
         
         # Get students and their parents
         students = Student.objects.filter(id__in=student_ids)
@@ -582,16 +996,11 @@ def teacher_send_absence_reports(request):
             # Get parents of this student
             parents = student.parents.all()
             
-            # Count absences for this student in the current week (Sunday to Thursday)
-            today = timezone.now().date()
-            days_since_sunday = (today.weekday() + 1) % 7
-            start_of_week = today - timedelta(days=days_since_sunday)
-            end_of_week = start_of_week + timedelta(days=4)
-            
+            # Count absences for this student in the specified date range
             weekly_absences = Attendance.objects.filter(
                 student=student,
                 is_present=False,
-                timestamp__date__range=[start_of_week, end_of_week]
+                timestamp__date__range=[from_date, to_date]
             ).count()
             
             for parent in parents:
@@ -605,7 +1014,7 @@ def teacher_send_absence_reports(request):
                     'absent_days': weekly_absences,
                     'absence_threshold': absence_threshold,
                     'teacher_name': f"{teacher.user.first_name} {teacher.user.last_name}".strip() or teacher.user.username,
-                    'warning_message': f"Dear Parent, {student.name} was absent {weekly_absences} time(s) this week. Please ensure regular attendance for better academic performance.",
+                    'warning_message': f"Dear Parent, {student.name} was absent {weekly_absences} time(s) from {from_date} to {to_date}. Please ensure regular attendance for better academic performance.",
                     'sent_at': timezone.now().isoformat()
                 }
                 reports_sent.append(report_data)
@@ -620,17 +1029,18 @@ def teacher_send_absence_reports(request):
             'message': f'Reports sent to {len(reports_sent)} parents',
             'teacher': TeacherSerializer(teacher).data,
             'absence_threshold': absence_threshold,
+            'date_range': {
+                'from': from_date.isoformat(),
+                'to': to_date.isoformat()
+            },
             'reports_sent': reports_sent,
             'total_reports': len(reports_sent)
         }, status=status.HTTP_200_OK)
         
     except Teacher.DoesNotExist:
-        return Response({'error': 'Teacher not found'}, status=status.HTTP_404_NOT_FOUND)
+        return api_error('Teacher not found', status.HTTP_404_NOT_FOUND, code='teacher_not_found')
     except Exception as e:
-        return Response({
-            'error': 'An error occurred while sending reports',
-            'details': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return api_error('An error occurred while sending reports', status.HTTP_500_INTERNAL_SERVER_ERROR, code='server_error', details=str(e))
 
 
 @api_view(['POST'])
@@ -674,12 +1084,9 @@ def teacher_send_daily_absence_notifications(request):
         }, status=status.HTTP_200_OK)
         
     except Teacher.DoesNotExist:
-        return Response({'error': 'Teacher profile not found'}, status=status.HTTP_404_NOT_FOUND)
+        return api_error('Teacher profile not found', status.HTTP_404_NOT_FOUND, code='teacher_not_found')
     except Exception as e:
-        return Response({
-            'error': 'An error occurred while sending daily absence notifications',
-            'details': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return api_error('An error occurred while sending daily absence notifications', status.HTTP_500_INTERNAL_SERVER_ERROR, code='server_error', details=str(e))
 
 
 @api_view(['POST'])
@@ -737,12 +1144,9 @@ def teacher_send_report_notifications(request):
         }, status=status.HTTP_200_OK)
         
     except Teacher.DoesNotExist:
-        return Response({'error': 'Teacher profile not found'}, status=status.HTTP_404_NOT_FOUND)
+        return api_error('Teacher profile not found', status.HTTP_404_NOT_FOUND, code='teacher_not_found')
     except Exception as e:
-        return Response({
-            'error': 'An error occurred while sending teacher report notifications',
-            'details': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return api_error('An error occurred while sending teacher report notifications', status.HTTP_500_INTERNAL_SERVER_ERROR, code='server_error', details=str(e))
 
 
 # Notification Views
@@ -761,12 +1165,9 @@ def parent_notifications(request, parent_id):
         }, status=status.HTTP_200_OK)
         
     except Parent.DoesNotExist:
-        return Response({'error': 'Parent not found'}, status=status.HTTP_404_NOT_FOUND)
+        return api_error('Parent not found', status.HTTP_404_NOT_FOUND, code='parent_not_found')
     except Exception as e:
-        return Response({
-            'error': 'An error occurred while fetching notifications',
-            'details': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return api_error('An error occurred while fetching notifications', status.HTTP_500_INTERNAL_SERVER_ERROR, code='server_error', details=str(e))
 
 
 @api_view(['PATCH'])
@@ -786,12 +1187,9 @@ def mark_notification_as_read(request, notification_id):
         }, status=status.HTTP_200_OK)
         
     except Notification.DoesNotExist:
-        return Response({'error': 'Notification not found'}, status=status.HTTP_404_NOT_FOUND)
+        return api_error('Notification not found', status.HTTP_404_NOT_FOUND, code='notification_not_found')
     except Exception as e:
-        return Response({
-            'error': 'An error occurred while marking notification as read',
-            'details': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return api_error('An error occurred while marking notification as read', status.HTTP_500_INTERNAL_SERVER_ERROR, code='server_error', details=str(e))
 
 
 @api_view(['PATCH'])
@@ -810,12 +1208,9 @@ def mark_all_notifications_as_read(request, parent_id):
         }, status=status.HTTP_200_OK)
         
     except Parent.DoesNotExist:
-        return Response({'error': 'Parent not found'}, status=status.HTTP_404_NOT_FOUND)
+        return api_error('Parent not found', status.HTTP_404_NOT_FOUND, code='parent_not_found')
     except Exception as e:
-        return Response({
-            'error': 'An error occurred while marking notifications as read',
-            'details': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return api_error('An error occurred while marking notifications as read', status.HTTP_500_INTERNAL_SERVER_ERROR, code='server_error', details=str(e))
 
 
 def create_report_notification(student, parent, report_data):
@@ -998,9 +1393,6 @@ def parent_detailed_reports(request, parent_id):
         }, status=status.HTTP_200_OK)
         
     except Parent.DoesNotExist:
-        return Response({'error': 'Parent not found'}, status=status.HTTP_404_NOT_FOUND)
+        return api_error('Parent not found', status.HTTP_404_NOT_FOUND, code='parent_not_found')
     except Exception as e:
-        return Response({
-            'error': 'An error occurred while generating absence reports',
-            'details': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return api_error('An error occurred while generating absence reports', status.HTTP_500_INTERNAL_SERVER_ERROR, code='server_error', details=str(e))

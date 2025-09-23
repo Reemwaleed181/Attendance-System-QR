@@ -5,10 +5,15 @@ urlpatterns = [
     # Authentication
     path('login/teacher/', views.teacher_login, name='teacher_login'),
     path('login/parent/', views.parent_login, name='parent_login'),
+    path('login/student/', views.student_login, name='student_login'),
     
     # Attendance
     path('attendance/mark/', views.mark_attendance, name='mark_attendance'),
     path('attendance/mark-absence/', views.mark_absence, name='mark_absence'),
+    path('teacher/self-attendance/open/', views.open_self_attendance_window, name='open_self_attendance'),
+    path('teacher/self-attendance/close/', views.close_self_attendance_window, name='close_self_attendance'),
+    path('student/self-attendance/mark/', views.student_self_mark, name='student_self_mark'),
+    path('student/self-attendance/status/', views.self_attendance_status, name='self_attendance_status'),
     
     # Data endpoints
     path('classrooms/', views.ClassRoomListView.as_view(), name='classroom_list'),
@@ -27,6 +32,13 @@ urlpatterns = [
     path('teacher/send-absence-reports/', views.teacher_send_absence_reports, name='teacher_send_absence_reports'),
     path('teacher/send-daily-absence-notifications/', views.teacher_send_daily_absence_notifications, name='teacher_send_daily_absence_notifications'),
     path('teacher/send-report-notifications/', views.teacher_send_report_notifications, name='teacher_send_report_notifications'),
+    path('teacher/class-attendance/live/', views.teacher_live_class_attendance, name='teacher_live_class_attendance'),
+    
+    # Attendance request workflow
+    path('attendance/requests/create/', views.create_attendance_request, name='create_attendance_request'),
+    path('attendance/requests/pending/', views.list_pending_attendance_requests, name='list_pending_attendance_requests'),
+    path('attendance/requests/<uuid:request_id>/approve/', views.approve_attendance_request, name='approve_attendance_request'),
+    path('attendance/requests/<uuid:request_id>/deny/', views.deny_attendance_request, name='deny_attendance_request'),
     
     # Notification endpoints
     path('parent/<uuid:parent_id>/notifications/', views.parent_notifications, name='parent_notifications'),

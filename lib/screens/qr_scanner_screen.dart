@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
+import '../utils/responsive.dart';
 import '../widgets/custom_button.dart';
 
 class QRScannerScreen extends StatefulWidget {
@@ -259,10 +260,15 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                   child: SlideTransition(
                     position: _slideAnimation,
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
+                      padding: Responsive.pagePadding(context),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: Responsive.maxContentWidth(context),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
                           // Current Status Card
                           if (_currentClassroom != null || _currentStudent != null)
                             Container(
@@ -590,7 +596,9 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                         ),
                       ],
                     ),
-                        ],
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                         ),

@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/api_service.dart';
 import '../../models/student.dart';
 import '../../constants/app_colors.dart';
+import '../../utils/responsive.dart';
 
 class ParentWeeklyStatsScreen extends StatefulWidget {
   const ParentWeeklyStatsScreen({super.key});
@@ -296,19 +297,6 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Icon(
-                        Icons.analytics,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
                     const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,21 +339,6 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
                         ),
                       ),
                     ),
-                    IconButton(
-                      onPressed: _loadChildrenData,
-                      icon: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.refresh,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -387,10 +360,15 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
                             color: AppColors.secondary,
                             child: SingleChildScrollView(
                               physics: const AlwaysScrollableScrollPhysics(),
-                              padding: const EdgeInsets.all(24.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
+                              padding: Responsive.pagePadding(context),
+                              child: Center(
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth: Responsive.maxContentWidth(context),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
                                   if (_children.isEmpty)
                                     Container(
                                       padding: const EdgeInsets.all(32),
@@ -448,7 +426,9 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
                                         ..._children.map((child) => _buildChildStatsCard(child)),
                                       ],
                                     ),
-                                ],
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -808,7 +788,7 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
                 final media = MediaQuery.of(context);
                 return SafeArea(
                   child: Container(
-                    constraints: BoxConstraints(maxHeight: media.size.height * 0.85),
+                    constraints: BoxConstraints(maxHeight: media.size.height * 0.5),
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -898,6 +878,7 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
                                                       crossAxisCount: 7,
                                                       mainAxisSpacing: 10,
                                                       crossAxisSpacing: 10,
+                                                      childAspectRatio: 1.0, // Ensure square cells to prevent overflow
                                                       shrinkWrap: true,
                                                       physics: const NeverScrollableScrollPhysics(),
                                                       children: cells.map((CalendarCellDate cell) {
@@ -1069,8 +1050,8 @@ class _CalendarCell extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
-          width: 34,
-          height: 34,
+          width: 32, // Reduced from 34 to 32
+          height: 32, // Reduced from 34 to 32
           alignment: Alignment.center,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
@@ -1080,17 +1061,17 @@ class _CalendarCell extends StatelessWidget {
           child: Text(
             day.toString(),
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 13, // Reduced from 14 to 13
               fontWeight: FontWeight.w700,
               color: isToday && status != null ? dotColor : numberColor,
             ),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 2), // Reduced from 4 to 2
         if (status != null)
           Container(
-            width: 6,
-            height: 6,
+            width: 4, // Reduced from 6 to 4
+            height: 4, // Reduced from 6 to 4
             decoration: BoxDecoration(
               color: dotColor,
               shape: BoxShape.circle,
