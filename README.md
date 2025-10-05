@@ -1,61 +1,170 @@
-# 🎓 QR Attendance — QR Code Based Attendance Management
+# 🎓 QR Attendance — QR Code Based Attendance Management System
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.9+-blue.svg)](https://flutter.dev/)
 [![Dart](https://img.shields.io/badge/Dart-3.9+-blue.svg)](https://dart.dev/)
+[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20Web-green.svg)](https://flutter.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ## ✨ Overview
 
-**QR Attendance** is a modern, feature-rich Flutter application for managing attendance using QR codes. It is designed to be general-purpose and suitable for both schools and colleges. Built with cutting-edge UI/UX principles and powered by QR code technology, it provides an intuitive, efficient, and visually polished solution for teachers, parents, and administrators.
+**QR Attendance** is a comprehensive, modern Flutter application for managing attendance using QR codes. Designed for **schools and colleges**, it provides a complete attendance management solution with separate interfaces for teachers, parents, and students. Built with cutting-edge UI/UX principles and powered by QR code technology, it offers an intuitive, efficient, and visually polished solution for educational institutions.
+
+### 🎯 Target Audience
+- **Schools** (Primary, Secondary, High Schools)
+- **Colleges** (Community Colleges, Universities)
+- **Educational Institutions** of all sizes
+- **Training Centers** and **Academies**
 
 ### 🎯 Key Features
 
-- **🔐 Dual User Authentication**: Separate interfaces for teachers and parents
+- **🔐 Multi-Role Authentication**: Separate interfaces for teachers, parents, and students
 - **📱 QR Code Scanning**: Quick attendance marking with mobile/web QR scanning
-- **📊 Real-time Analytics**: Live attendance statistics and reports
+- **📊 Real-time Analytics**: Live attendance statistics and comprehensive reports
 - **🎨 Modern UI/UX**: Beautiful, responsive design with smooth animations
-- **📱 Cross-Platform**: Works seamlessly on iOS, Android, and Web
+- **📱 Cross-Platform**: Native support for Android, iOS, and Web browsers
 - **🔒 Secure**: JWT-based authentication and data encryption
 - **📈 Scalable**: Built with clean architecture for easy maintenance
+- **📋 Excel Integration**: Automated Excel sheet generation for students and parents
+- **🔔 Smart Notifications**: Real-time alerts and absence reports
+- **📱 Self-Service**: Student self-attendance during open windows
 
 ## 📸 Screenshots
 
-Add your UI screenshots into `docs/screenshots/` using the suggested filenames below to have them render automatically.
+### 🎨 UI Gallery
+View our comprehensive UI screenshots in the [`ui/`](ui/) folder:
+
+- **[Authentication Screens](ui/README.md#-authentication-screens)** - Login interfaces for all user types
+- **[Teacher Interface](ui/README.md#-teacher-screens)** - Complete teacher workflow and management
+- **[Parent Interface](ui/README.md#-parent-screens)** - Parent dashboard, reports, and notifications
+- **[Student Interface](ui/README.md#-student-screens)** - Student attendance request system
+
+### 📱 Key Screenshots
 
 <table>
   <tr>
     <td align="center">
-      <img src="docs/screenshots/01_splash.png" alt="Splash Screen" width="260"/>
-      <div><sub>Splash</sub></div>
+      <img src="ui/splash.png" alt="Splash Screen" width="200"/>
+      <div><sub>App Launch</sub></div>
     </td>
     <td align="center">
-      <img src="docs/screenshots/02_login.png" alt="Login" width="260"/>
-      <div><sub>Login</sub></div>
+      <img src="ui/Teacher_login.png" alt="Teacher Login" width="200"/>
+      <div><sub>Teacher Login</sub></div>
     </td>
     <td align="center">
-      <img src="docs/screenshots/03_teacher_dashboard.png" alt="Teacher Dashboard" width="260"/>
-      <div><sub>Teacher Dashboard</sub></div>
+      <img src="ui/Parent_login.png" alt="Parent Login" width="200"/>
+      <div><sub>Parent Login</sub></div>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="docs/screenshots/04_parent_dashboard.png" alt="Parent Dashboard" width="260"/>
+      <img src="ui/teacher_home_screen.png" alt="Teacher Dashboard" width="200"/>
+      <div><sub>Teacher Dashboard</sub></div>
+    </td>
+    <td align="center">
+      <img src="ui/parent_home_screen.png" alt="Parent Dashboard" width="200"/>
       <div><sub>Parent Dashboard</sub></div>
     </td>
     <td align="center">
-      <img src="docs/screenshots/05_qr_scanner.png" alt="QR Scanner" width="260"/>
+      <img src="ui/qr_scanner.png" alt="QR Scanner" width="200"/>
       <div><sub>QR Scanner</sub></div>
-    </td>
-    <td align="center">
-      <img src="docs/screenshots/06_attendance_detail.png" alt="Attendance Detail" width="260"/>
-      <div><sub>Attendance Detail</sub></div>
     </td>
   </tr>
 </table>
 
-Tip: If you prefer different filenames, update the `<img>` paths above accordingly.
+> 📁 **Complete UI Gallery**: See all screenshots in the [`ui/`](ui/) folder with detailed descriptions and workflows.
 
-## 🚀 What’s New
+## 📦 Technology Stack & Packages
+
+### 🎯 Frontend (Flutter)
+- **Framework**: Flutter 3.9+ with Dart 3.9+
+- **State Management**: Built-in Flutter state management
+- **UI Components**: Material Design 3 with custom theming
+- **Animations**: Flutter Animation Framework
+
+#### 📱 Key Flutter Packages
+```yaml
+dependencies:
+  # Core Flutter
+  flutter: sdk
+  
+  # HTTP & API
+  http: ^1.1.0                    # HTTP requests
+  shared_preferences: ^2.2.2      # Local storage
+  
+  # QR Code & Camera
+  qr_code_scanner: ^1.0.1         # QR code scanning
+  mobile_scanner: ^3.5.6          # Advanced QR scanning
+  qr_flutter: ^4.1.0             # QR code generation
+  
+  # UI & Navigation
+  table_calendar: ^3.0.9         # Calendar widgets
+  flutter_svg: ^2.0.9            # SVG support
+  cached_network_image: ^3.3.0   # Image caching
+  
+  # Utilities
+  intl: ^0.19.0                  # Internationalization
+  url_launcher: ^6.2.1           # External links
+  permission_handler: ^11.0.1    # Device permissions
+```
+
+### 🔧 Backend (Python/Django)
+- **Framework**: Django 4.2+ with Django REST Framework
+- **Database**: SQLite (development) / PostgreSQL (production)
+- **Authentication**: JWT tokens with Django REST Framework
+- **API**: RESTful API with comprehensive endpoints
+
+#### 🐍 Key Python Packages
+```txt
+# Core Framework
+Django==4.2.7
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+
+# Database & ORM
+psycopg2-binary==2.9.7          # PostgreSQL adapter
+django-extensions==3.2.3        # Django extensions
+
+# Authentication & Security
+djangorestframework-simplejwt==5.3.0
+django-oauth-toolkit==1.7.1
+
+# QR Code & Image Processing
+qrcode==7.4.2                   # QR code generation
+Pillow==10.1.0                  # Image processing
+openpyxl==3.1.2                 # Excel file handling
+
+# Data Processing
+pandas==2.1.3                   # Data analysis
+numpy==1.26.4                   # Numerical computing
+
+# Development & Testing
+python-decouple==3.8            # Environment variables
+```
+
+### 📊 Excel Integration
+- **Student Reports**: Automated Excel generation with attendance data
+- **Parent Reports**: Customized reports with child attendance history
+- **Teacher Analytics**: Class-wise attendance statistics
+- **Export Features**: CSV and Excel export capabilities
+
+## 🌐 Platform Support
+
+### 📱 Mobile Platforms
+- **Android**: API level 21+ (Android 5.0+)
+- **iOS**: iOS 12.0+ with Xcode 14+
+- **Features**: Native camera integration, push notifications, offline support
+
+### 💻 Web Platform
+- **Browsers**: Chrome, Firefox, Safari, Edge (latest versions)
+- **Features**: Web-based QR scanning, responsive design, PWA support
+- **Deployment**: Static hosting (Netlify, Vercel, GitHub Pages)
+
+### 🖥️ Desktop Support
+- **Windows**: Windows 10+ with Flutter desktop
+- **macOS**: macOS 10.14+ with Flutter desktop
+- **Linux**: Ubuntu 18.04+ with Flutter desktop
+
+## 🚀 What's New
 
 ### ✅ Renaming and Generalization
 - App renamed to **QR Attendance** (more general for schools and colleges)
@@ -282,11 +391,23 @@ This application provides three role-based interfaces. Each role exposes only th
 ## 🚀 Getting Started
 
 ### **Prerequisites**
-- Flutter SDK 3.9+
-- Dart 3.9+
-- Python 3.8+ (for backend)
-- Django 4.0+
-- PostgreSQL/MySQL database
+
+#### 📱 For Mobile Development
+- **Flutter SDK**: 3.9+ with Dart 3.9+
+- **Android Studio**: Latest version with Android SDK
+- **Xcode**: 14+ (for iOS development)
+- **VS Code**: Recommended IDE with Flutter extensions
+
+#### 🔧 For Backend Development
+- **Python**: 3.8+ (recommended 3.11+)
+- **Django**: 4.2+
+- **Database**: SQLite (development) / PostgreSQL (production)
+- **Virtual Environment**: Python venv or conda
+
+#### 🌐 For Web Development
+- **Node.js**: 16+ (for web build tools)
+- **Chrome/Edge**: Latest version for testing
+- **Web Server**: Apache/Nginx (for production)
 
 ### **Run on real Android devices (LAN)**
 
@@ -467,15 +588,57 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 - Maintain consistent formatting
 
 
+## 📊 Excel Integration Features
+
+### 📋 Automated Report Generation
+- **Student Reports**: Individual attendance records with detailed breakdowns
+- **Parent Reports**: Child-specific attendance summaries and trends
+- **Class Reports**: Teacher-generated class attendance analytics
+- **Institution Reports**: School/college-wide attendance statistics
+
+### 📈 Export Capabilities
+- **Excel Format**: `.xlsx` files with formatted data and charts
+- **CSV Export**: Raw data for further analysis
+- **PDF Reports**: Formatted reports for official use
+- **Scheduled Reports**: Automated report generation and distribution
+
+### 🎯 Report Types
+- **Daily Attendance**: Day-by-day attendance records
+- **Weekly Summaries**: Weekly attendance patterns and trends
+- **Monthly Analytics**: Comprehensive monthly attendance analysis
+- **Custom Periods**: Flexible date range reporting
+- **Absence Reports**: Detailed absence tracking and notifications
+
 ## 📊 Project Status
 
 - **Current Version**: 2.0.0
 - **Development Status**: Active Development
-- **Last Updated**: December 2024
+- **Last Updated**: October 2025
 - **Next Release**: Q1 2025
+- **Platform Support**: Android, iOS, Web
+- **Target Audience**: Schools and Colleges
+
+## 🎓 Educational Institution Support
+
+### 🏫 School Features
+- **Primary Schools**: Simple attendance tracking for young students
+- **Secondary Schools**: Advanced analytics and parent communication
+- **High Schools**: Comprehensive reporting and student management
+
+### 🎓 College Features
+- **Community Colleges**: Flexible class scheduling and attendance
+- **Universities**: Large-scale attendance management
+- **Training Centers**: Professional development tracking
+
+### 📚 Institution Benefits
+- **Reduced Administrative Work**: Automated attendance management
+- **Improved Communication**: Real-time parent notifications
+- **Better Analytics**: Data-driven insights for student success
+- **Cost Effective**: Reduced paper-based processes
+- **Scalable Solution**: Grows with your institution
 
 ---
 
-**Made with ❤️ by the School Attendance Team**
+**Made with ❤️ by the QR Attendance Team**
 
 *Transforming education through technology, one QR code at a time.*
