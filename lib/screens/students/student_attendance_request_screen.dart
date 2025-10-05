@@ -17,8 +17,6 @@ class StudentAttendanceRequestScreen extends StatefulWidget {
 class _StudentAttendanceRequestScreenState extends State<StudentAttendanceRequestScreen>
     with SingleTickerProviderStateMixin {
   bool _isLoading = false;
-  bool _success = false;
-  String? _statusMessage;
   // method selection removed; GPS used automatically
 
   final _studentQrController = TextEditingController();

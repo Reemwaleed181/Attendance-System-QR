@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'utils/platform_utils.dart';
 import 'utils/dev_defaults.dart';
 import 'utils/runtime_config.dart';
 import 'package:school_qr/screens/parents/parent_home_screen.dart';
