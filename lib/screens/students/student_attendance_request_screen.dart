@@ -128,7 +128,7 @@ class _StudentAttendanceRequestScreenState extends State<StudentAttendanceReques
       final ok = await LocationService.requestPermissionsAndService();
       if (!mounted) return;
       if (!ok) {
-        setState(() => _statusMessage = 'Please grant location permission and enable GPS in Settings.');
+        // Location permission not granted
       }
       await _loadLocation();
     } finally {
@@ -157,7 +157,6 @@ class _StudentAttendanceRequestScreenState extends State<StudentAttendanceReques
     }
     setState(() {
       _isLoading = true;
-      _statusMessage = null;
     });
 
     try {
@@ -171,17 +170,14 @@ class _StudentAttendanceRequestScreenState extends State<StudentAttendanceReques
           : (prefs.getString('student_class_qr') ?? '');
       
       if (classQr.isEmpty) {
-        setState(() => _statusMessage = 'No classroom linked');
         return;
       }
       
       if (studentToken.isEmpty) {
-        setState(() => _statusMessage = 'No student token - please log in again');
         return;
       }
 
       if (lat == null || lng == null) {
-        setState(() => _statusMessage = 'Location not available. Please enable GPS and try again.');
         return;
       }
 
@@ -193,9 +189,7 @@ class _StudentAttendanceRequestScreenState extends State<StudentAttendanceReques
       );
       if (!mounted) return;
       setState(() {
-        _success = true;
         _submitted = true;
-        _statusMessage = '✅ Thank you for recording your attendance. Please focus on the lesson.';
       });
       await _showInfoDialog(
         title: 'Attendance Recorded',
@@ -225,7 +219,6 @@ class _StudentAttendanceRequestScreenState extends State<StudentAttendanceReques
       }
       
       if (!mounted) return;
-      setState(() => _statusMessage = errorMessage);
       await _showRetryDialog(message: errorMessage);
     } finally {
       if (mounted) {
