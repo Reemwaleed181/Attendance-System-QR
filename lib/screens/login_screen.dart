@@ -273,7 +273,7 @@ class _LoginScreenState extends State<LoginScreen>
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: const Icon(
-                              Icons.school,
+                              Icons.qr_code_outlined,
                               size: 48,
                               color: Colors.white,
                             ),

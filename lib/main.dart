@@ -106,7 +106,8 @@ class SchoolAttendanceApp extends StatelessWidget {
         '/parent': (context) => const ParentHomeScreen(),
         '/teacher/history': (context) => const TeacherAttendanceHistoryScreen(),
         '/teacher/reports': (context) => const TeacherReportsScreen(),
-        '/student/request-attendance': (context) => const StudentAttendanceRequestScreen(),
+        '/student/request-attendance': (context) =>
+            const StudentAttendanceRequestScreen(),
       },
     );
   }
@@ -223,11 +224,11 @@ class _SplashScreenState extends State<SplashScreen>
                           width: 2,
                         ),
                       ),
-                      child: const Icon(
-                        Icons.school,
-                        size: 80,
-                        color: Colors.white,
-                      ),
+                      child: Icon(
+                          Icons.qr_code_rounded,
+                          size: 64,
+                          color: Colors.white
+                      )
                     ),
                   ),
                 ),
