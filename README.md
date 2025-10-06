@@ -117,52 +117,108 @@ QR Attendance provides three distinct, role-based interfaces designed for differ
 
 ### 🎨 Complete UI Gallery
 
+#### 🚀 App Launch
+<div align="center">
+  <img src="ui/splash.png" alt="Splash Screen" width="300"/>
+  <div><sub>Beautiful animated splash screen with gradient background</sub></div>
+</div>
+
+#### 👩‍🏫 Teacher Interface
 <table>
   <tr>
     <td align="center">
-      <img src="ui/splash.png" alt="Splash Screen" width="200"/>
-      <div><sub>App Launch</sub></div>
-    </td>
-    <td align="center">
-      <img src="ui/Teacher_login.png" alt="Teacher Login" width="200"/>
+      <img src="ui/teacher/Teacher_login.png" alt="Teacher Login" width="200"/>
       <div><sub>Teacher Login</sub></div>
     </td>
     <td align="center">
-      <img src="ui/Parent_login.png" alt="Parent Login" width="200"/>
-      <div><sub>Parent Login</sub></div>
-    </td>
-  </tr>
-  <tr>
-    <td align="center">
-      <img src="ui/Student_login.png" alt="Student Login" width="200"/>
-      <div><sub>Student Login</sub></div>
-    </td>
-    <td align="center">
-      <img src="ui/teacher_home_screen.png" alt="Teacher Dashboard" width="200"/>
+      <img src="ui/teacher/teacher_home_screen.png" alt="Teacher Dashboard" width="200"/>
       <div><sub>Teacher Dashboard</sub></div>
     </td>
     <td align="center">
-      <img src="ui/parent_home_screen.png" alt="Parent Dashboard" width="200"/>
-      <div><sub>Parent Dashboard</sub></div>
+      <img src="ui/teacher/teacher_classes_screen.png" alt="Class Management" width="200"/>
+      <div><sub>Class Management</sub></div>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="ui/student_attendance_request_screen.png" alt="Student Attendance" width="200"/>
-      <div><sub>Student Attendance</sub></div>
-    </td>
-    <td align="center">
-      <img src="ui/qr_scanner.png" alt="QR Scanner" width="200"/>
+      <img src="ui/teacher/qr_scanner.png" alt="QR Scanner" width="200"/>
       <div><sub>QR Scanner</sub></div>
     </td>
     <td align="center">
-      <img src="ui/teacher_classes_screen.png" alt="Class Management" width="200"/>
-      <div><sub>Class Management</sub></div>
+      <img src="ui/teacher/class_attendance_screen.png" alt="Class Attendance" width="200"/>
+      <div><sub>Class Attendance</sub></div>
+    </td>
+    <td align="center">
+      <img src="ui/teacher/teacher_reports_screen.png" alt="Teacher Reports" width="200"/>
+      <div><sub>Teacher Reports</sub></div>
     </td>
   </tr>
 </table>
 
-> 📁 **Complete UI Gallery**: See all screenshots in the [`ui/`](ui/) folder with detailed descriptions and workflows.
+#### 👨‍👩‍👧 Parent Interface
+<table>
+  <tr>
+    <td align="center">
+      <img src="ui/parent/Parent_login.png" alt="Parent Login" width="200"/>
+      <div><sub>Parent Login</sub></div>
+    </td>
+    <td align="center">
+      <img src="ui/parent/parent_home_screen.png" alt="Parent Dashboard" width="200"/>
+      <div><sub>Parent Dashboard</sub></div>
+    </td>
+    <td align="center">
+      <img src="ui/parent/parent_weekly_stats_screen.png" alt="Weekly Stats" width="200"/>
+      <div><sub>Weekly Statistics</sub></div>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="ui/parent/parent_notifications_screen.png" alt="Notifications" width="200"/>
+      <div><sub>Notifications</sub></div>
+    </td>
+    <td align="center">
+      <img src="ui/parent/parent_reports_screen.png" alt="Parent Reports" width="200"/>
+      <div><sub>Parent Reports</sub></div>
+    </td>
+    <td align="center">
+      <img src="ui/parent/parent_home_screen2.png" alt="Parent Dashboard 2" width="200"/>
+      <div><sub>Dashboard Detail</sub></div>
+    </td>
+  </tr>
+</table>
+
+#### 🎓 Student Interface
+<table>
+  <tr>
+    <td align="center">
+      <img src="ui/student/Student_login.png" alt="Student Login" width="200"/>
+      <div><sub>Student Login</sub></div>
+    </td>
+    <td align="center">
+      <img src="ui/student/student_attendance_request_screen.png" alt="Student Attendance" width="200"/>
+      <div><sub>Attendance Request</sub></div>
+    </td>
+    <td align="center">
+      <img src="ui/student/student_attendance_request_screen2.png" alt="Student Attendance 2" width="200"/>
+      <div><sub>QR Scanning</sub></div>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="ui/student/student_attendance_request_screen3.png" alt="Student Attendance 3" width="200"/>
+      <div><sub>Gallery Upload</sub></div>
+    </td>
+    <td align="center" colspan="2">
+      <div><strong>📱 One-Tap Attendance Recording</strong></div>
+      <div><sub>Simple interface for quick attendance submission</sub></div>
+    </td>
+  </tr>
+</table>
+
+> 📁 **Complete UI Gallery**: See all screenshots organized by user type in the [`ui/`](ui/) folder:
+> - **[Teacher Screens](ui/teacher/)** - Complete teacher workflow and management
+> - **[Parent Screens](ui/parent/)** - Parent dashboard, reports, and notifications  
+> - **[Student Screens](ui/student/)** - Student attendance request system
 
 ## 🛠️ Technology Stack
 
@@ -366,4 +422,5 @@ The app uses a carefully crafted color scheme designed for educational environme
 
 
 
+*Transforming education through technology, one QR code at a time.*
 *Transforming education through technology, one QR code at a time.*
