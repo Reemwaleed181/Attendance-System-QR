@@ -422,4 +422,3 @@ The app uses a carefully crafted color scheme designed for educational environme
 
 
 
-*Transforming education through technology, one QR code at a time.*
