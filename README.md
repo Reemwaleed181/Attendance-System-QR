@@ -19,7 +19,7 @@
 - **Educational Institutions** of all sizes
 - **Training Centers** and **Academies**
 
-### Platform Support
+### 📱 Platform Support
 - **Mobile**: Android and iOS native apps
 - **Web**: Browser-based interface with QR scanning
 - **Cross-platform**: Consistent experience across all devices
