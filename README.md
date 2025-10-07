@@ -19,6 +19,12 @@
 - **Educational Institutions** of all sizes
 - **Training Centers** and **Academies**
 
+### Platform Support
+- **Mobile**: Android and iOS native apps
+- **Web**: Browser-based interface with QR scanning
+- **Cross-platform**: Consistent experience across all devices
+
+
 ### 🎯 Key Features
 
 - **🔐 Multi-Role Authentication**: Separate interfaces for teachers, parents, and students
@@ -354,18 +360,6 @@ The app uses a carefully crafted color scheme designed for educational environme
 - Configure database connection in backend settings
 - Set up environment variables for production
 
-## 📊 Features
-
-### Report Generation
-- **Excel Export**: Automated Excel generation with attendance data
-- **PDF Reports**: Formatted reports for official use
-- **Real-time Analytics**: Live attendance statistics and trends
-- **Custom Periods**: Flexible date range reporting
-
-### Platform Support
-- **Mobile**: Android and iOS native apps
-- **Web**: Browser-based interface with QR scanning
-- **Cross-platform**: Consistent experience across all devices
 
 
 
