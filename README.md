@@ -153,6 +153,45 @@ QR Attendance provides three distinct, role-based interfaces designed for differ
       <div><sub>Teacher Reports</sub></div>
     </td>
   </tr>
+  <tr>
+    <td align="center">
+      <img src="ui/teacher/teacher_classes_screen2.jpg" alt="Class Management 2" width="200"/>
+      <div><sub>Class Management 2</sub></div>
+    </td>
+    <td align="center">
+      <img src="ui/teacher/teacher_classes_screen3.jpg" alt="Class Management 3" width="200"/>
+      <div><sub>Class Management 3</sub></div>
+    </td>
+    <td align="center">
+      <img src="ui/teacher/class_attendance_screen2.jpg" alt="Class Attendance 2" width="200"/>
+      <div><sub>Class Attendance 2</sub></div>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="ui/teacher/teacher_attendance_history_screen.jpg" alt="Attendance History" width="200"/>
+      <div><sub>Attendance History</sub></div>
+    </td>
+    <td align="center">
+      <img src="ui/teacher/teacher_attendance_history_screen2.jpg" alt="Attendance History 2" width="200"/>
+      <div><sub>Attendance History 2</sub></div>
+    </td>
+    <td align="center">
+      <img src="ui/teacher/teacher_reports_screen2.jpg" alt="Teacher Reports 2" width="200"/>
+      <div><sub>Teacher Reports 2</sub></div>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="ui/teacher/teacher_reports_screen3.jpg" alt="Teacher Reports 3" width="200"/>
+      <div><sub>Teacher Reports 3</sub></div>
+    </td>
+    <td align="center">
+      <img src="ui/teacher/teacher_reports_screen4.jpg" alt="Teacher Reports 4" width="200"/>
+      <div><sub>Teacher Reports 4</sub></div>
+    </td>
+    <td align="center">&nbsp;</td>
+  </tr>
 </table>
 
 #### 👨‍👩‍👧 Parent Interface
@@ -183,6 +222,12 @@ QR Attendance provides three distinct, role-based interfaces designed for differ
     <td align="center">
       <img src="ui/parent/parent_reports_screen2.jpg" alt="Parent Reports 2" width="200"/>
       <div><sub>Additional Reports</sub></div>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" colspan="3">
+      <img src="ui/parent/parent_weekly_stats_screen2.jpg" alt="Weekly Statistics 2" width="200"/>
+      <div><sub>Weekly Statistics 2</sub></div>
     </td>
   </tr>
 </table>
