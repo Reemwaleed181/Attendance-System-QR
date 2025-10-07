@@ -253,7 +253,6 @@ QR Attendance provides three distinct, role-based interfaces designed for differ
 - **Django 4.2+** with REST API
 - **Database**: SQLite (development) / PostgreSQL (production)
 - **Authentication**: JWT-based secure authentication
-- **Excel Integration**: Automated report generation
 
 ## ✨ Key Features
 
