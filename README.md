@@ -274,25 +274,14 @@ QR Attendance provides three distinct, role-based interfaces designed for differ
 
 The app uses a carefully crafted color scheme designed for educational environments:
 
-| Category | Color Name | Hex Code | Usage | Importance |
-|----------|------------|----------|-------|------------|
-| **Primary** | Primary Indigo | `#3949AB` | Main brand color, navigation, primary actions | ⭐⭐⭐⭐⭐ |
-| **Primary** | Primary Light | `#5C6BC0` | Highlights and secondary elements | ⭐⭐⭐ |
-| **Primary** | Primary Dark | `#303F9F` | Emphasis and active states | ⭐⭐⭐⭐ |
-| **Secondary** | Teal | `#26A69A` | Parent interface accent, success states | ⭐⭐⭐⭐ |
-| **Secondary** | Teal Light | `#80CBC4` | Subtle highlights and backgrounds | ⭐⭐ |
-| **Secondary** | Teal Dark | `#00897B` | Emphasis and active teal elements | ⭐⭐⭐ |
-| **Accent** | Deep Purple | `#5E35B1` | Teacher interface accent | ⭐⭐⭐⭐ |
-| **Accent** | Purple Light | `#7E57C2` | Teacher button highlights | ⭐⭐⭐ |
-| **Accent** | Purple Dark | `#4527A0` | Dark purple emphasis | ⭐⭐⭐ |
-| **Status** | Success Green | `#10B981` | Present/Success states | ⭐⭐⭐⭐⭐ |
-| **Status** | Warning Orange | `#F59E0B` | Warning/Attention states | ⭐⭐⭐⭐ |
-| **Status** | Error Red | `#EF4444` | Absent/Error states | ⭐⭐⭐⭐⭐ |
-| **Status** | Info Blue | `#3B82F6` | Information states | ⭐⭐⭐ |
-| **Neutral** | Background | `#FAFAFA` | Main background color | ⭐⭐⭐⭐ |
-| **Neutral** | Surface | `#FFFFFF` | Card and container backgrounds | ⭐⭐⭐⭐ |
-| **Neutral** | Text Primary | `#212121` | Main text color | ⭐⭐⭐⭐⭐ |
-| **Neutral** | Text Secondary | `#616161` | Secondary text color | ⭐⭐⭐ |
+| Color Name | Hex Code | Usage | Importance |
+|------------|----------|-------|------------|
+| **Primary Indigo** | `#3949AB` | Main brand color, navigation, primary actions | ⭐⭐⭐⭐⭐ |
+| **Teal** | `#26A69A` | Parent interface accent, success states | ⭐⭐⭐⭐ |
+| **Deep Purple** | `#5E35B1` | Teacher interface accent | ⭐⭐⭐⭐ |
+| **Success Green** | `#10B981` | Present/Success states | ⭐⭐⭐⭐⭐ |
+| **Error Red** | `#EF4444` | Absent/Error states | ⭐⭐⭐⭐⭐ |
+| **Text Primary** | `#212121` | Main text color | ⭐⭐⭐⭐⭐ |
 
 ### 🎨 Visual Color Palette
 
