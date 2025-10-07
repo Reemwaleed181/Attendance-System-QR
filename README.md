@@ -206,28 +206,28 @@ QR Attendance provides three distinct, role-based interfaces designed for differ
       <div><sub>Parent Dashboard</sub></div>
     </td>
     <td align="center">
-      <img src="ui/parent/parent_notifications_screen.jpg" alt="Weekly Stats" width="200"/>
-      <div><sub>Weekly Statistics</sub></div>
+      <img src="ui/parent/parent_notifications_screen.jpg" alt="Notifications" width="200"/>
+      <div><sub>Notifications</sub></div>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="ui/parent/parent_reports_screen2.jpg" alt="Notifications" width="200"/>
-      <div><sub>Notifications</sub></div>
+      <img src="ui/parent/parent_weekly_stats_screen.jpg" alt="Weekly Stats" width="200"/>
+      <div><sub>Weekly Statistics</sub></div>
     </td>
     <td align="center">
-      <img src="ui/parent/parent_reports_screen.jpg2" alt="Parent Reports" width="200"/>
+      <img src="ui/parent/parent_weekly_stats_screen2.jpg" alt="Weekly Statistics 2" width="200"/>
+      <div><sub>Weekly Statistics 2</sub></div>
+    </td>
+    <td align="center">
+      <img src="ui/parent/parent_reports_screen.jpg" alt="Parent Reports" width="200"/>
       <div><sub>Parent Reports</sub></div>
-    </td>
-    <td align="center">
-      <img src="ui/parent/parent_weekly_stats_screen1.jpg" alt="Parent Reports 2" width="200"/>
-      <div><sub>Additional Reports</sub></div>
     </td>
   </tr>
   <tr>
     <td align="center" colspan="3">
-      <img src="ui/parent/parent_weekly_stats_screen2.jpg" alt="Weekly Statistics 2" width="200"/>
-      <div><sub>Weekly Statistics 2</sub></div>
+      <img src="ui/parent/parent_reports_screen2.jpg" alt="Parent Reports 2" width="200"/>
+      <div><sub>Additional Reports</sub></div>
     </td>
   </tr>
 </table>
@@ -286,9 +286,9 @@ QR Attendance provides three distinct, role-based interfaces designed for differ
 #### Parent (`ui/parent/`)
 - `Parent_login.jpg`
 - `parent_home_screen.jpg`
+- `parent_notifications_screen.jpg`
 - `parent_weekly_stats_screen.jpg`
 - `parent_weekly_stats_screen2.jpg`
-- `parent_notifications_screen.jpg`
 - `parent_reports_screen.jpg`
 - `parent_reports_screen2.jpg`
 
