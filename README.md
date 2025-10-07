@@ -227,10 +227,8 @@ QR Attendance provides three distinct, role-based interfaces designed for differ
       <img src="ui/student/student_attendance_request_screen3.jpg" alt="Student Attendance 3" width="200"/>
       <div><sub>Gallery Upload</sub></div>
     </td>
-    <td align="center" colspan="2">
-      <div><strong>📱 One-Tap Attendance Recording</strong></div>
-      <div><sub>Simple interface for quick attendance submission</sub></div>
-    </td>
+    <td align="center">&nbsp;</td>
+    <td align="center">&nbsp;</td>
   </tr>
 </table>
 
