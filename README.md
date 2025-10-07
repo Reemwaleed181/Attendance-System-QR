@@ -43,25 +43,27 @@ QR Attendance provides three distinct, role-based interfaces designed for differ
 **Key Features**:
 - **Dashboard Overview**: Real-time attendance statistics and class management
 - **QR Code Generation**: Create and manage class QR codes for attendance sessions
-- **Live Attendance Control**: Enable/disable self-attendance windows for students
+ - **Dual Attendance Modes**: Allow students to self-record (Live Attendance Control: Enable/disable self-attendance windows for students), or record attendance directly by a teacher 
+ - **Late Arrival Handling**: Scan a late student's QR to mark them present with a late status
 - **Class Management**: View and manage multiple classes with detailed analytics
 - **Attendance History**: Comprehensive tracking of student attendance patterns
-- **Report Generation**: Export attendance data and generate detailed reports
+- **Report Generation**: Export attendance data and generate detailed reports to send to parents
 
 **Main Screens**:
 - **Teacher Home**: Central dashboard with quick access to all features
 - **Class Management**: View and select classes for attendance sessions
-- **QR Scanner**: Scan student QR codes for manual attendance marking
+- **QR Scanner**: Scan student QR codes for attendance marking
 - **Attendance History**: Detailed view of past attendance records
-- **Reports**: Generate and export attendance analytics
+- **Reports**: Absence report sent to parent (a specific numbers of absences determined by the teacher) regarding the student's absence
 
 **Workflow**:
 1. Login and select class from dashboard
 2. Generate or scan class QR code
 3. Enable attendance window for students
-4. Monitor real-time attendance updates
-5. Close session and review results
-6. Generate reports and export data
+4. Record attendance directly by a teacher 
+5. Monitor real-time attendance updates
+7. Review attendance (Attendance History)
+8. Generate reports and export data
 
 ### 👨‍👩‍👧 Parent Interface
 
@@ -69,20 +71,20 @@ QR Attendance provides three distinct, role-based interfaces designed for differ
 
 **Key Features**:
 - **Child Dashboard**: View attendance status for all registered children
-- **Real-time Notifications**: Instant alerts for attendance updates
+- **Real-time Notifications**: Instant alerts for attendance updates 
 - **Weekly Statistics**: Track attendance patterns and trends
-- **Detailed Reports**: Access comprehensive attendance history
+- **Detailed Reports**: Student absence report sent by the teacher
 - **Absence Alerts**: Receive notifications when children are marked absent
 
 **Main Screens**:
-- **Parent Home**: Overview of all children's attendance status
+- **Parent Home**: Overview of all childrens
 - **Weekly Stats**: Visual charts showing attendance trends
 - **Notifications**: Real-time alerts and absence reports
-- **Detailed Reports**: Comprehensive attendance history and analytics 
+- **Detailed Reports**: Absence report sent by the teacher regarding the student's absence
 
 **Workflow**:
 1. Login with parent credentials
-2. View dashboard showing all children's status
+2. View dashboard showing all childrens
 3. Select child to see detailed attendance information
 4. Review weekly statistics and trends
 5. Check notifications for important updates
@@ -93,22 +95,21 @@ QR Attendance provides three distinct, role-based interfaces designed for differ
 **Purpose**: Simple, one-tap attendance recording for students.
 
 **Key Features**:
-- **One-Tap Attendance**: Record attendance with a single button press
-- **QR Code Scanning**: Scan class QR codes for attendance verification
-- **Gallery Upload**: Alternative method to load QR codes from photos
+- **One-Tap Attendance**: Record attendance with a single button press (all student data load after login)
+- **QR Code Scanning**: Alternative method 1 : scan class QR codes for attendance verification
+- **Gallery Upload**: Alternative method 2 : load QR codes from photos
 - **Real-time Status**: See immediate feedback on attendance submission
-- **Location Verification**: GPS-based attendance validation
+- **Location Verification**: GPS-based attendance validation (student must be in the same plase/class of the teacher)
 
 **Main Screens**:
 - **Student Login**: Simple authentication with student credentials
 - **Attendance Request**: Main interface for recording attendance
-- **QR Scanner**: Camera-based QR code scanning
 - **Status Display**: Real-time feedback on attendance status
 
 **Workflow**:
 1. Login with student credentials
 2. View class information and attendance status
-3. Scan class QR code or load from gallery
+3. If data not load --> scan class QR code or load from gallery
 4. Tap "Record Attendance" button
 5. Receive immediate confirmation
 6. Return to class activities
