@@ -199,9 +199,7 @@ QR Attendance provides three distinct, role-based interfaces designed for differ
       <img src="ui/parent/parent_reports_screen.jpg" alt="Parent Reports" width="200"/>
       <div><sub>Parent Reports</sub></div>
     </td>
-  </tr>
-  <tr>
-    <td align="center" colspan="3">
+    <td align="center">
       <img src="ui/parent/parent_reports_screen2.jpg" alt="Parent Reports 2" width="200"/>
       <div><sub>Parent Reports 2</sub></div>
     </td>
