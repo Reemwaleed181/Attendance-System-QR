@@ -18,6 +18,9 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen>
   String? _parentId;
   List<NotificationModel> _notifications = [];
   bool _isLoading = true;
+  bool _isSelectionMode = false;
+  final Set<String> _selectedIds = {};
+  bool _changed = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -70,7 +73,7 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen>
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-          );
+    );
         }
       }
     } else {
@@ -104,6 +107,91 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen>
     }
   }
 
+  void _toggleSelection(String id) {
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+      } else {
+        _selectedIds.add(id);
+      }
+      _isSelectionMode = _selectedIds.isNotEmpty;
+    });
+  }
+
+  void _clearSelection() {
+    setState(() {
+      _selectedIds.clear();
+      _isSelectionMode = false;
+    });
+  }
+
+  Future<void> _deleteSelected() async {
+    if (_parentId == null || _selectedIds.isEmpty) return;
+    final ids = _selectedIds.toList();
+    try {
+      await ApiService.deleteParentNotifications(_parentId!, ids: ids);
+      setState(() {
+        _notifications.removeWhere((n) => _selectedIds.contains(n.id));
+      });
+      _changed = true;
+      _clearSelection();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${ids.length} notification${ids.length == 1 ? '' : 's'} deleted'),
+            backgroundColor: Colors.green.shade400,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error deleting selected: $e'),
+            backgroundColor: Colors.red.shade400,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteAll() async {
+    if (_parentId == null) return;
+    try {
+      await ApiService.deleteParentNotifications(_parentId!);
+      setState(() {
+        _notifications.clear();
+      });
+      _changed = true;
+      _clearSelection();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('All notifications deleted'),
+            backgroundColor: Colors.green.shade400,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error deleting all: $e'),
+            backgroundColor: Colors.red.shade400,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _markAsRead(String notificationId) async {
     try {
       await ApiService.markNotificationAsRead(notificationId);
@@ -113,6 +201,7 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen>
           _notifications[index] = _notifications[index].copyWith(isRead: true);
         }
       });
+      _changed = true;
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -135,6 +224,7 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen>
       setState(() {
         _notifications = _notifications.map((n) => n.copyWith(isRead: true)).toList();
       });
+      _changed = true;
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -165,7 +255,12 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pop(context, _changed);
+        return false;
+      },
+      child: Scaffold(
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -199,7 +294,7 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen>
                 child: Row(
                   children: [
                     IconButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => Navigator.pop(context, _changed),
                       icon: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -214,7 +309,7 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen>
                       ),
                     ),
                     const SizedBox(width: 16),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -243,6 +338,38 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen>
                     ),
                     Row(
                       children: [
+                        if (_isSelectionMode) ...[
+                          IconButton(
+                            onPressed: _clearSelection,
+                            icon: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.close,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: _deleteSelected,
+                            icon: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.delete,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ] else ...[
                         if (_notifications.any((n) => !n.isRead))
                           IconButton(
                             onPressed: _markAllAsRead,
@@ -259,6 +386,22 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen>
                               ),
                             ),
                           ),
+                          IconButton(
+                            onPressed: _deleteAll,
+                            icon: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.delete_sweep,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ],
@@ -413,11 +556,18 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen>
           ),
         ),
       ),
-    );
+    ));
+    
   }
 
   Widget _buildNotificationCard(NotificationModel notification) {
-    return Container(
+    final bool selected = _selectedIds.contains(notification.id);
+    return GestureDetector(
+      onLongPress: () => _toggleSelection(notification.id),
+      onTap: _isSelectionMode
+          ? () => _toggleSelection(notification.id)
+          : null,
+      child: Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -430,7 +580,9 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen>
             offset: const Offset(0, 6),
           ),
         ],
-        border: !notification.isRead
+        border: selected
+            ? Border.all(color: AppColors.secondary, width: 2)
+            : !notification.isRead
             ? Border.all(
                 color: AppColors.secondary.withValues(alpha: 0.3),
                 width: 2,
@@ -486,6 +638,15 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen>
                     shape: BoxShape.circle,
                   ),
                 ),
+              if (_isSelectionMode)
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Icon(
+                    selected ? Icons.check_circle : Icons.radio_button_unchecked,
+                    color: selected ? AppColors.secondary : const Color(0xFFCBD5E1),
+                    size: 20,
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 12),
@@ -514,7 +675,7 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen>
               ),
             ),
           ],
-          if (!notification.isRead) ...[
+          if (!notification.isRead && !_isSelectionMode) ...[
             const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerRight,
@@ -533,8 +694,8 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen>
           ],
         ],
       ),
-    );
-  }
+    )
+    );}
 
   Color _getNotificationColor(String type) {
     switch (type.toLowerCase()) {

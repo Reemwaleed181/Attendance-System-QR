@@ -1,4 +1,4 @@
-# 🎓 QR Attendance — QR Code Based Attendance Management System
+# QR Attendance 
 
 <div align="center">
   <img src="images/logo.jpg" alt="QR Attendance Logo" width="200" height="200" style="border-radius: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
@@ -220,6 +220,40 @@ QR Attendance provides three distinct, role-based interfaces designed for differ
 > - **[Parent Screens](ui/parent/)** - Parent dashboard, reports, and notifications  
 > - **[Student Screens](ui/student/)** - Student attendance request system
 
+### 📚 Complete UI Screen Index
+
+#### Teacher (`ui/teacher/`)
+- `Teacher_login.png`
+- `teacher_home_screen.png`
+- `teacher_classes_screen.png`
+- `teacher_classes_screen3.png`
+- `qr_scanner.png`
+- `class_attendance_screen.png`
+- `class_attendance_screen2.png`
+- `teacher_attendance_history_screen.png`
+- `teacher_attendance_history_screen2.png`
+- `teacher_attendance_history_screen3.png`
+- `teacher_reports_screen.png`
+- `teacher_reports_screen2.png`
+- `teacher_reports_screen3.png`
+- `teacher_reports_screen4.png`
+
+#### Parent (`ui/parent/`)
+- `Parent_login.png`
+- `parent_home_screen.png`
+- `parent_home_screen2.png`
+- `parent_weekly_stats_screen.png`
+- `parent_weekly_stats_screen2.png`
+- `parent_notifications_screen.png`
+- `parent_reports_screen.png`
+- `parent_reports_screen2.png`
+
+#### Student (`ui/student/`)
+- `Student_login.png`
+- `student_attendance_request_screen.png`
+- `student_attendance_request_screen2.png`
+- `student_attendance_request_screen3.png`
+
 ## 🛠️ Technology Stack
 
 ### Frontend
@@ -283,56 +317,6 @@ The app uses a carefully crafted color scheme designed for educational environme
 | **Error Red** | `#EF4444` | Absent/Error states | ⭐⭐⭐⭐⭐ |
 | **Text Primary** | `#212121` | Main text color | ⭐⭐⭐⭐⭐ |
 
-### 🎨 Visual Color Palette
-
-<div align="center">
-  <table>
-    <tr>
-      <td align="center">
-        <div style="background-color: #3949AB; width: 60px; height: 60px; border-radius: 8px; margin: 5px;"></div>
-        <div><small>Primary Indigo</small></div>
-        <div><small>#3949AB</small></div>
-      </td>
-      <td align="center">
-        <div style="background-color: #26A69A; width: 60px; height: 60px; border-radius: 8px; margin: 5px;"></div>
-        <div><small>Teal</small></div>
-        <div><small>#26A69A</small></div>
-      </td>
-      <td align="center">
-        <div style="background-color: #5E35B1; width: 60px; height: 60px; border-radius: 8px; margin: 5px;"></div>
-        <div><small>Deep Purple</small></div>
-        <div><small>#5E35B1</small></div>
-      </td>
-      <td align="center">
-        <div style="background-color: #10B981; width: 60px; height: 60px; border-radius: 8px; margin: 5px;"></div>
-        <div><small>Success Green</small></div>
-        <div><small>#10B981</small></div>
-      </td>
-    </tr>
-    <tr>
-      <td align="center">
-        <div style="background-color: #F59E0B; width: 60px; height: 60px; border-radius: 8px; margin: 5px;"></div>
-        <div><small>Warning Orange</small></div>
-        <div><small>#F59E0B</small></div>
-      </td>
-      <td align="center">
-        <div style="background-color: #EF4444; width: 60px; height: 60px; border-radius: 8px; margin: 5px;"></div>
-        <div><small>Error Red</small></div>
-        <div><small>#EF4444</small></div>
-      </td>
-      <td align="center">
-        <div style="background-color: #3B82F6; width: 60px; height: 60px; border-radius: 8px; margin: 5px;"></div>
-        <div><small>Info Blue</small></div>
-        <div><small>#3B82F6</small></div>
-      </td>
-      <td align="center">
-        <div style="background-color: #212121; width: 60px; height: 60px; border-radius: 8px; margin: 5px;"></div>
-        <div><small>Text Primary</small></div>
-        <div><small>#212121</small></div>
-      </td>
-    </tr>
-  </table>
-</div>
 
 ### User Experience
 - **Intuitive Navigation**: Role-based interfaces for different user types

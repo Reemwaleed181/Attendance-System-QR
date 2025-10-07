@@ -6,10 +6,12 @@ import '../../constants/app_colors.dart';
 import '../../utils/responsive.dart';
 
 class ParentWeeklyStatsScreen extends StatefulWidget {
-  const ParentWeeklyStatsScreen({super.key});
+  final Student? selectedChild;
+  const ParentWeeklyStatsScreen({super.key, this.selectedChild});
 
   @override
-  State<ParentWeeklyStatsScreen> createState() => _ParentWeeklyStatsScreenState();
+  State<ParentWeeklyStatsScreen> createState() =>
+      _ParentWeeklyStatsScreenState();
 }
 
 class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
@@ -30,21 +32,17 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
 
     _animationController.forward();
     _loadParentId();
@@ -79,20 +77,24 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
 
   Future<void> _loadChildrenData() async {
     if (_parentId == null) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       // Load parent children data
-      final parentData = await ApiService.getParentChildren(_parentId!);
-      final childrenData = parentData['children'] as List<dynamic>? ?? [];
-      
-      final children = childrenData.map((json) {
-        // The backend returns children in a nested structure: {'student': {...}, 'attendance_today': [...]}
-        final studentData = json['student'] as Map<String, dynamic>? ?? json;
-        return Student.fromJson(studentData);
-      }).toList();
-      
+      List<Student> children;
+      if (widget.selectedChild != null) {
+        // Single-child mode: use the passed child directly
+        children = [widget.selectedChild!];
+      } else {
+        final parentData = await ApiService.getParentChildren(_parentId!);
+        final childrenData = parentData['children'] as List<dynamic>? ?? [];
+        children = childrenData.map((json) {
+          final studentData = json['student'] as Map<String, dynamic>? ?? json;
+          return Student.fromJson(studentData);
+        }).toList();
+      }
+
       // Load comprehensive weekly statistics for each child
       final Map<String, Map<String, dynamic>> weeklyStats = {};
       for (final child in children) {
@@ -102,25 +104,32 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
           final now = DateTime.now();
           final deviceTimezoneOffset = now.timeZoneOffset.inMinutes;
           // Convert to backend timezone like the backend does
-          final backendTime = now.toUtc().add(Duration(minutes: deviceTimezoneOffset));
+          final backendTime = now.toUtc().add(
+            Duration(minutes: deviceTimezoneOffset),
+          );
           // Calculate start of week (Sunday)
           // weekday returns 1=Monday, 2=Tuesday, ..., 7=Sunday
           // We need to go back to the previous Sunday
-          final daysSinceSunday = (backendTime.weekday % 7); // 0=Sunday, 1=Monday, ..., 6=Saturday
-          final startOfWeek = backendTime.subtract(Duration(days: daysSinceSunday));
+          final daysSinceSunday =
+              (backendTime.weekday % 7); // 0=Sunday, 1=Monday, ..., 6=Saturday
+          final startOfWeek = backendTime.subtract(
+            Duration(days: daysSinceSunday),
+          );
           // End of week is Thursday (4 days after Sunday)
           final endOfWeek = startOfWeek.add(const Duration(days: 4));
-          
-          final fromDateStr = '${startOfWeek.year}-${startOfWeek.month.toString().padLeft(2, '0')}-${startOfWeek.day.toString().padLeft(2, '0')}';
-          final toDateStr = '${endOfWeek.year}-${endOfWeek.month.toString().padLeft(2, '0')}-${endOfWeek.day.toString().padLeft(2, '0')}';
-          
+
+          final fromDateStr =
+              '${startOfWeek.year}-${startOfWeek.month.toString().padLeft(2, '0')}-${startOfWeek.day.toString().padLeft(2, '0')}';
+          final toDateStr =
+              '${endOfWeek.year}-${endOfWeek.month.toString().padLeft(2, '0')}-${endOfWeek.day.toString().padLeft(2, '0')}';
+
           // Get detailed reports for comprehensive stats
           final reports = await ApiService.getParentDetailedReports(
             _parentId!,
             fromDate: fromDateStr,
             toDate: toDateStr,
           );
-          
+
           // Process the data to extract comprehensive statistics
           final stats = _processWeeklyStats(reports, child.id);
           weeklyStats[child.id] = stats;
@@ -139,7 +148,7 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
           };
         }
       }
-      
+
       setState(() {
         _children = children;
         _weeklyStats = weeklyStats;
@@ -162,48 +171,60 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
     }
   }
 
-  Map<String, dynamic> _processWeeklyStats(Map<String, dynamic> reports, String childId) {
+  Map<String, dynamic> _processWeeklyStats(
+    Map<String, dynamic> reports,
+    String childId,
+  ) {
     final absenceReports = reports['absence_reports'] as List<dynamic>? ?? [];
-    
+
     // Find reports for this specific child
-    final childReports = absenceReports.where((report) => 
-      report['student_id'] == childId
-    ).toList();
-    
+    final childReports = absenceReports
+        .where((report) => report['student_id'] == childId)
+        .toList();
+
     int presentDays = 0;
     int absentDays = 0;
     int lateDays = 0;
     int timeAbsences = 0;
     int reportsSent = childReports.length;
-    
+
     // Process each day of the week (Sunday to Thursday)
     // Use the same timezone logic as backend: get_local_date_key function
     final now = DateTime.now();
     final deviceTimezoneOffset = now.timeZoneOffset.inMinutes;
     // Convert to backend timezone like the backend does
-    final backendTime = now.toUtc().add(Duration(minutes: deviceTimezoneOffset));
+    final backendTime = now.toUtc().add(
+      Duration(minutes: deviceTimezoneOffset),
+    );
     // Calculate start of week (Sunday)
     // weekday returns 1=Monday, 2=Tuesday, ..., 7=Sunday
     // We need to go back to the previous Sunday
-    final daysSinceSunday = (backendTime.weekday % 7); // 0=Sunday, 1=Monday, ..., 6=Saturday
+    final daysSinceSunday =
+        (backendTime.weekday % 7); // 0=Sunday, 1=Monday, ..., 6=Saturday
     final startOfWeek = backendTime.subtract(Duration(days: daysSinceSunday));
     final List<Map<String, dynamic>> weeklyData = [];
-    
-    for (int i = 0; i < 5; i++) { // Sunday to Thursday
+
+    for (int i = 0; i < 5; i++) {
+      // Sunday to Thursday
       final day = startOfWeek.add(Duration(days: i));
-      final dayStr = '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
-      
+      final dayStr =
+          '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
+
       // Check if there's an absence report for this day
       final dayReport = childReports.where((report) {
         final absenceDates = report['absence_dates'] as List<dynamic>? ?? [];
         return absenceDates.any((absence) => absence['date'] == dayStr);
       }).toList();
-      
+
       if (dayReport.isNotEmpty) {
         // Any reported absence counts as absent for the day.
         final hasTimeAbsence = dayReport.any((report) {
           final absenceDates = report['absence_dates'] as List<dynamic>? ?? [];
-          return absenceDates.any((absence) => absence['date'] == dayStr && (absence['time'] != null && absence['time'] != ''));
+          return absenceDates.any(
+            (absence) =>
+                absence['date'] == dayStr &&
+                (absence['time'] != null && absence['time'] != ''),
+          );
         });
         if (hasTimeAbsence) {
           timeAbsences++;
@@ -226,10 +247,10 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
         });
       }
     }
-    
+
     final totalDays = presentDays + absentDays;
     final attendanceRate = totalDays > 0 ? presentDays / totalDays : 0.0;
-    
+
     return {
       'total_days': totalDays,
       'present_days': presentDays,
@@ -250,11 +271,7 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFF8FAFC),
-              Color(0xFFE2E8F0),
-              Color(0xFFCBD5E1),
-            ],
+            colors: [Color(0xFFF8FAFC), Color(0xFFE2E8F0), Color(0xFFCBD5E1)],
           ),
         ),
         child: SafeArea(
@@ -342,7 +359,7 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
                   ],
                 ),
               ),
-              
+
               // Main Content
               Expanded(
                 child: _isLoading
@@ -364,68 +381,82 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
                               child: Center(
                                 child: ConstrainedBox(
                                   constraints: BoxConstraints(
-                                    maxWidth: Responsive.maxContentWidth(context),
+                                    maxWidth: Responsive.maxContentWidth(
+                                      context,
+                                    ),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
                                     children: [
-                                  if (_children.isEmpty)
-                                    Container(
-                                      padding: const EdgeInsets.all(32),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(24),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(alpha: 0.05),
-                                            blurRadius: 20,
-                                            offset: const Offset(0, 8),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Column(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(20),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.secondary.withValues(alpha: 0.1),
-                                              borderRadius: BorderRadius.circular(20),
+                                      if (_children.isEmpty)
+                                        Container(
+                                          padding: const EdgeInsets.all(32),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(
+                                              24,
                                             ),
-                                            child: const Icon(
-                                              Icons.people_outline,
-                                              size: 48,
-                                              color: AppColors.secondary,
-                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.05,
+                                                ),
+                                                blurRadius: 20,
+                                                offset: const Offset(0, 8),
+                                              ),
+                                            ],
                                           ),
-                                          const SizedBox(height: 20),
-                                          const Text(
-                                            'No Children Found',
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w700,
-                                              color: Color(0xFF1F2937),
-                                            ),
-                                            textAlign: TextAlign.center,
+                                          child: Column(
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.all(
+                                                  20,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.secondary
+                                                      .withValues(alpha: 0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.people_outline,
+                                                  size: 48,
+                                                  color: AppColors.secondary,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 20),
+                                              const Text(
+                                                'No Children Found',
+                                                style: TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Color(0xFF1F2937),
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              const SizedBox(height: 12),
+                                              const Text(
+                                                'No children are registered under your account',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  color: Color(0xFF6B7280),
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ],
                                           ),
-                                          const SizedBox(height: 12),
-                                          const Text(
-                                            'No children are registered under your account',
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              color: Color(0xFF6B7280),
+                                        )
+                                      else
+                                        Column(
+                                          children: [
+                                            // Children Stats Cards
+                                            ..._children.map(
+                                              (child) =>
+                                                  _buildChildStatsCard(child),
                                             ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                  else
-                                    Column(
-                                      children: [
-                                        // Children Stats Cards
-                                        ..._children.map((child) => _buildChildStatsCard(child)),
-                                      ],
-                                    ),
+                                          ],
+                                        ),
                                     ],
                                   ),
                                 ),
@@ -519,14 +550,17 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
               ),
               // Attendance Rate Badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: attendanceRate >= 0.8 
+                    colors: attendanceRate >= 0.8
                         ? [AppColors.secondary, AppColors.secondaryDark]
                         : attendanceRate >= 0.6
-                            ? [const Color(0xFFF59E0B), const Color(0xFFD97706)]
-                            : [const Color(0xFFEF4444), const Color(0xFFDC2626)],
+                        ? [const Color(0xFFF59E0B), const Color(0xFFD97706)]
+                        : [const Color(0xFFEF4444), const Color(0xFFDC2626)],
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -541,9 +575,9 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
               ),
             ],
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Weekly Chart
           if (weeklyData.isNotEmpty) ...[
             const Text(
@@ -564,9 +598,9 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
               ),
             ),
           ],
-          
+
           const SizedBox(height: 20),
-          
+
           // Summary Info
           Container(
             padding: const EdgeInsets.all(16),
@@ -574,16 +608,10 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFFF8FAFC),
-                  Color(0xFFE2E8F0),
-                ],
+                colors: [Color(0xFFF8FAFC), Color(0xFFE2E8F0)],
               ),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: const Color(0xFFE2E8F0),
-                width: 1,
-              ),
+              border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
             ),
             child: Column(
               children: [
@@ -609,10 +637,26 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildSummaryItem('Present', presentDays, AppColors.secondary),
-                    _buildSummaryItem('Absent', absentDays, const Color(0xFFEF4444)),
-                    _buildSummaryItem('Late', lateDays, const Color(0xFFF59E0B)),
-                    _buildSummaryItem('Reports', reportsSent, const Color(0xFF3B82F6)),
+                    _buildSummaryItem(
+                      'Present',
+                      presentDays,
+                      AppColors.secondary,
+                    ),
+                    _buildSummaryItem(
+                      'Absent',
+                      absentDays,
+                      const Color(0xFFEF4444),
+                    ),
+                    _buildSummaryItem(
+                      'Late',
+                      lateDays,
+                      const Color(0xFFF59E0B),
+                    ),
+                    _buildSummaryItem(
+                      'Reports',
+                      reportsSent,
+                      const Color(0xFF3B82F6),
+                    ),
                   ],
                 ),
               ],
@@ -622,7 +666,6 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
       ),
     );
   }
-
 
   Widget _buildSummaryItem(String label, int value, Color color) {
     return Column(
@@ -658,16 +701,16 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
   List<Widget> _buildEnhancedWeeklyChart(List<dynamic> weeklyData) {
     final days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu'];
     final List<Widget> chartBars = [];
-    
+
     for (int i = 0; i < days.length && i < weeklyData.length; i++) {
       final dayData = weeklyData[i] as Map<String, dynamic>? ?? {};
       final isPresent = dayData['is_present'] ?? false;
       final isLate = dayData['is_late'] ?? false;
-      
+
       Color color;
       double height;
       String status;
-      
+
       if (isPresent && !isLate) {
         color = AppColors.secondary;
         height = 80.0;
@@ -681,7 +724,7 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
         height = 30.0;
         status = 'Absent';
       }
-      
+
       chartBars.add(
         Column(
           mainAxisAlignment: MainAxisAlignment.end,
@@ -693,10 +736,7 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    color,
-                    color.withValues(alpha: 0.8),
-                  ],
+                  colors: [color, color.withValues(alpha: 0.8)],
                 ),
                 borderRadius: BorderRadius.circular(6),
                 boxShadow: [
@@ -719,7 +759,10 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
             ),
             const SizedBox(height: 3), // Reduced from 4
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1), // Reduced padding
+              padding: const EdgeInsets.symmetric(
+                horizontal: 4,
+                vertical: 1,
+              ), // Reduced padding
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
@@ -737,10 +780,10 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
         ),
       );
     }
-    
+
     return chartBars;
   }
-  
+
   void _showMonthlyCalendar() {
     showModalBottomSheet(
       context: context,
@@ -752,7 +795,9 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
       builder: (context) {
         final now = DateTime.now();
         final deviceTimezoneOffset = now.timeZoneOffset.inMinutes;
-        final backendTime = now.toUtc().add(Duration(minutes: deviceTimezoneOffset));
+        final backendTime = now.toUtc().add(
+          Duration(minutes: deviceTimezoneOffset),
+        );
         DateTime selectedMonth = DateTime(backendTime.year, backendTime.month);
         Map<String, Set<String>> childIdToAbsentDates = {};
 
@@ -760,13 +805,22 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
           if (_parentId == null) return;
           final firstDay = DateTime(month.year, month.month, 1);
           final lastDay = DateTime(month.year, month.month + 1, 0);
-          final fromDate = '${firstDay.year}-${firstDay.month.toString().padLeft(2, '0')}-${firstDay.day.toString().padLeft(2, '0')}';
-          final toDate = '${lastDay.year}-${lastDay.month.toString().padLeft(2, '0')}-${lastDay.day.toString().padLeft(2, '0')}';
-          final reports = await ApiService.getParentDetailedReports(_parentId!, fromDate: fromDate, toDate: toDate);
-          final absenceReports = reports['absence_reports'] as List<dynamic>? ?? [];
+          final fromDate =
+              '${firstDay.year}-${firstDay.month.toString().padLeft(2, '0')}-${firstDay.day.toString().padLeft(2, '0')}';
+          final toDate =
+              '${lastDay.year}-${lastDay.month.toString().padLeft(2, '0')}-${lastDay.day.toString().padLeft(2, '0')}';
+          final reports = await ApiService.getParentDetailedReports(
+            _parentId!,
+            fromDate: fromDate,
+            toDate: toDate,
+          );
+          final absenceReports =
+              reports['absence_reports'] as List<dynamic>? ?? [];
           final Map<String, Set<String>> map = {};
           for (final child in _children) {
-            final childReports = absenceReports.where((r) => r['student_id'] == child.id);
+            final childReports = absenceReports.where(
+              (r) => r['student_id'] == child.id,
+            );
             final dates = <String>{};
             for (final rep in childReports) {
               final list = rep['absence_dates'] as List<dynamic>? ?? [];
@@ -788,29 +842,45 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
                 final media = MediaQuery.of(context);
                 return SafeArea(
                   child: Container(
-                    constraints: BoxConstraints(maxHeight: media.size.height * 0.5),
+                    constraints: BoxConstraints(
+                      maxHeight: media.size.height * 0.5,
+                    ),
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.calendar_month, color: AppColors.secondary),
+                            const Icon(
+                              Icons.calendar_month,
+                              color: AppColors.secondary,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 '${_monthName(selectedMonth)} ${selectedMonth.year}',
-                                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF1F2937), letterSpacing: -0.3),
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF1F2937),
+                                  letterSpacing: -0.3,
+                                ),
                               ),
                             ),
                             _headerIconButton(Icons.chevron_left, () async {
-                              selectedMonth = DateTime(selectedMonth.year, selectedMonth.month - 1);
+                              selectedMonth = DateTime(
+                                selectedMonth.year,
+                                selectedMonth.month - 1,
+                              );
                               await loadMonthData(selectedMonth);
                               setModalState(() {});
                             }),
                             const SizedBox(width: 8),
                             _headerIconButton(Icons.chevron_right, () async {
-                              selectedMonth = DateTime(selectedMonth.year, selectedMonth.month + 1);
+                              selectedMonth = DateTime(
+                                selectedMonth.year,
+                                selectedMonth.month + 1,
+                              );
                               await loadMonthData(selectedMonth);
                               setModalState(() {});
                             }),
@@ -818,7 +888,10 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
                         ),
                         const SizedBox(height: 12),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFF1F5F9),
                             borderRadius: BorderRadius.circular(12),
@@ -826,85 +899,168 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: const [
-                              _LegendDot(color: AppColors.secondary, label: 'Present'),
+                              _LegendDot(
+                                color: AppColors.secondary,
+                                label: 'Present',
+                              ),
                               SizedBox(width: 18),
-                              _LegendDot(color: Color(0xFFEF4444), label: 'Absent'),
+                              _LegendDot(
+                                color: Color(0xFFEF4444),
+                                label: 'Absent',
+                              ),
                               SizedBox(width: 18),
-                              _LegendDot(color: Color(0xFFF59E0B), label: 'Holiday'),
+                              _LegendDot(
+                                color: Color(0xFFF59E0B),
+                                label: 'Holiday',
+                              ),
                             ],
                           ),
                         ),
                         const SizedBox(height: 12),
                         Expanded(
-                          child: snapshot.connectionState == ConnectionState.waiting
-                              ? const Center(child: CircularProgressIndicator(color: AppColors.secondary))
+                          child:
+                              snapshot.connectionState ==
+                                  ConnectionState.waiting
+                              ? const Center(
+                                  child: CircularProgressIndicator(
+                                    color: AppColors.secondary,
+                                  ),
+                                )
                               : SingleChildScrollView(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       if (_children.isEmpty)
                                         const Padding(
                                           padding: EdgeInsets.all(8.0),
-                                          child: Text('No children found.', style: TextStyle(color: Color(0xFF6B7280))),
+                                          child: Text(
+                                            'No children found.',
+                                            style: TextStyle(
+                                              color: Color(0xFF6B7280),
+                                            ),
+                                          ),
                                         )
                                       else
                                         ..._children.map((child) {
-                                          final absentDates = childIdToAbsentDates[child.id] ?? <String>{};
+                                          final absentDates =
+                                              childIdToAbsentDates[child.id] ??
+                                              <String>{};
                                           // Using the month cell grid below; keep days via _monthCells
                                           return Container(
-                                            margin: const EdgeInsets.only(bottom: 16.0),
-                                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                                            margin: const EdgeInsets.only(
+                                              bottom: 16.0,
+                                            ),
+                                            padding: const EdgeInsets.fromLTRB(
+                                              16,
+                                              12,
+                                              16,
+                                              16,
+                                            ),
                                             decoration: BoxDecoration(
                                               color: Colors.white,
-                                              borderRadius: BorderRadius.circular(16),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
                                               boxShadow: [
-                                                BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
+                                                BoxShadow(
+                                                  color: Colors.black
+                                                      .withValues(alpha: 0.04),
+                                                  blurRadius: 10,
+                                                  offset: const Offset(0, 4),
+                                                ),
                                               ],
                                             ),
                                             child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  child.name.isNotEmpty ? child.name : 'Unknown Student',
-                                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1F2937), letterSpacing: -0.2),
+                                                  child.name.isNotEmpty
+                                                      ? child.name
+                                                      : 'Unknown Student',
+                                                  style: const TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: Color(0xFF1F2937),
+                                                    letterSpacing: -0.2,
+                                                  ),
                                                 ),
                                                 const SizedBox(height: 10),
                                                 _WeekdayHeaders(),
                                                 const SizedBox(height: 8),
                                                 LayoutBuilder(
                                                   builder: (context, constraints) {
-                                                    final cells = _calendarCells(selectedMonth);
+                                                    final cells =
+                                                        _calendarCells(
+                                                          selectedMonth,
+                                                        );
                                                     return GridView.count(
                                                       crossAxisCount: 7,
                                                       mainAxisSpacing: 10,
                                                       crossAxisSpacing: 10,
-                                                      childAspectRatio: 1.0, // Ensure square cells to prevent overflow
+                                                      childAspectRatio:
+                                                          1.0, // Ensure square cells to prevent overflow
                                                       shrinkWrap: true,
-                                                      physics: const NeverScrollableScrollPhysics(),
-                                                      children: cells.map((CalendarCellDate cell) {
+                                                      physics:
+                                                          const NeverScrollableScrollPhysics(),
+                                                      children: cells.map((
+                                                        CalendarCellDate cell,
+                                                      ) {
                                                         final d = cell.date;
-                                                        final inMonth = cell.isCurrentMonth;
-                                                        final dateStr = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-                                                        final isWeekend = _isWeekend(d);
-                                                        final now = DateTime.now();
-                                                        final deviceTimezoneOffset = now.timeZoneOffset.inMinutes;
-                                                        final backendTime = now.toUtc().add(Duration(minutes: deviceTimezoneOffset));
-                                                        final isToday = _isSameDay(d, backendTime);
+                                                        final inMonth =
+                                                            cell.isCurrentMonth;
+                                                        final dateStr =
+                                                            '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+                                                        final isWeekend =
+                                                            _isWeekend(d);
+                                                        final now =
+                                                            DateTime.now();
+                                                        final deviceTimezoneOffset =
+                                                            now
+                                                                .timeZoneOffset
+                                                                .inMinutes;
+                                                        final backendTime = now
+                                                            .toUtc()
+                                                            .add(
+                                                              Duration(
+                                                                minutes:
+                                                                    deviceTimezoneOffset,
+                                                              ),
+                                                            );
+                                                        final isToday =
+                                                            _isSameDay(
+                                                              d,
+                                                              backendTime,
+                                                            );
                                                         CalendarStatus? status;
                                                         if (!inMonth) {
-                                                          status = null; // no dot
+                                                          status =
+                                                              null; // no dot
                                                         } else if (isWeekend) {
-                                                          status = CalendarStatus.holiday;
-                                                        } else if (d.isAfter(backendTime)) {
-                                                          status = null; // no dot for future days
-                                                        } else if (absentDates.contains(dateStr)) {
-                                                          status = CalendarStatus.absent;
+                                                          status =
+                                                              CalendarStatus
+                                                                  .holiday;
+                                                        } else if (d.isAfter(
+                                                          backendTime,
+                                                        )) {
+                                                          status =
+                                                              null; // no dot for future days
+                                                        } else if (absentDates
+                                                            .contains(
+                                                              dateStr,
+                                                            )) {
+                                                          status =
+                                                              CalendarStatus
+                                                                  .absent;
                                                         } else {
-                                                          status = CalendarStatus.present;
+                                                          status =
+                                                              CalendarStatus
+                                                                  .present;
                                                         }
                                                         return _CalendarCell(
                                                           day: d.day,
-                                                          inCurrentMonth: inMonth,
+                                                          inCurrentMonth:
+                                                              inMonth,
                                                           isToday: isToday,
                                                           status: status,
                                                         );
@@ -934,8 +1090,14 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
 
   // helper reserved for future use (intentionally unused)
   // ignore: unused_element
-  List<DateTime> _allDaysOfMonth(DateTime month) { final last = DateTime(month.year, month.month + 1, 0); return List.generate(last.day, (i) => DateTime(month.year, month.month, i + 1)); }
-  
+  List<DateTime> _allDaysOfMonth(DateTime month) {
+    final last = DateTime(month.year, month.month + 1, 0);
+    return List.generate(
+      last.day,
+      (i) => DateTime(month.year, month.month, i + 1),
+    );
+  }
+
   // Build a 7xN grid (previous month leading days + current + next) to align under headers
   List<CalendarCellDate> _calendarCells(DateTime month) {
     final first = DateTime(month.year, month.month, 1);
@@ -961,14 +1123,29 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
     if (remainder != 0) {
       final needed = 7 - remainder;
       for (int i = 1; i <= needed; i++) {
-        cells.add(CalendarCellDate(DateTime(month.year, month.month + 1, i), false));
+        cells.add(
+          CalendarCellDate(DateTime(month.year, month.month + 1, i), false),
+        );
       }
     }
     return cells;
   }
 
   String _monthName(DateTime m) {
-    const names = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const names = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
     return names[m.month - 1];
   }
 
@@ -977,7 +1154,10 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
   }
 
   // ignore: unused_element
-  bool _isSchoolDay(DateTime date) { final weekday = date.weekday % 7; return weekday >= 0 && weekday <= 4; }
+  bool _isSchoolDay(DateTime date) {
+    final weekday = date.weekday % 7;
+    return weekday >= 0 && weekday <= 4;
+  }
 
   bool _isWeekend(DateTime date) {
     final weekday = date.weekday % 7;
@@ -996,7 +1176,6 @@ class _ParentWeeklyStatsScreenState extends State<ParentWeeklyStatsScreen>
       ),
     );
   }
-
 }
 
 class _WeekdayHeaders extends StatelessWidget {
@@ -1004,7 +1183,7 @@ class _WeekdayHeaders extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: days.map((e) {
@@ -1016,7 +1195,9 @@ class _WeekdayHeaders extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
-                color: isWeekend ? const Color(0xFF94A3B8) : const Color(0xFF6B7280),
+                color: isWeekend
+                    ? const Color(0xFF94A3B8)
+                    : const Color(0xFF6B7280),
                 letterSpacing: 0.2,
               ),
             ),
@@ -1034,11 +1215,18 @@ class _CalendarCell extends StatelessWidget {
   final bool inCurrentMonth;
   final bool isToday;
   final CalendarStatus? status;
-  const _CalendarCell({required this.day, required this.inCurrentMonth, required this.isToday, required this.status});
+  const _CalendarCell({
+    required this.day,
+    required this.inCurrentMonth,
+    required this.isToday,
+    required this.status,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final Color numberColor = inCurrentMonth ? const Color(0xFF374151) : const Color(0xFFCBD5E1);
+    final Color numberColor = inCurrentMonth
+        ? const Color(0xFF374151)
+        : const Color(0xFFCBD5E1);
     final Color dotColor = switch (status) {
       CalendarStatus.present => AppColors.secondary,
       CalendarStatus.absent => const Color(0xFFEF4444),
@@ -1055,8 +1243,12 @@ class _CalendarCell extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isToday && status != null ? dotColor.withValues(alpha: 0.18) : Colors.transparent,
-            border: isToday && status == null ? Border.all(color: const Color(0xFFF59E0B), width: 2) : null,
+            color: isToday && status != null
+                ? dotColor.withValues(alpha: 0.18)
+                : Colors.transparent,
+            border: isToday && status == null
+                ? Border.all(color: const Color(0xFFF59E0B), width: 2)
+                : null,
           ),
           child: Text(
             day.toString(),
@@ -1072,10 +1264,7 @@ class _CalendarCell extends StatelessWidget {
           Container(
             width: 4, // Reduced from 6 to 4
             height: 4, // Reduced from 6 to 4
-            decoration: BoxDecoration(
-              color: dotColor,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
           ),
       ],
     );
@@ -1107,10 +1296,13 @@ class _LegendDot extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           label,
-          style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280), fontWeight: FontWeight.w600),
+          style: const TextStyle(
+            fontSize: 12,
+            color: Color(0xFF6B7280),
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     );
   }
 }
-

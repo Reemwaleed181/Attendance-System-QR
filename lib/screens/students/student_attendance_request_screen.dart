@@ -35,10 +35,12 @@ class _StudentAttendanceRequestScreenState
   DateTime? _windowExpiresAt;
   bool _submitted = false;
   Timer? _statusTimer;
+  Timer? _countdownTimer;
 
   @override
   void dispose() {
     _statusTimer?.cancel();
+    _countdownTimer?.cancel();
     _studentQrController.dispose();
     _classQrController.dispose();
     _scannerController.dispose();
@@ -100,10 +102,35 @@ class _StudentAttendanceRequestScreenState
         if (enabled) {
           _statusTimer?.cancel();
           _statusTimer = null;
+          _startCountdown();
         }
       } catch (_) {
         // ignore transient polling errors
       }
+    });
+  }
+
+  void _startCountdown() {
+    _countdownTimer?.cancel();
+    if (!_attendanceEnabled || _windowExpiresAt == null) return;
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      final expiresAt = _windowExpiresAt;
+      if (!_attendanceEnabled || expiresAt == null) {
+        _countdownTimer?.cancel();
+        _countdownTimer = null;
+        return;
+      }
+      if (DateTime.now().isAfter(expiresAt)) {
+        setState(() {
+          _attendanceEnabled = false;
+        });
+        _countdownTimer?.cancel();
+        _countdownTimer = null;
+        return;
+      }
+      // Trigger rebuild to refresh remaining text
+      setState(() {});
     });
   }
 
@@ -128,6 +155,12 @@ class _StudentAttendanceRequestScreenState
         _attendanceEnabled = enabled;
         _windowExpiresAt = expires;
       });
+      if (enabled) {
+        _startCountdown();
+      } else {
+        _countdownTimer?.cancel();
+        _countdownTimer = null;
+      }
     } catch (_) {
       // ignore single-shot errors
     }
@@ -436,25 +469,10 @@ class _StudentAttendanceRequestScreenState
   Widget build(BuildContext context) {
     final remaining = _remainingText();
     return Scaffold(
+      backgroundColor: const Color(0xFFF3F4F6),
       appBar: AppBar(
         title: const Text('Request Attendance'),
         actions: [
-          _attendanceEnabled
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 8,
-                    horizontal: 6,
-                  ),
-                  child: Chip(
-                    label: Text(
-                      remaining == null ? 'Enabled' : 'Enabled • $remaining',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    backgroundColor: const Color(0xFF10B981),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                )
-              : const SizedBox.shrink(),
           IconButton(
             onPressed: _isLoading ? null : () => _refresh(),
             icon: const Icon(Icons.refresh),
@@ -463,13 +481,7 @@ class _StudentAttendanceRequestScreenState
         ],
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: AppColors.backgroundGradient,
-          ),
-        ),
+        color: const Color(0xFFF3F4F6),
         child: SafeArea(
           child: RefreshIndicator(
             onRefresh: _refresh,
@@ -786,7 +798,7 @@ class _StudentAttendanceRequestScreenState
                                         color: AppColors.textPrimary,
                                       ),
                                       label: const Text(
-                                        'Load from Gallery',
+                                        'Load QR',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w600,
                                           color: AppColors.textPrimary,
@@ -811,6 +823,46 @@ class _StudentAttendanceRequestScreenState
                             const SizedBox(height: 8),
                             const SizedBox(height: 16),
                             const SizedBox(height: 24),
+                            if (_attendanceEnabled) ...[
+                              Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(
+                                    0xFF10B981,
+                                  ).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: const Color(
+                                      0xFF10B981,
+                                    ).withOpacity(0.3),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.check_circle,
+                                      color: Color(0xFF10B981),
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      remaining == null
+                                          ? 'Self-attendance enabled'
+                                          : 'Enabled • $remaining',
+                                      style: const TextStyle(
+                                        color: Color(0xFF047857),
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                             ElevatedButton.icon(
                               onPressed: (_isLoading || _submitted)
                                   ? null

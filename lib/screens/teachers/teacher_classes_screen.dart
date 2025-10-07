@@ -30,6 +30,10 @@ class _TeacherClassesScreenState extends State<TeacherClassesScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _buttonGlowAnimation;
+  // Track which students are expanded to show their QR
+  final Set<String> _expandedStudentKeys = {};
+  // Track which classes have their student list expanded
+  final Set<String> _expandedClassStudentLists = {};
 
   @override
   void initState() {
@@ -73,6 +77,27 @@ class _TeacherClassesScreenState extends State<TeacherClassesScreen>
     _buttonAnimationController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _toggleStudentExpanded(Student student) {
+    final key = student.qrCode; // assume unique per student
+    setState(() {
+      if (_expandedStudentKeys.contains(key)) {
+        _expandedStudentKeys.remove(key);
+      } else {
+        _expandedStudentKeys.add(key);
+      }
+    });
+  }
+
+  void _toggleClassStudents(String className) {
+    setState(() {
+      if (_expandedClassStudentLists.contains(className)) {
+        _expandedClassStudentLists.remove(className);
+      } else {
+        _expandedClassStudentLists.add(className);
+      }
+    });
   }
 
   Future<void> _loadTeacherToken() async {
@@ -144,7 +169,7 @@ class _TeacherClassesScreenState extends State<TeacherClassesScreen>
       }
     });
     _saveSelectedClasses();
-    
+
     // Start button animation when classes are selected
     if (_selectedClassrooms.isNotEmpty) {
       _buttonAnimationController.repeat(reverse: true);
@@ -169,7 +194,7 @@ class _TeacherClassesScreenState extends State<TeacherClassesScreen>
           .where((classroom) => savedClassNames.contains(classroom.name))
           .toList();
     });
-    
+
     // Start button animation if classes are already selected
     if (_selectedClassrooms.isNotEmpty) {
       _buttonAnimationController.repeat(reverse: true);
@@ -182,29 +207,38 @@ class _TeacherClassesScreenState extends State<TeacherClassesScreen>
         .toList();
     if (_searchQuery.isEmpty) return students;
     final q = _searchQuery.toLowerCase();
-    return students.where((s) =>
-      s.name.toLowerCase().contains(q) ||
-      s.qrCode.toLowerCase().contains(q)
-    ).toList();
+    return students
+        .where(
+          (s) =>
+              s.name.toLowerCase().contains(q) ||
+              s.qrCode.toLowerCase().contains(q),
+        )
+        .toList();
   }
 
   List<Classroom> _filteredClassrooms() {
     if (_searchQuery.isEmpty) return _allClassrooms;
     final q = _searchQuery.toLowerCase();
-    return _allClassrooms.where((c) =>
-      c.name.toLowerCase().contains(q) ||
-      c.qrCode.toLowerCase().contains(q)
-    ).toList();
+    return _allClassrooms
+        .where(
+          (c) =>
+              c.name.toLowerCase().contains(q) ||
+              c.qrCode.toLowerCase().contains(q),
+        )
+        .toList();
   }
 
   List<Student> _searchStudents() {
     if (_searchQuery.isEmpty) return const [];
     final q = _searchQuery.toLowerCase();
-    return _allStudents.where((s) =>
-      s.name.toLowerCase().contains(q) ||
-      s.qrCode.toLowerCase().contains(q) ||
-      s.classroomName.toLowerCase().contains(q)
-    ).toList();
+    return _allStudents
+        .where(
+          (s) =>
+              s.name.toLowerCase().contains(q) ||
+              s.qrCode.toLowerCase().contains(q) ||
+              s.classroomName.toLowerCase().contains(q),
+        )
+        .toList();
   }
 
   @override
@@ -310,594 +344,891 @@ class _TeacherClassesScreenState extends State<TeacherClassesScreen>
                               child: Center(
                                 child: ConstrainedBox(
                                   constraints: BoxConstraints(
-                                    maxWidth: Responsive.maxContentWidth(context),
+                                    maxWidth: Responsive.maxContentWidth(
+                                      context,
+                                    ),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
                                     children: [
-                                  if (_errorMessage != null) ...[
-                                    Container(
-                                      margin: const EdgeInsets.only(bottom: 16),
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFFFF1F2),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(color: const Color(0xFFFCA5A5)),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          const Icon(Icons.error_outline, color: Color(0xFFDC2626)),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              _errorMessage!,
-                                              style: const TextStyle(color: Color(0xFFB91C1C), fontWeight: FontWeight.w600),
+                                      if (_errorMessage != null) ...[
+                                        Container(
+                                          margin: const EdgeInsets.only(
+                                            bottom: 16,
+                                          ),
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFFFF1F2),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            border: Border.all(
+                                              color: const Color(0xFFFCA5A5),
                                             ),
                                           ),
-                                          TextButton(
-                                            onPressed: _loadData,
-                                            child: const Text('Retry'),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                  // Search bar
-                                  Container(
-                                    margin: const EdgeInsets.only(bottom: 16),
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(16),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.05),
-                                          blurRadius: 16,
-                                          offset: const Offset(0, 8),
-                                        ),
-                                      ],
-                                      border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(Icons.search, color: Color(0xFF6B7280), size: 20),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: TextField(
-                                            controller: _searchController,
-                                            decoration: const InputDecoration(
-                                              hintText: 'Student or Classroom',
-                                              border: InputBorder.none,
-                                            ),
-                                            onChanged: (value) {
-                                              setState(() => _searchQuery = value.trim());
-                                            },
-                                          ),
-                                        ),
-                                        if (_searchQuery.isNotEmpty)
-                                          IconButton(
-                                            icon: const Icon(Icons.clear, size: 18, color: Color(0xFF6B7280)),
-                                            onPressed: () {
-                                              _searchController.clear();
-                                              setState(() => _searchQuery = '');
-                                            },
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  // If searching, show only search results
-                                  if (_searchQuery.isNotEmpty) ...[
-                                    _buildSearchResults(),
-                                  ]
-                                  // Otherwise, show normal content
-                                  else if (_selectedClassrooms.isNotEmpty)
-                                    Container(
-                                      margin: const EdgeInsets.only(bottom: 24),
-                                      child: AnimatedBuilder(
-                                        animation: _buttonGlowAnimation,
-                                        builder: (context, child) {
-                                          return Stack(
+                                          child: Row(
                                             children: [
-                                              // Animated background glow
-                                              Container(
-                                                height: 65,
-                                                decoration: BoxDecoration(
-                                                  gradient: const LinearGradient(
-                                                    colors: [
-                                                      Color(0xFF10B981),
-                                                      Color(0xFF059669),
-                                                      Color(0xFF047857),
-                                                    ],
-                                                    begin: Alignment.topLeft,
-                                                    end: Alignment.bottomRight,
+                                              const Icon(
+                                                Icons.error_outline,
+                                                color: Color(0xFFDC2626),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Text(
+                                                  _errorMessage!,
+                                                  style: const TextStyle(
+                                                    color: Color(0xFFB91C1C),
+                                                    fontWeight: FontWeight.w600,
                                                   ),
-                                                  borderRadius: BorderRadius.circular(28),
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color: const Color(0xFF10B981).withValues(alpha: 0.4 * _buttonGlowAnimation.value),
-                                                      blurRadius: 25 * _buttonGlowAnimation.value,
-                                                      offset: const Offset(0, 8),
-                                                      spreadRadius: 2 * _buttonGlowAnimation.value,
-                                                    ),
-                                                    BoxShadow(
-                                                      color: const Color(0xFF10B981).withValues(alpha: 0.2 * _buttonGlowAnimation.value),
-                                                      blurRadius: 40 * _buttonGlowAnimation.value,
-                                                      offset: const Offset(0, 15),
-                                                      spreadRadius: 5 * _buttonGlowAnimation.value,
-                                                    ),
-                                                  ],
                                                 ),
                                               ),
-                                          // Main button content
-                                          Container(
-                                            height: 80,
-                                            decoration: BoxDecoration(
-                                              gradient: const LinearGradient(
-                                                colors: [
-                                                  Color(0xFF10B981),
-                                                  Color(0xFF059669),
-                                                ],
-                                                begin: Alignment.topLeft,
-                                                end: Alignment.bottomRight,
+                                              TextButton(
+                                                onPressed: _loadData,
+                                                child: const Text('Retry'),
                                               ),
-                                              borderRadius: BorderRadius.circular(28),
-                                              border: Border.all(
-                                                color: Colors.white.withValues(alpha: 0.3),
-                                                width: 2,
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                      // Search bar
+                                      Container(
+                                        margin: const EdgeInsets.only(
+                                          bottom: 16,
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(
+                                                alpha: 0.05,
                                               ),
+                                              blurRadius: 16,
+                                              offset: const Offset(0, 8),
                                             ),
-                                            child: Material(
-                                              color: Colors.transparent,
-                                              child: InkWell(
-                                                onTap: () {
-                                                  Navigator.pushReplacement(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          const TeacherHomeScreen(),
+                                          ],
+                                          border: Border.all(
+                                            color: const Color(0xFFE5E7EB),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.search,
+                                              color: Color(0xFF6B7280),
+                                              size: 20,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: TextField(
+                                                controller: _searchController,
+                                                decoration:
+                                                    const InputDecoration(
+                                                      hintText:
+                                                          'Student or Classroom',
+                                                      border: InputBorder.none,
                                                     ),
+                                                onChanged: (value) {
+                                                  setState(
+                                                    () => _searchQuery = value
+                                                        .trim(),
                                                   );
                                                 },
-                                                borderRadius: BorderRadius.circular(28),
-                                                child: Padding(
-                                                  padding: const EdgeInsets.symmetric(
-                                                    horizontal: 20,
-                                                    vertical: 10,
+                                              ),
+                                            ),
+                                            if (_searchQuery.isNotEmpty)
+                                              IconButton(
+                                                icon: const Icon(
+                                                  Icons.clear,
+                                                  size: 18,
+                                                  color: Color(0xFF6B7280),
+                                                ),
+                                                onPressed: () {
+                                                  _searchController.clear();
+                                                  setState(
+                                                    () => _searchQuery = '',
+                                                  );
+                                                },
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                      // If searching, show only search results
+                                      if (_searchQuery.isNotEmpty) ...[
+                                        _buildSearchResults(),
+                                      ]
+                                      // Otherwise, show normal content
+                                      else if (_selectedClassrooms.isNotEmpty)
+                                        Container(
+                                          margin: const EdgeInsets.only(
+                                            bottom: 24,
+                                          ),
+                                          child: AnimatedBuilder(
+                                            animation: _buttonGlowAnimation,
+                                            builder: (context, child) {
+                                              return Stack(
+                                                children: [
+                                                  // Animated background glow
+                                                  Container(
+                                                    height: 65,
+                                                    decoration: BoxDecoration(
+                                                      gradient:
+                                                          const LinearGradient(
+                                                            colors: [
+                                                              Color(0xFF10B981),
+                                                              Color(0xFF059669),
+                                                              Color(0xFF047857),
+                                                            ],
+                                                            begin: Alignment
+                                                                .topLeft,
+                                                            end: Alignment
+                                                                .bottomRight,
+                                                          ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            28,
+                                                          ),
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color:
+                                                              const Color(
+                                                                0xFF10B981,
+                                                              ).withValues(
+                                                                alpha:
+                                                                    0.4 *
+                                                                    _buttonGlowAnimation
+                                                                        .value,
+                                                              ),
+                                                          blurRadius:
+                                                              25 *
+                                                              _buttonGlowAnimation
+                                                                  .value,
+                                                          offset: const Offset(
+                                                            0,
+                                                            8,
+                                                          ),
+                                                          spreadRadius:
+                                                              2 *
+                                                              _buttonGlowAnimation
+                                                                  .value,
+                                                        ),
+                                                        BoxShadow(
+                                                          color:
+                                                              const Color(
+                                                                0xFF10B981,
+                                                              ).withValues(
+                                                                alpha:
+                                                                    0.2 *
+                                                                    _buttonGlowAnimation
+                                                                        .value,
+                                                              ),
+                                                          blurRadius:
+                                                              40 *
+                                                              _buttonGlowAnimation
+                                                                  .value,
+                                                          offset: const Offset(
+                                                            0,
+                                                            15,
+                                                          ),
+                                                          spreadRadius:
+                                                              5 *
+                                                              _buttonGlowAnimation
+                                                                  .value,
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
-                                                  child: Row(
-                                                    children: [
-                                                      // Animated icon container
-                                                      Container(
-                                                        width: 40,
-                                                        height: 40,
+                                                  // Main button content
+                                                  Container(
+                                                    height: 80,
+                                                    decoration: BoxDecoration(
+                                                      gradient:
+                                                          const LinearGradient(
+                                                            colors: [
+                                                              Color(0xFF10B981),
+                                                              Color(0xFF059669),
+                                                            ],
+                                                            begin: Alignment
+                                                                .topLeft,
+                                                            end: Alignment
+                                                                .bottomRight,
+                                                          ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            28,
+                                                          ),
+                                                      border: Border.all(
+                                                        color: Colors.white
+                                                            .withValues(
+                                                              alpha: 0.3,
+                                                            ),
+                                                        width: 2,
+                                                      ),
+                                                    ),
+                                                    child: Material(
+                                                      color: Colors.transparent,
+                                                      child: InkWell(
+                                                        onTap: () {
+                                                          Navigator.pushReplacement(
+                                                            context,
+                                                            MaterialPageRoute(
+                                                              builder: (context) =>
+                                                                  const TeacherHomeScreen(),
+                                                            ),
+                                                          );
+                                                        },
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              28,
+                                                            ),
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets.symmetric(
+                                                                horizontal: 20,
+                                                                vertical: 10,
+                                                              ),
+                                                          child: Row(
+                                                            children: [
+                                                              // Animated icon container
+                                                              Container(
+                                                                width: 40,
+                                                                height: 40,
+                                                                decoration: BoxDecoration(
+                                                                  color: Colors
+                                                                      .white
+                                                                      .withValues(
+                                                                        alpha:
+                                                                            0.2,
+                                                                      ),
+                                                                  borderRadius:
+                                                                      BorderRadius.circular(
+                                                                        16,
+                                                                      ),
+                                                                  border: Border.all(
+                                                                    color: Colors
+                                                                        .white
+                                                                        .withValues(
+                                                                          alpha:
+                                                                              0.4,
+                                                                        ),
+                                                                    width: 2,
+                                                                  ),
+                                                                ),
+                                                                child: const Icon(
+                                                                  Icons
+                                                                      .dashboard_rounded,
+                                                                  color: Colors
+                                                                      .white,
+                                                                  size: 22,
+                                                                ),
+                                                              ),
+                                                              const SizedBox(
+                                                                width: 20,
+                                                              ),
+                                                              // Text content
+                                                              Expanded(
+                                                                child: Column(
+                                                                  crossAxisAlignment:
+                                                                      CrossAxisAlignment
+                                                                          .start,
+                                                                  mainAxisAlignment:
+                                                                      MainAxisAlignment
+                                                                          .center,
+                                                                  mainAxisSize:
+                                                                      MainAxisSize
+                                                                          .min,
+                                                                  children: [
+                                                                    const Text(
+                                                                      'Ready to Start!',
+                                                                      style: TextStyle(
+                                                                        fontSize:
+                                                                            18,
+                                                                        fontWeight:
+                                                                            FontWeight.w800,
+                                                                        color: Colors
+                                                                            .white,
+                                                                        letterSpacing:
+                                                                            -0.5,
+                                                                      ),
+                                                                      maxLines:
+                                                                          1,
+                                                                      overflow:
+                                                                          TextOverflow
+                                                                              .ellipsis,
+                                                                    ),
+                                                                    const SizedBox(
+                                                                      height: 2,
+                                                                    ),
+                                                                    Text(
+                                                                      '${_selectedClassrooms.length} class${_selectedClassrooms.length == 1 ? '' : 'es'} selected',
+                                                                      style: TextStyle(
+                                                                        fontSize:
+                                                                            12,
+                                                                        fontWeight:
+                                                                            FontWeight.w500,
+                                                                        color: Colors
+                                                                            .white
+                                                                            .withValues(
+                                                                              alpha: 0.9,
+                                                                            ),
+                                                                      ),
+                                                                      maxLines:
+                                                                          1,
+                                                                      overflow:
+                                                                          TextOverflow
+                                                                              .ellipsis,
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                              // Arrow icon
+                                                              Container(
+                                                                width: 32,
+                                                                height: 32,
+                                                                decoration: BoxDecoration(
+                                                                  color: Colors
+                                                                      .white
+                                                                      .withValues(
+                                                                        alpha:
+                                                                            0.2,
+                                                                      ),
+                                                                  borderRadius:
+                                                                      BorderRadius.circular(
+                                                                        12,
+                                                                      ),
+                                                                ),
+                                                                child: const Icon(
+                                                                  Icons
+                                                                      .arrow_forward_ios_rounded,
+                                                                  color: Colors
+                                                                      .white,
+                                                                  size: 16,
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      if (_searchQuery.isEmpty)
+                                        // Class Selection Section
+                                        Container(
+                                          padding: const EdgeInsets.all(24),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(
+                                              24,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.05,
+                                                ),
+                                                blurRadius: 20,
+                                                offset: const Offset(0, 8),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets.all(8),
+                                                    decoration: BoxDecoration(
+                                                      color: AppColors.accent
+                                                          .withValues(
+                                                            alpha: 0.1,
+                                                          ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
+                                                          ),
+                                                    ),
+                                                    child: const Icon(
+                                                      Icons.checklist,
+                                                      color: AppColors.accent,
+                                                      size: 24,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 16),
+                                                  const Text(
+                                                    'Select Your Classes',
+                                                    style: TextStyle(
+                                                      fontSize: 20,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: Color(0xFF1F2937),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 20),
+                                              if (_allClassrooms.isEmpty)
+                                                const Center(
+                                                  child: Text(
+                                                    'No classrooms found',
+                                                    style: TextStyle(
+                                                      fontSize: 16,
+                                                      color: Color(0xFF6B7280),
+                                                    ),
+                                                  ),
+                                                )
+                                              else
+                                                Wrap(
+                                                  spacing: 12,
+                                                  runSpacing: 12,
+                                                  children: _filteredClassrooms().map((
+                                                    classroom,
+                                                  ) {
+                                                    final isSelected =
+                                                        _selectedClassrooms
+                                                            .contains(
+                                                              classroom,
+                                                            );
+                                                    return GestureDetector(
+                                                      onTap: () =>
+                                                          _toggleClassroomSelection(
+                                                            classroom,
+                                                          ),
+                                                      child: Container(
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              horizontal: 16,
+                                                              vertical: 12,
+                                                            ),
                                                         decoration: BoxDecoration(
-                                                          color: Colors.white.withValues(alpha: 0.2),
-                                                          borderRadius: BorderRadius.circular(16),
+                                                          color: isSelected
+                                                              ? AppColors.accent
+                                                              : const Color(
+                                                                  0xFFF3F4F6,
+                                                                ),
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                20,
+                                                              ),
                                                           border: Border.all(
-                                                            color: Colors.white.withValues(alpha: 0.4),
+                                                            color: isSelected
+                                                                ? AppColors
+                                                                      .accent
+                                                                : const Color(
+                                                                    0xFFE5E7EB,
+                                                                  ),
                                                             width: 2,
                                                           ),
                                                         ),
-                                                        child: const Icon(
-                                                          Icons.dashboard_rounded,
-                                                          color: Colors.white,
-                                                          size: 22,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(width: 20),
-                                                      // Text content
-                                                      Expanded(
-                                                        child: Column(
-                                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                                          mainAxisAlignment: MainAxisAlignment.center,
-                                                          mainAxisSize: MainAxisSize.min,
+                                                        child: Row(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
                                                           children: [
-                                                            const Text(
-                                                              'Ready to Start!',
-                                                              style: TextStyle(
-                                                                fontSize: 18,
-                                                                fontWeight: FontWeight.w800,
-                                                                color: Colors.white,
-                                                                letterSpacing: -0.5,
-                                                              ),
-                                                              maxLines: 1,
-                                                              overflow: TextOverflow.ellipsis,
+                                                            Icon(
+                                                              isSelected
+                                                                  ? Icons
+                                                                        .check_circle
+                                                                  : Icons
+                                                                        .radio_button_unchecked,
+                                                              color: isSelected
+                                                                  ? Colors.white
+                                                                  : const Color(
+                                                                      0xFF6B7280,
+                                                                    ),
+                                                              size: 20,
                                                             ),
-                                                            const SizedBox(height: 2),
+                                                            const SizedBox(
+                                                              width: 8,
+                                                            ),
                                                             Text(
-                                                              '${_selectedClassrooms.length} class${_selectedClassrooms.length == 1 ? '' : 'es'} selected',
+                                                              classroom.name,
                                                               style: TextStyle(
-                                                                fontSize: 12,
-                                                                fontWeight: FontWeight.w500,
-                                                                color: Colors.white.withValues(alpha: 0.9),
+                                                                fontSize: 14,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                                color:
+                                                                    isSelected
+                                                                    ? Colors
+                                                                          .white
+                                                                    : const Color(
+                                                                        0xFF1F2937,
+                                                                      ),
                                                               ),
-                                                              maxLines: 1,
-                                                              overflow: TextOverflow.ellipsis,
                                                             ),
                                                           ],
                                                         ),
                                                       ),
-                                                      // Arrow icon
-                                                      Container(
-                                                        width: 32,
-                                                        height: 32,
-                                                        decoration: BoxDecoration(
-                                                          color: Colors.white.withValues(alpha: 0.2),
-                                                          borderRadius: BorderRadius.circular(12),
-                                                        ),
-                                                        child: const Icon(
-                                                          Icons.arrow_forward_ios_rounded,
-                                                          color: Colors.white,
-                                                          size: 16,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
+                                                    );
+                                                  }).toList(),
                                                 ),
-                                              ),
-                                            ),
-                                          ),
                                             ],
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  if (_searchQuery.isEmpty)
-                                  // Class Selection Section
-                                  Container(
-                                    padding: const EdgeInsets.all(24),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(24),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.05),
-                                          blurRadius: 20,
-                                          offset: const Offset(0, 8),
+                                          ),
                                         ),
-                                      ],
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.all(8),
-                                              decoration: BoxDecoration(
-                                                color: AppColors.accent.withValues(alpha: 0.1),
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                              ),
-                                              child: const Icon(
-                                                Icons.checklist,
-                                                color: AppColors.accent,
-                                                size: 24,
-                                              ),
+
+                                      if (_searchQuery.isEmpty &&
+                                          _selectedClassrooms.isNotEmpty) ...[
+                                        const SizedBox(height: 24),
+
+                                        // Selected Classes QR Codes
+                                        ..._selectedClassrooms.map((classroom) {
+                                          final students =
+                                              _getStudentsForClassroom(
+                                                classroom,
+                                              );
+                                          return Container(
+                                            margin: const EdgeInsets.only(
+                                              bottom: 24,
                                             ),
-                                            const SizedBox(width: 16),
-                                            const Text(
-                                              'Select Your Classes',
-                                              style: TextStyle(
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.w700,
-                                                color: Color(0xFF1F2937),
-                                              ),
+                                            padding: const EdgeInsets.all(24),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(24),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black
+                                                      .withValues(alpha: 0.05),
+                                                  blurRadius: 20,
+                                                  offset: const Offset(0, 8),
+                                                ),
+                                              ],
                                             ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 20),
-                                        if (_allClassrooms.isEmpty)
-                                          const Center(
-                                            child: Text(
-                                              'No classrooms found',
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                color: Color(0xFF6B7280),
-                                              ),
-                                            ),
-                                          )
-                                        else
-                                          Wrap(
-                                            spacing: 12,
-                                            runSpacing: 12,
-                                            children: _filteredClassrooms().map((
-                                              classroom,
-                                            ) {
-                                              final isSelected =
-                                                  _selectedClassrooms.contains(
-                                                    classroom,
-                                                  );
-                                              return GestureDetector(
-                                                onTap: () =>
-                                                    _toggleClassroomSelection(
-                                                      classroom,
-                                                    ),
-                                                child: Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 16,
-                                                        vertical: 12,
-                                                      ),
-                                                  decoration: BoxDecoration(
-                                                    color: isSelected
-                                                        ? AppColors.accent
-                                                        : const Color(
-                                                            0xFFF3F4F6,
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                // Class Header
+                                                Row(
+                                                  children: [
+                                                    Container(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                            8,
                                                           ),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          20,
-                                                        ),
-                                                    border: Border.all(
-                                                      color: isSelected
-                                                          ? AppColors.accent
-                                                          : const Color(
-                                                              0xFFE5E7EB,
+                                                      decoration: BoxDecoration(
+                                                        color: AppColors.accent
+                                                            .withValues(
+                                                              alpha: 0.1,
                                                             ),
-                                                      width: 2,
-                                                    ),
-                                                  ),
-                                                  child: Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      Icon(
-                                                        isSelected
-                                                            ? Icons.check_circle
-                                                            : Icons
-                                                                  .radio_button_unchecked,
-                                                        color: isSelected
-                                                            ? Colors.white
-                                                            : const Color(
-                                                                0xFF6B7280,
-                                                              ),
-                                                        size: 20,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              12,
+                                                            ),
                                                       ),
-                                                      const SizedBox(width: 8),
-                                                      Text(
-                                                        classroom.name,
+                                                      child: const Icon(
+                                                        Icons.class_,
+                                                        color: AppColors.accent,
+                                                        size: 24,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 16),
+                                                    Expanded(
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          Text(
+                                                            classroom.name,
+                                                            style:
+                                                                const TextStyle(
+                                                                  fontSize: 20,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w700,
+                                                                  color: Color(
+                                                                    0xFF1F2937,
+                                                                  ),
+                                                                ),
+                                                          ),
+                                                          Text(
+                                                            '${students.length} students',
+                                                            style:
+                                                                const TextStyle(
+                                                                  fontSize: 14,
+                                                                  color: Color(
+                                                                    0xFF6B7280,
+                                                                  ),
+                                                                ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+
+                                                const SizedBox(height: 20),
+
+                                                // Class QR Code
+                                                Center(
+                                                  child: Column(
+                                                    children: [
+                                                      const Text(
+                                                        'Class QR Code',
                                                         style: TextStyle(
-                                                          fontSize: 14,
+                                                          fontSize: 16,
                                                           fontWeight:
                                                               FontWeight.w600,
-                                                          color: isSelected
-                                                              ? Colors.white
-                                                              : const Color(
-                                                                  0xFF1F2937,
-                                                                ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              );
-                                            }).toList(),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  if (_searchQuery.isEmpty && _selectedClassrooms.isNotEmpty) ...[
-                                    const SizedBox(height: 24),
-
-                                    // Selected Classes QR Codes
-                                    ..._selectedClassrooms.map((classroom) {
-                                      final students = _getStudentsForClassroom(
-                                        classroom,
-                                      );
-                                      return Container(
-                                        margin: const EdgeInsets.only(
-                                          bottom: 24,
-                                        ),
-                                        padding: const EdgeInsets.all(24),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(
-                                            24,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withValues(alpha: 
-                                                0.05,
-                                              ),
-                                              blurRadius: 20,
-                                              offset: const Offset(0, 8),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            // Class Header
-                                            Row(
-                                              children: [
-                                                Container(
-                                                  padding: const EdgeInsets.all(
-                                                    8,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: AppColors.accent.withValues(alpha: 0.1),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          12,
-                                                        ),
-                                                  ),
-                                                  child: const Icon(
-                                                    Icons.class_,
-                                                    color: AppColors.accent,
-                                                    size: 24,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 16),
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(
-                                                        classroom.name,
-                                                        style: const TextStyle(
-                                                          fontSize: 20,
-                                                          fontWeight:
-                                                              FontWeight.w700,
                                                           color: Color(
                                                             0xFF1F2937,
                                                           ),
                                                         ),
                                                       ),
-                                                      Text(
-                                                        '${students.length} students',
-                                                        style: const TextStyle(
-                                                          fontSize: 14,
-                                                          color: Color(
-                                                            0xFF6B7280,
+                                                      const SizedBox(
+                                                        height: 12,
+                                                      ),
+                                                      Container(
+                                                        padding:
+                                                            const EdgeInsets.all(
+                                                              8,
+                                                            ),
+                                                        decoration: BoxDecoration(
+                                                          color: const Color(
+                                                            0xFFF8FAFC,
+                                                          ),
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                12,
+                                                              ),
+                                                          border: Border.all(
+                                                            color: const Color(
+                                                              0xFFE5E7EB,
+                                                            ),
+                                                            width: 1,
+                                                          ),
+                                                        ),
+                                                        child: SizedBox(
+                                                          width: 150,
+                                                          height: 150,
+                                                          child: QrImageView(
+                                                            data: classroom
+                                                                .qrCode,
+                                                            version:
+                                                                QrVersions.auto,
+                                                            backgroundColor:
+                                                                Colors.white,
                                                           ),
                                                         ),
                                                       ),
+                                                      // QR name removed per request
                                                     ],
                                                   ),
                                                 ),
+
+                                                if (students.isNotEmpty)
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      const SizedBox(
+                                                        height: 16,
+                                                      ),
+                                                      SizedBox(
+                                                        width: double.infinity,
+                                                        child: OutlinedButton.icon(
+                                                          onPressed: () =>
+                                                              _toggleClassStudents(
+                                                                classroom.name,
+                                                              ),
+                                                          style: OutlinedButton.styleFrom(
+                                                            side:
+                                                                const BorderSide(
+                                                                  color: Color(
+                                                                    0xFFE5E7EB,
+                                                                  ),
+                                                                  width: 1,
+                                                                ),
+                                                            foregroundColor:
+                                                                const Color(
+                                                                  0xFF1F2937,
+                                                                ),
+                                                            backgroundColor:
+                                                                const Color(
+                                                                  0xFFF9FAFB,
+                                                                ),
+                                                            padding:
+                                                                const EdgeInsets.symmetric(
+                                                                  vertical: 14,
+                                                                  horizontal:
+                                                                      12,
+                                                                ),
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    12,
+                                                                  ),
+                                                            ),
+                                                          ),
+                                                          icon: AnimatedRotation(
+                                                            duration:
+                                                                const Duration(
+                                                                  milliseconds:
+                                                                      200,
+                                                                ),
+                                                            turns:
+                                                                _expandedClassStudentLists
+                                                                    .contains(
+                                                                      classroom
+                                                                          .name,
+                                                                    )
+                                                                ? 0.5
+                                                                : 0,
+                                                            child: const Icon(
+                                                              Icons
+                                                                  .keyboard_arrow_down_rounded,
+                                                            ),
+                                                          ),
+                                                          label: Text(
+                                                            'Students (${students.length})',
+                                                            style:
+                                                                const TextStyle(
+                                                                  fontSize: 14,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      AnimatedCrossFade(
+                                                        firstChild:
+                                                            const SizedBox.shrink(),
+                                                        secondChild: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            const SizedBox(
+                                                              height: 12,
+                                                            ),
+                                                            ListView.separated(
+                                                              shrinkWrap: true,
+                                                              physics:
+                                                                  const NeverScrollableScrollPhysics(),
+                                                              itemCount:
+                                                                  students
+                                                                      .length,
+                                                              separatorBuilder:
+                                                                  (_, __) =>
+                                                                      const SizedBox(
+                                                                        height:
+                                                                            12,
+                                                                      ),
+                                                              itemBuilder:
+                                                                  (
+                                                                    context,
+                                                                    index,
+                                                                  ) {
+                                                                    final student =
+                                                                        students[index];
+                                                                    return _buildStudentExpandableItem(
+                                                                      student,
+                                                                    );
+                                                                  },
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        crossFadeState:
+                                                            _expandedClassStudentLists
+                                                                .contains(
+                                                                  classroom
+                                                                      .name,
+                                                                )
+                                                            ? CrossFadeState
+                                                                  .showSecond
+                                                            : CrossFadeState
+                                                                  .showFirst,
+                                                        duration:
+                                                            const Duration(
+                                                              milliseconds: 200,
+                                                            ),
+                                                      ),
+                                                    ],
+                                                  ),
                                               ],
                                             ),
+                                          );
+                                        }).toList(),
+                                      ],
 
-                                            const SizedBox(height: 20),
-
-                                            // Class QR Code
-                                            Center(
-                                                child: Column(
-                                                  children: [
-                                                    const Text(
-                                                      'Class QR Code',
-                                                      style: TextStyle(
-                                                        fontSize: 16,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      color: Color(0xFF1F2937),
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 12),
-                                                  Container(
-                                                    padding: const EdgeInsets.all(8),
-                                                    decoration: BoxDecoration(
-                                                      color: const Color(0xFFF8FAFC),
-                                                      borderRadius: BorderRadius.circular(12),
-                                                      border: Border.all(
-                                                        color: const Color(0xFFE5E7EB),
-                                                        width: 1,
-                                                      ),
-                                                    ),
-                                                    child: SizedBox(
-                                                      width: 150,
-                                                      height: 150,
-                                                      child: QrImageView(
-                                                      data: classroom.qrCode,
-                                                      version: QrVersions.auto,
-                                                        backgroundColor: Colors.white,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  // QR name removed per request
-                                                ],
-                                              ),
+                                      if (_searchQuery.isEmpty &&
+                                          _selectedClassrooms.isEmpty) ...[
+                                        const SizedBox(height: 24),
+                                        Container(
+                                          padding: const EdgeInsets.all(32),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(
+                                              24,
                                             ),
-
-                                            if (students.isNotEmpty)
-                                              Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                              const SizedBox(height: 24),
-                                              const Text(
-                                                'Students',
-                                                style: TextStyle(
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Color(0xFF1F2937),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.05,
                                                 ),
-                                              ),
-                                              const SizedBox(height: 16),
-                                              GridView.builder(
-                                                shrinkWrap: true,
-                                                physics: const NeverScrollableScrollPhysics(),
-                                                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                                                  maxCrossAxisExtent: 220,
-                                                      crossAxisSpacing: 12,
-                                                      mainAxisSpacing: 12,
-                                                  childAspectRatio: 0.9,
-                                                    ),
-                                                itemCount: students.length,
-                                                itemBuilder: (context, index) {
-                                                      final student = students[index];
-                                                      return _buildStudentQRCard(student);
-                                                },
+                                                blurRadius: 20,
+                                                offset: const Offset(0, 8),
                                               ),
                                             ],
+                                          ),
+                                          child: Column(
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.all(
+                                                  20,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.accent
+                                                      .withValues(alpha: 0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.class_,
+                                                  size: 48,
+                                                  color: AppColors.accent,
+                                                ),
                                               ),
-                                          ],
+                                              const SizedBox(height: 20),
+                                              const Text(
+                                                'Select Your Classes',
+                                                style: TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Color(0xFF1F2937),
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              const SizedBox(height: 12),
+                                              const Text(
+                                                'Choose the classes you teach to view their QR codes and students',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: Color(0xFF6B7280),
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      );
-                                    }).toList(),
-                                  ],
-
-                                  if (_searchQuery.isEmpty && _selectedClassrooms.isEmpty) ...[
-                                    const SizedBox(height: 24),
-                                    Container(
-                                      padding: const EdgeInsets.all(32),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(24),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(alpha: 
-                                              0.05,
-                                            ),
-                                            blurRadius: 20,
-                                            offset: const Offset(0, 8),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Column(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(20),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.accent.withValues(alpha: 0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                            ),
-                                            child: const Icon(
-                                              Icons.class_,
-                                              size: 48,
-                                              color: AppColors.accent,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 20),
-                                          const Text(
-                                            'Select Your Classes',
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w700,
-                                              color: Color(0xFF1F2937),
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                          const SizedBox(height: 12),
-                                          const Text(
-                                            'Choose the classes you teach to view their QR codes and students',
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w500,
-                                              color: Color(0xFF6B7280),
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
+                                      ],
                                     ],
                                   ),
                                 ),
@@ -914,74 +1245,96 @@ class _TeacherClassesScreenState extends State<TeacherClassesScreen>
     );
   }
 
-  Widget _buildStudentQRCard(Student student) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Estimate available space for QR after header/text/paddings
-        final availableWidth = constraints.maxWidth;
-        final availableHeight = constraints.maxHeight;
-        // Reserve ~70px for icon + name + spacing + caption
-        final qrMaxByHeight = (availableHeight - 84).clamp(60.0, 180.0);
-        final qrMaxByWidth = (availableWidth - 24).clamp(60.0, 180.0);
-        final double qrSize = qrMaxByHeight < qrMaxByWidth ? qrMaxByHeight : qrMaxByWidth;
-
+  Widget _buildStudentExpandableItem(Student student) {
+    final isExpanded = _expandedStudentKeys.contains(student.qrCode);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: const Color(0xFF10B981).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.person, color: Color(0xFF10B981), size: 16),
-          ),
-              const SizedBox(height: 6),
-          Text(
-            student.name,
-            style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-              color: Color(0xFF1F2937),
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 8),
-              Flexible(
-                fit: FlexFit.loose,
-                child: Container(
+          Row(
+            children: [
+              Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
+                  color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                  child: SizedBox(
-                    width: qrSize,
-                    height: qrSize,
-            child: QrImageView(
-              data: student.qrCode,
-              version: QrVersions.auto,
-              backgroundColor: Colors.white,
-            ),
-          ),
+                child: const Icon(
+                  Icons.person,
+                  color: Color(0xFF10B981),
+                  size: 16,
                 ),
               ),
-              // QR name removed per request
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  student.name,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1F2937),
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              IconButton(
+                onPressed: () => _toggleStudentExpanded(student),
+                icon: AnimatedRotation(
+                  duration: const Duration(milliseconds: 200),
+                  turns: isExpanded ? 0.5 : 0,
+                  child: const Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+              ),
             ],
           ),
-        );
-      },
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Container(
+              margin: const EdgeInsets.only(top: 12),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
+              ),
+              child: Center(
+                child: SizedBox(
+                  height: 150,
+                  width: 150,
+                  child: Center(
+                    child: QrImageView(
+                      data: student.qrCode,
+                      version: QrVersions.auto,
+                      backgroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            crossFadeState: isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 200),
+          ),
+        ],
+      ),
     );
   }
 
@@ -991,13 +1344,17 @@ class _TeacherClassesScreenState extends State<TeacherClassesScreen>
     Classroom? exactClass;
     if (_searchQuery.isNotEmpty) {
       final lower = _searchQuery.toLowerCase();
-      final match = _allClassrooms.where((c) => c.name.toLowerCase() == lower || c.qrCode.toLowerCase() == lower);
+      final match = _allClassrooms.where(
+        (c) => c.name.toLowerCase() == lower || c.qrCode.toLowerCase() == lower,
+      );
       if (match.isNotEmpty) {
         exactClass = match.first;
       }
     }
     final studentResults = exactClass != null
-        ? _allStudents.where((s) => s.classroomName == exactClass!.name).toList()
+        ? _allStudents
+              .where((s) => s.classroomName == exactClass!.name)
+              .toList()
         : _searchStudents();
     final noResults = classResults.isEmpty && studentResults.isEmpty;
 
@@ -1036,7 +1393,9 @@ class _TeacherClassesScreenState extends State<TeacherClassesScreen>
                   const SizedBox(height: 12),
                   Column(
                     children: classResults.map((classroom) {
-                      final isSelected = _selectedClassrooms.contains(classroom);
+                      final isSelected = _selectedClassrooms.contains(
+                        classroom,
+                      );
                       return Container(
                         margin: const EdgeInsets.only(bottom: 16),
                         padding: const EdgeInsets.all(20),
@@ -1044,7 +1403,9 @@ class _TeacherClassesScreenState extends State<TeacherClassesScreen>
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: isSelected ? const Color(0xFF8B5CF6) : const Color(0xFFE5E7EB),
+                            color: isSelected
+                                ? const Color(0xFF8B5CF6)
+                                : const Color(0xFFE5E7EB),
                             width: 2,
                           ),
                           boxShadow: [
@@ -1061,20 +1422,29 @@ class _TeacherClassesScreenState extends State<TeacherClassesScreen>
                             Row(
                               children: [
                                 GestureDetector(
-                                  onTap: () => _toggleClassroomSelection(classroom),
+                                  onTap: () =>
+                                      _toggleClassroomSelection(classroom),
                                   child: Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: isSelected ? const Color(0xFF8B5CF6) : const Color(0xFFF3F4F6),
+                                      color: isSelected
+                                          ? const Color(0xFF8B5CF6)
+                                          : const Color(0xFFF3F4F6),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                        color: isSelected ? const Color(0xFF8B5CF6) : const Color(0xFFE5E7EB),
+                                        color: isSelected
+                                            ? const Color(0xFF8B5CF6)
+                                            : const Color(0xFFE5E7EB),
                                         width: 2,
                                       ),
                                     ),
                                     child: Icon(
-                                      isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
-                                      color: isSelected ? Colors.white : const Color(0xFF6B7280),
+                                      isSelected
+                                          ? Icons.check_circle
+                                          : Icons.radio_button_unchecked,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : const Color(0xFF6B7280),
                                       size: 20,
                                     ),
                                   ),
@@ -1082,14 +1452,17 @@ class _TeacherClassesScreenState extends State<TeacherClassesScreen>
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         classroom.name,
                                         style: TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.w700,
-                                          color: isSelected ? const Color(0xFF8B5CF6) : const Color(0xFF1F2937),
+                                          color: isSelected
+                                              ? const Color(0xFF8B5CF6)
+                                              : const Color(0xFF1F2937),
                                         ),
                                       ),
                                       Text(
@@ -1158,23 +1531,18 @@ class _TeacherClassesScreenState extends State<TeacherClassesScreen>
                     ),
                   ),
                   const SizedBox(height: 12),
-                  GridView.builder(
+                  ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 220,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 0.9,
-                    ),
                     itemCount: studentResults.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
-                      return _buildStudentQRCard(studentResults[index]);
+                      return _buildStudentExpandableItem(studentResults[index]);
                     },
                   ),
                 ],
-        ],
-      ),
+              ],
+            ),
     );
   }
 }

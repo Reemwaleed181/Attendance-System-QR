@@ -1213,6 +1213,57 @@ def mark_all_notifications_as_read(request, parent_id):
         return api_error('An error occurred while marking notifications as read', status.HTTP_500_INTERNAL_SERVER_ERROR, code='server_error', details=str(e))
 
 
+@api_view(['DELETE'])
+@permission_classes([permissions.AllowAny])
+def delete_notification(request, notification_id):
+    """
+    Delete a single notification by id
+    """
+    try:
+        notification = Notification.objects.get(id=notification_id)
+        notification.delete()
+        return Response({'message': 'Notification deleted', 'deleted_id': str(notification_id)}, status=status.HTTP_200_OK)
+    except Notification.DoesNotExist:
+        return api_error('Notification not found', status.HTTP_404_NOT_FOUND, code='notification_not_found')
+    except Exception as e:
+        return api_error('An error occurred while deleting notification', status.HTTP_500_INTERNAL_SERVER_ERROR, code='server_error', details=str(e))
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def bulk_delete_parent_notifications(request, parent_id):
+    """
+    Bulk delete notifications for a parent (expects JSON body: {"ids": [..]})
+    """
+    try:
+        parent = Parent.objects.get(id=parent_id)
+        ids = request.data.get('ids', [])
+        if not isinstance(ids, list) or not ids:
+            return api_error('No ids provided', status.HTTP_400_BAD_REQUEST, code='invalid_request')
+        qs = Notification.objects.filter(parent=parent, id__in=ids)
+        deleted_count, _ = qs.delete()
+        return Response({'message': f'{deleted_count} notifications deleted', 'deleted_count': deleted_count}, status=status.HTTP_200_OK)
+    except Parent.DoesNotExist:
+        return api_error('Parent not found', status.HTTP_404_NOT_FOUND, code='parent_not_found')
+    except Exception as e:
+        return api_error('An error occurred while bulk deleting notifications', status.HTTP_500_INTERNAL_SERVER_ERROR, code='server_error', details=str(e))
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.AllowAny])
+def delete_all_parent_notifications(request, parent_id):
+    """
+    Delete all notifications for a parent
+    """
+    try:
+        parent = Parent.objects.get(id=parent_id)
+        deleted_count, _ = Notification.objects.filter(parent=parent).delete()
+        return Response({'message': f'All notifications deleted ({deleted_count})', 'deleted_count': deleted_count}, status=status.HTTP_200_OK)
+    except Parent.DoesNotExist:
+        return api_error('Parent not found', status.HTTP_404_NOT_FOUND, code='parent_not_found')
+    except Exception as e:
+        return api_error('An error occurred while deleting notifications', status.HTTP_500_INTERNAL_SERVER_ERROR, code='server_error', details=str(e))
+
 def create_report_notification(student, parent, report_data):
     """
     Helper function to create report notifications for the app

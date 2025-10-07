@@ -20,17 +20,17 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
   bool _isLoading = true;
   bool _hasError = false;
   String? _errorMessage;
-  
+
   // Period selection
   String _selectedPeriod = 'current_week'; // 'current_week', 'today', 'custom'
   DateTime? _customFromDate;
   DateTime? _customToDate;
-  
+
   // Table calendar state
   DateTime _focusedDay = DateTime.now();
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
-  
+
   // Animation controllers
   late AnimationController _mainAnimationController;
   late AnimationController _cardAnimationController;
@@ -63,16 +63,13 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
       CurvedAnimation(parent: _mainAnimationController, curve: Curves.easeOut),
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3), 
-      end: Offset.zero
-    ).animate(
-      CurvedAnimation(
-        parent: _mainAnimationController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
-
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _mainAnimationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
 
     _mainAnimationController.forward();
   }
@@ -86,29 +83,29 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
 
   Future<void> _loadParentData() async {
     try {
-    final prefs = await SharedPreferences.getInstance();
-    _parentId = prefs.getString('parent_id');
+      final prefs = await SharedPreferences.getInstance();
+      _parentId = prefs.getString('parent_id');
 
       if (_parentId == null) {
         _setErrorState('Parent ID not found. Please log in again.');
         return;
       }
 
-          await _loadReportsData();
-      } catch (e) {
+      await _loadReportsData();
+    } catch (e) {
       _setErrorState('Error loading parent data: $e');
     }
   }
 
   Future<void> _loadReportsData() async {
     if (_parentId == null) return;
-    
+
     setState(() {
       _isLoading = true;
       _hasError = false;
       _errorMessage = null;
     });
-    
+
     try {
       final dateRange = _getDateRange();
       final data = await ApiService.getParentDetailedReports(
@@ -116,12 +113,12 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
         fromDate: dateRange['from'],
         toDate: dateRange['to'],
       );
-      
+
       setState(() {
         _reportsData = data;
         _isLoading = false;
       });
-      
+
       _cardAnimationController.forward();
     } catch (e) {
       _setErrorState('Error loading reports: $e');
@@ -138,18 +135,22 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
 
   Map<String, String> _getDateRange() {
     final now = DateTime.now();
-    
+
     switch (_selectedPeriod) {
       case 'today':
         return {
-          'from': '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
-          'to': '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
+          'from':
+              '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
+          'to':
+              '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
         };
       case 'custom':
         if (_customFromDate != null && _customToDate != null) {
           return {
-            'from': '${_customFromDate!.year}-${_customFromDate!.month.toString().padLeft(2, '0')}-${_customFromDate!.day.toString().padLeft(2, '0')}',
-            'to': '${_customToDate!.year}-${_customToDate!.month.toString().padLeft(2, '0')}-${_customToDate!.day.toString().padLeft(2, '0')}',
+            'from':
+                '${_customFromDate!.year}-${_customFromDate!.month.toString().padLeft(2, '0')}-${_customFromDate!.day.toString().padLeft(2, '0')}',
+            'to':
+                '${_customToDate!.year}-${_customToDate!.month.toString().padLeft(2, '0')}-${_customToDate!.day.toString().padLeft(2, '0')}',
           };
         }
         // Fallback to current week if custom dates not set
@@ -159,26 +160,31 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
         // Calculate start of week (Sunday) - consistent with weekly stats
         // weekday returns 1=Monday, 2=Tuesday, ..., 7=Sunday
         // We need to go back to the previous Sunday
-        final daysSinceSunday = (now.weekday % 7); // 0=Sunday, 1=Monday, ..., 6=Saturday
+        final daysSinceSunday =
+            (now.weekday % 7); // 0=Sunday, 1=Monday, ..., 6=Saturday
         final startOfWeek = now.subtract(Duration(days: daysSinceSunday));
         // End of week is Thursday (4 days after Sunday) - consistent with weekly stats
         // But extend to include today to catch reports sent recently
         final endOfWeek = now;
-        
+
         return {
-          'from': '${startOfWeek.year}-${startOfWeek.month.toString().padLeft(2, '0')}-${startOfWeek.day.toString().padLeft(2, '0')}',
-          'to': '${endOfWeek.year}-${endOfWeek.month.toString().padLeft(2, '0')}-${endOfWeek.day.toString().padLeft(2, '0')}',
+          'from':
+              '${startOfWeek.year}-${startOfWeek.month.toString().padLeft(2, '0')}-${startOfWeek.day.toString().padLeft(2, '0')}',
+          'to':
+              '${endOfWeek.year}-${endOfWeek.month.toString().padLeft(2, '0')}-${endOfWeek.day.toString().padLeft(2, '0')}',
         };
     }
-    
+
     // Fallback to current week
     final daysSinceSunday = (now.weekday % 7);
     final startOfWeek = now.subtract(Duration(days: daysSinceSunday));
     final endOfWeek = now; // Include today to catch recent reports
-    
+
     return {
-      'from': '${startOfWeek.year}-${startOfWeek.month.toString().padLeft(2, '0')}-${startOfWeek.day.toString().padLeft(2, '0')}',
-      'to': '${endOfWeek.year}-${endOfWeek.month.toString().padLeft(2, '0')}-${endOfWeek.day.toString().padLeft(2, '0')}',
+      'from':
+          '${startOfWeek.year}-${startOfWeek.month.toString().padLeft(2, '0')}-${startOfWeek.day.toString().padLeft(2, '0')}',
+      'to':
+          '${endOfWeek.year}-${endOfWeek.month.toString().padLeft(2, '0')}-${endOfWeek.day.toString().padLeft(2, '0')}',
     };
   }
 
@@ -224,7 +230,7 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Title
             const Text(
               'Select Period',
@@ -235,7 +241,7 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Period options
             _buildPeriodOption(
               'Today',
@@ -255,9 +261,9 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
               'custom',
               Icons.date_range_rounded,
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Current period display
             Container(
               padding: const EdgeInsets.all(16),
@@ -309,9 +315,14 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
     );
   }
 
-  Widget _buildPeriodOption(String title, String subtitle, String value, IconData icon) {
+  Widget _buildPeriodOption(
+    String title,
+    String subtitle,
+    String value,
+    IconData icon,
+  ) {
     final isSelected = _selectedPeriod == value;
-    
+
     return GestureDetector(
       onTap: () async {
         if (value == 'custom') {
@@ -329,14 +340,12 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected 
+          color: isSelected
               ? AppColors.secondary.withValues(alpha: 0.1)
               : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected 
-                ? AppColors.secondary
-                : const Color(0xFFE5E7EB),
+            color: isSelected ? AppColors.secondary : const Color(0xFFE5E7EB),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -345,16 +354,14 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: isSelected 
+                color: isSelected
                     ? AppColors.secondary
                     : const Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 icon,
-                color: isSelected 
-                    ? Colors.white
-                    : const Color(0xFF6B7280),
+                color: isSelected ? Colors.white : const Color(0xFF6B7280),
                 size: 20,
               ),
             ),
@@ -368,7 +375,7 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: isSelected 
+                      color: isSelected
                           ? AppColors.secondary
                           : const Color(0xFF1F2937),
                     ),
@@ -401,7 +408,7 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
     _rangeStart = _customFromDate;
     _rangeEnd = _customToDate;
     _focusedDay = _rangeStart ?? DateTime.now();
-    
+
     final result = await showDialog<Map<String, DateTime>>(
       context: context,
       builder: (BuildContext context) {
@@ -421,224 +428,235 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                    // Header
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: AppColors.secondary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.date_range_rounded,
-                            color: AppColors.secondary,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Expanded(
-                          child: Text(
-                            'Select Period',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF1F2937),
+                      // Header
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.secondary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(
-                            Icons.close,
-                            color: Color(0xFF6B7280),
-                          ),
-                        ),
-                      ],
-                    ),
-                    // Table Calendar
-                    Flexible(
-                      child: SizedBox(
-                        height: 350,
-                        child: TableCalendar<dynamic>(
-                        firstDay: DateTime.now().subtract(const Duration(days: 365)),
-                        lastDay: DateTime.now(),
-                        focusedDay: _focusedDay,
-                        calendarFormat: CalendarFormat.month,
-                        rangeSelectionMode: RangeSelectionMode.enforced,
-                        startingDayOfWeek: StartingDayOfWeek.sunday,
-                        rangeStartDay: _rangeStart,
-                        rangeEndDay: _rangeEnd,
-                        calendarStyle: CalendarStyle(
-                          outsideDaysVisible: false,
-                          weekendTextStyle: const TextStyle(
-                            color: Color(0xFF6B7280),
-                            fontWeight: FontWeight.w600,
-                          ),
-                          defaultTextStyle: const TextStyle(
-                            color: Color(0xFF374151),
-                            fontWeight: FontWeight.w600,
-                          ),
-                          selectedTextStyle: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                          ),
-                          todayTextStyle: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                          ),
-                          rangeHighlightColor: AppColors.secondary.withValues(alpha: 0.3),
-                          rangeStartDecoration: BoxDecoration(
-                            color: AppColors.secondary,
-                            shape: BoxShape.circle,
-                          ),
-                          rangeEndDecoration: BoxDecoration(
-                            color: AppColors.secondary,
-                            shape: BoxShape.circle,
-                          ),
-                          withinRangeDecoration: BoxDecoration(
-                            color: AppColors.secondary.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          todayDecoration: BoxDecoration(
-                            color: const Color(0xFF10B981),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        headerStyle: HeaderStyle(
-                          formatButtonVisible: false,
-                          titleCentered: true,
-                          titleTextStyle: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF1F2937),
-                          ),
-                          leftChevronIcon: Icon(
-                            Icons.chevron_left,
-                            color: AppColors.secondary,
-                            size: 24,
-                          ),
-                          rightChevronIcon: Icon(
-                            Icons.chevron_right,
-                            color: AppColors.secondary,
-                            size: 24,
-                          ),
-                        ),
-                        onDaySelected: (selectedDay, focusedDay) {
-                          setState(() {
-                            _focusedDay = focusedDay;
-                            if (_rangeStart == null || _rangeEnd != null) {
-                              // Start new range
-                              _rangeStart = selectedDay;
-                              _rangeEnd = null;
-                            } else {
-                              // Complete the range
-                              if (selectedDay.isBefore(_rangeStart!)) {
-                                _rangeEnd = _rangeStart;
-                                _rangeStart = selectedDay;
-                              } else {
-                                _rangeEnd = selectedDay;
-                              }
-                            }
-                          });
-                        },
-                        onRangeSelected: (start, end, focusedDay) {
-                          setState(() {
-                            _rangeStart = start;
-                            _rangeEnd = end;
-                            _focusedDay = focusedDay;
-                          });
-                        },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Selected Range Display
-                    if (_rangeStart != null && _rangeEnd != null)
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.secondary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: AppColors.secondary.withValues(alpha: 0.2),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.check_circle_rounded,
+                            child: Icon(
+                              Icons.date_range_rounded,
                               color: AppColors.secondary,
-                              size: 16,
+                              size: 20,
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Selected: ${_rangeStart!.day}/${_rangeStart!.month}/${_rangeStart!.year} - ${_rangeEnd!.day}/${_rangeEnd!.month}/${_rangeEnd!.year}',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF374151),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    const SizedBox(height: 16),
-                    
-                    // Action Buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: const BorderSide(color: Color(0xFFE5E7EB)),
-                              ),
-                            ),
-                            child: const Text(
-                              'Cancel',
+                          ),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Text(
+                              'Select Period',
                               style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF1F2937),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: const Icon(
+                              Icons.close,
+                              color: Color(0xFF6B7280),
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Table Calendar
+                      Flexible(
+                        child: SizedBox(
+                          height: 350,
+                          child: TableCalendar<dynamic>(
+                            firstDay: DateTime.now().subtract(
+                              const Duration(days: 365),
+                            ),
+                            lastDay: DateTime.now(),
+                            focusedDay: _focusedDay,
+                            calendarFormat: CalendarFormat.month,
+                            rangeSelectionMode: RangeSelectionMode.enforced,
+                            startingDayOfWeek: StartingDayOfWeek.sunday,
+                            rangeStartDay: _rangeStart,
+                            rangeEndDay: _rangeEnd,
+                            calendarStyle: CalendarStyle(
+                              outsideDaysVisible: false,
+                              weekendTextStyle: const TextStyle(
                                 color: Color(0xFF6B7280),
                                 fontWeight: FontWeight.w600,
                               ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: (_rangeStart != null && _rangeEnd != null)
-                                ? () {
-                                    Navigator.of(context).pop({
-                                      'from': _rangeStart,
-                                      'to': _rangeEnd,
-                                    });
-                                  }
-                                : null,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.secondary,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: const Text(
-                              'Apply',
-                              style: TextStyle(
+                              defaultTextStyle: const TextStyle(
+                                color: Color(0xFF374151),
                                 fontWeight: FontWeight.w600,
                               ),
+                              selectedTextStyle: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              todayTextStyle: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              rangeHighlightColor: AppColors.secondary
+                                  .withValues(alpha: 0.3),
+                              rangeStartDecoration: BoxDecoration(
+                                color: AppColors.secondary,
+                                shape: BoxShape.circle,
+                              ),
+                              rangeEndDecoration: BoxDecoration(
+                                color: AppColors.secondary,
+                                shape: BoxShape.circle,
+                              ),
+                              withinRangeDecoration: BoxDecoration(
+                                color: AppColors.secondary.withValues(
+                                  alpha: 0.1,
+                                ),
+                                shape: BoxShape.circle,
+                              ),
+                              todayDecoration: BoxDecoration(
+                                color: const Color(0xFF10B981),
+                                shape: BoxShape.circle,
+                              ),
                             ),
+                            headerStyle: HeaderStyle(
+                              formatButtonVisible: false,
+                              titleCentered: true,
+                              titleTextStyle: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF1F2937),
+                              ),
+                              leftChevronIcon: Icon(
+                                Icons.chevron_left,
+                                color: AppColors.secondary,
+                                size: 24,
+                              ),
+                              rightChevronIcon: Icon(
+                                Icons.chevron_right,
+                                color: AppColors.secondary,
+                                size: 24,
+                              ),
+                            ),
+                            onDaySelected: (selectedDay, focusedDay) {
+                              setState(() {
+                                _focusedDay = focusedDay;
+                                if (_rangeStart == null || _rangeEnd != null) {
+                                  // Start new range
+                                  _rangeStart = selectedDay;
+                                  _rangeEnd = null;
+                                } else {
+                                  // Complete the range
+                                  if (selectedDay.isBefore(_rangeStart!)) {
+                                    _rangeEnd = _rangeStart;
+                                    _rangeStart = selectedDay;
+                                  } else {
+                                    _rangeEnd = selectedDay;
+                                  }
+                                }
+                              });
+                            },
+                            onRangeSelected: (start, end, focusedDay) {
+                              setState(() {
+                                _rangeStart = start;
+                                _rangeEnd = end;
+                                _focusedDay = focusedDay;
+                              });
+                            },
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Selected Range Display
+                      if (_rangeStart != null && _rangeEnd != null)
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.secondary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: AppColors.secondary.withValues(alpha: 0.2),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.check_circle_rounded,
+                                color: AppColors.secondary,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Selected: ${_rangeStart!.day}/${_rangeStart!.month}/${_rangeStart!.year} - ${_rangeEnd!.day}/${_rangeEnd!.month}/${_rangeEnd!.year}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF374151),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      const SizedBox(height: 16),
+
+                      // Action Buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: const BorderSide(
+                                    color: Color(0xFFE5E7EB),
+                                  ),
+                                ),
+                              ),
+                              child: const Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  color: Color(0xFF6B7280),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed:
+                                  (_rangeStart != null && _rangeEnd != null)
+                                  ? () {
+                                      final Map<String, DateTime> result = {
+                                        'from': _rangeStart!,
+                                        'to': _rangeEnd!,
+                                      };
+                                      Navigator.of(context).pop(result);
+                                    }
+                                  : null,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.secondary,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text(
+                                'Apply',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -648,7 +666,7 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
         );
       },
     );
-    
+
     if (result != null) {
       setState(() {
         _selectedPeriod = 'custom';
@@ -658,8 +676,6 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
       _loadReportsData();
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -686,43 +702,46 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
 
   Widget _buildHeader() {
     return Container(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      child: Column(
+        children: [
+          Row(
+            children: [
               _buildHeaderButton(
                 icon: Icons.arrow_back_ios_new_rounded,
-                            onPressed: () => Navigator.of(context).pop(),
-                    ),
-                    const SizedBox(width: 16),
-                        Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                              const Text(
-                                'Teacher Reports',
-                            style: TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                                  letterSpacing: -0.8,
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                child: const Text(
-                                  'Reports sent by teachers',
-                              style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Teacher Reports',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: -0.8,
                       ),
                     ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      child: const Text(
+                        'Reports sent by teachers',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               _buildHeaderButton(
                 icon: Icons.refresh_rounded,
                 onPressed: _loadReportsData,
@@ -739,18 +758,18 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
     required VoidCallback onPressed,
   }) {
     return Container(
-                        decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: IconButton(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: IconButton(
         onPressed: onPressed,
         icon: Icon(icon, color: Colors.white, size: 20),
       ),
@@ -759,29 +778,29 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
 
   Widget _buildMainContent() {
     return Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(32),
-                      topRight: Radius.circular(32),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: Responsive.pagePadding(context),
-                    child: Column(
-                      children: [
-                        _buildPeriodIndicator(),
-                        const SizedBox(height: 16),
-                        Expanded(
-                          child: _isLoading
-                              ? _buildLoadingState()
-                              : _hasError
-                                  ? _buildErrorState()
-                                  : _buildReportsContent(),
-                        ),
-                      ],
-                    ),
-                  ),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(32),
+          topRight: Radius.circular(32),
+        ),
+      ),
+      child: Padding(
+        padding: Responsive.pagePadding(context),
+        child: Column(
+          children: [
+            _buildPeriodIndicator(),
+            const SizedBox(height: 16),
+            Expanded(
+              child: _isLoading
+                  ? _buildLoadingState()
+                  : _hasError
+                  ? _buildErrorState()
+                  : _buildReportsContent(),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -812,11 +831,11 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
-              _selectedPeriod == 'today' 
+              _selectedPeriod == 'today'
                   ? Icons.today_rounded
                   : _selectedPeriod == 'custom'
-                      ? Icons.date_range_rounded
-                      : Icons.calendar_view_week_rounded,
+                  ? Icons.date_range_rounded
+                  : Icons.calendar_view_week_rounded,
               color: AppColors.secondary,
               size: 20,
             ),
@@ -868,31 +887,31 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
 
   Widget _buildLoadingState() {
     return Center(
-                                    child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(20),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.secondary.withValues(alpha: 0.1),
-                                            borderRadius: BorderRadius.circular(20),
-                                          ),
-                                child: const CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.secondary),
-                                  strokeWidth: 3,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                                        const Text(
-                                'Loading teacher reports...',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                            color: Color(0xFF6B7280),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.secondary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.secondary),
+              strokeWidth: 3,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Loading teacher reports...',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF6B7280),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -929,9 +948,9 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
                     color: const Color(0xFFEF4444).withValues(alpha: 0.3),
                     blurRadius: 16,
                     offset: const Offset(0, 8),
+                  ),
+                ],
               ),
-            ],
-          ),
               child: const Icon(
                 Icons.error_outline_rounded,
                 size: 56,
@@ -982,7 +1001,10 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFEF4444),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -1024,34 +1046,34 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
+              children: [
+                Container(
                   padding: const EdgeInsets.all(28),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: AppColors.secondaryGradient,
                     ),
                     borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.secondary.withValues(alpha: 0.3),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.secondary.withValues(alpha: 0.3),
                         blurRadius: 16,
                         offset: const Offset(0, 8),
                       ),
                     ],
-                ),
-                child: const Icon(
+                  ),
+                  child: const Icon(
                     Icons.check_circle_rounded,
                     size: 56,
-                  color: Colors.white,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 24),
-                    const Text(
+                const Text(
                   'Excellent Attendance!',
-                      style: TextStyle(
+                  style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w900,
                     color: Color(0xFF1F2937),
@@ -1060,7 +1082,10 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
                 ),
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFD1FAE5),
                     borderRadius: BorderRadius.circular(20),
@@ -1076,7 +1101,7 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  _selectedPeriod == 'today' 
+                  _selectedPeriod == 'today'
                       ? 'No detailed reports have been sent by teachers today. All children are doing well!'
                       : 'No detailed reports have been sent by teachers for the selected period. All children are doing well!',
                   style: const TextStyle(
@@ -1095,13 +1120,14 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
   }
 
   Widget _buildReportsData() {
-    final absenceReports = _reportsData['absence_reports'] as List<dynamic>? ?? [];
+    final absenceReports =
+        _reportsData['absence_reports'] as List<dynamic>? ?? [];
     final message = _reportsData['message'] as String?;
-    
+
     if (absenceReports.isEmpty && message != null) {
       return _buildNoAbsencesMessage(message);
     }
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -1114,7 +1140,10 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
     );
   }
 
-  Widget _buildAbsenceReportCard(Map<String, dynamic> absenceReport, int index) {
+  Widget _buildAbsenceReportCard(
+    Map<String, dynamic> absenceReport,
+    int index,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
@@ -1172,7 +1201,10 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEF4444),
                   borderRadius: BorderRadius.circular(20),
@@ -1188,9 +1220,9 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Warning Message
           Container(
             padding: const EdgeInsets.all(16),
@@ -1223,9 +1255,9 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
               ],
             ),
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Teacher Info
           Row(
             children: [
@@ -1250,14 +1282,13 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
     );
   }
 
-
   Widget _buildNoAbsencesMessage(String message) {
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       padding: const EdgeInsets.all(32),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -1265,16 +1296,16 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
             offset: const Offset(0, 8),
           ),
         ],
-        ),
-        child: Column(
-          children: [
-            Container(
+      ),
+      child: Column(
+        children: [
+          Container(
             padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
+            decoration: BoxDecoration(
               color: AppColors.secondary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Icon(
+            ),
+            child: const Icon(
               Icons.check_circle_outline,
               color: AppColors.secondary,
               size: 48,
@@ -1285,21 +1316,21 @@ class _ParentReportsScreenState extends State<ParentReportsScreen>
             'Great News!',
             style: TextStyle(
               fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1F2937),
-                      ),
-                    ),
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1F2937),
+            ),
+          ),
           const SizedBox(height: 12),
           Text(
             message,
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 16,
-                        color: Color(0xFF6B7280),
+              color: Color(0xFF6B7280),
               height: 1.5,
-                    ),
-                  ),
-                ],
+            ),
+          ),
+        ],
       ),
     );
   }

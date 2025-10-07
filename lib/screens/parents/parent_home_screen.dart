@@ -202,13 +202,16 @@ class _ParentHomeScreenState extends State<ParentHomeScreen>
                         Stack(
                           children: [
                             IconButton(
-                              onPressed: () {
-                                Navigator.push(
+                              onPressed: () async {
+                                final changed = await Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => const ParentNotificationsScreen(),
                                   ),
                                 );
+                                if (changed == true && mounted) {
+                                  await _refreshData();
+                                }
                               },
                               icon: Container(
                                 padding: const EdgeInsets.all(8),
@@ -387,13 +390,16 @@ class _ParentHomeScreenState extends State<ParentHomeScreen>
                                             ),
                                           ),
                                           GestureDetector(
-                                            onTap: () {
-                                              Navigator.push(
+                                            onTap: () async {
+                                              final changed = await Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
                                                   builder: (context) => const ParentNotificationsScreen(),
                                                 ),
                                               );
+                                              if (changed == true && mounted) {
+                                                await _refreshData();
+                                              }
                                             },
                                             child: Container(
                                               padding: const EdgeInsets.all(8),
@@ -546,7 +552,18 @@ class _ParentHomeScreenState extends State<ParentHomeScreen>
                                         childData['student'],
                                       );
                                       
-                                      return Container(
+                                      return GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => ParentWeeklyStatsScreen(
+                                                selectedChild: student,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        child: Container(
                                         margin: const EdgeInsets.only(bottom: 8),
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 16,
@@ -596,6 +613,7 @@ class _ParentHomeScreenState extends State<ParentHomeScreen>
                                             ),
                                           ],
                                         ),
+                                      ),
                                       );
                                     }).toList(),
                                         ],

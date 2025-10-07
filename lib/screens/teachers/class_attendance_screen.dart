@@ -53,21 +53,17 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
 
     _animationController.forward();
     _loadTeacherToken();
@@ -88,21 +84,21 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
 
   Future<void> _processQRCode(String qrCode) async {
     if (_isLoading) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       // Debug: Show the actual QR code being scanned
       print('DEBUG: Scanned QR code: "$qrCode"');
-      
+
       // Check for classroom QR codes (various formats)
       if (qrCode.startsWith('CLASS_') || qrCode.startsWith('CLASS:')) {
         await _handleClassroomQR(qrCode);
-      } 
+      }
       // Check for student QR codes (various formats)
       else if (qrCode.startsWith('STUDENT_') || qrCode.startsWith('STUDENT:')) {
         await _handleStudentQR(qrCode);
-      } 
+      }
       // Try to handle legacy formats or other patterns
       else if (qrCode.contains('CLASS') || qrCode.contains('STUDENT')) {
         if (qrCode.contains('CLASS')) {
@@ -129,7 +125,7 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
     if (_teacherToken != null) {
       try {
         String className;
-        
+
         // Parse different QR code formats
         if (qrCode.startsWith('CLASS:')) {
           // Format: CLASS:Class 1|TEACHER:Ms. Sarah Johnson|CAPACITY:25
@@ -142,19 +138,27 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
           // Fallback: try to extract class name from any format
           className = qrCode;
         }
-        
+
         setState(() {
           _currentClassroomName = className;
         });
-        
+
         // Get all classrooms and try multiple matching strategies
         final classrooms = await ApiService.getClassrooms(_teacherToken!);
         // Exclude the test class from matching
-        final filteredClassrooms = classrooms.where((c) => c.name.toLowerCase() != 'test class 1').toList();
+        final filteredClassrooms = classrooms
+            .where((c) => c.name.toLowerCase() != 'test class 1')
+            .toList();
 
         Classroom matchingClassroom = filteredClassrooms.firstWhere(
           (c) => c.qrCode == qrCode,
-          orElse: () => Classroom(id: '', name: 'Unknown', qrCode: '', createdAt: DateTime.now(), updatedAt: DateTime.now()),
+          orElse: () => Classroom(
+            id: '',
+            name: 'Unknown',
+            qrCode: '',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
         );
 
         if (matchingClassroom.name == 'Unknown') {
@@ -166,31 +170,42 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
           // Also try Title Case for common pattern
           final titleNormalized = normalized.isEmpty
               ? normalized
-              : normalized[0].toUpperCase() + normalized.substring(1).toLowerCase();
+              : normalized[0].toUpperCase() +
+                    normalized.substring(1).toLowerCase();
 
           matchingClassroom = filteredClassrooms.firstWhere(
-            (c) => c.name.toLowerCase() == className.toLowerCase()
-                || c.name.toLowerCase() == normalized.toLowerCase()
-                || c.name.toLowerCase() == titleNormalized.toLowerCase(),
-            orElse: () => Classroom(id: '', name: 'Unknown', qrCode: '', createdAt: DateTime.now(), updatedAt: DateTime.now()),
+            (c) =>
+                c.name.toLowerCase() == className.toLowerCase() ||
+                c.name.toLowerCase() == normalized.toLowerCase() ||
+                c.name.toLowerCase() == titleNormalized.toLowerCase(),
+            orElse: () => Classroom(
+              id: '',
+              name: 'Unknown',
+              qrCode: '',
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
           );
         }
-        
+
         if (matchingClassroom.name == 'Unknown') {
           _showSnackBar('Classroom not found: $className', isError: true);
           return;
         }
-        
+
         // Update _currentClassroom to use the actual classroom QR code from database
         setState(() {
           _currentClassroom = matchingClassroom.qrCode;
-          _currentClassroomName = matchingClassroom.name; // ensure display uses canonical name
+          _currentClassroomName =
+              matchingClassroom.name; // ensure display uses canonical name
         });
-        
+
         // Get students and filter by classroom ID instead of name for robustness
         final students = await ApiService.getStudents(_teacherToken!);
-        final studentsInClass = students.where((s) => s.classroomId == matchingClassroom.id).toList();
-        
+        final studentsInClass = students
+            .where((s) => s.classroomId == matchingClassroom.id)
+            .toList();
+
         setState(() {
           _studentsInClass = studentsInClass;
           _attendanceStatus.clear();
@@ -200,7 +215,9 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
         });
         // Do not start polling until teacher enables self-attendance
 
-        _showSnackBar('Classroom detected: $className (${studentsInClass.length} students)');
+        _showSnackBar(
+          'Classroom detected: $className (${studentsInClass.length} students)',
+        );
       } catch (e) {
         _showSnackBar('Error fetching students: $e', isError: true);
       }
@@ -209,12 +226,16 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
 
   Future<void> _handleStudentQR(String qrCode) async {
     if (_currentClassroom == null) {
-      _showSnackBar('Please scan classroom QR code first', isError: false, isWarning: true);
+      _showSnackBar(
+        'Please scan classroom QR code first',
+        isError: false,
+        isWarning: true,
+      );
       return;
     }
 
     String studentName;
-    
+
     // Parse different student QR code formats
     if (qrCode.startsWith('STUDENT:')) {
       // Format: STUDENT:John Doe|CLASS:Class 1
@@ -222,12 +243,16 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
       studentName = parts[0].replaceFirst('STUDENT:', '');
     } else if (qrCode.startsWith('STUDENT_')) {
       // Format: STUDENT_ahmed_ali or STUDENT_FATIMA_HASSAN_ce4d7da5
-      studentName = qrCode.replaceFirst('STUDENT_', '').split('_').take(2).join(' ');
+      studentName = qrCode
+          .replaceFirst('STUDENT_', '')
+          .split('_')
+          .take(2)
+          .join(' ');
     } else {
       // Fallback
       studentName = qrCode;
     }
-    
+
     // Try to find the student in the current class
     final student = _studentsInClass.firstWhere(
       (s) => s.name.toLowerCase() == studentName.toLowerCase(),
@@ -249,7 +274,10 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
       });
       _showSnackBar('$studentName marked as present (late arrival)');
     } else {
-      _showSnackBar('Student $studentName not found in current class', isError: true);
+      _showSnackBar(
+        'Student $studentName not found in current class',
+        isError: true,
+      );
     }
   }
 
@@ -297,7 +325,7 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
       int presentCount = 0;
       int absentCount = 0;
       List<String> absentStudentIds = [];
-      
+
       for (var student in _studentsInClass) {
         final isPresent = _attendanceStatus[student.id] == true;
         await ApiService.markAttendance(
@@ -321,7 +349,9 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
             _teacherToken!,
             absentStudentIds: absentStudentIds,
             classroomName: _currentClassroomName ?? 'Unknown Class',
-            date: DateTime.now().toIso8601String().split('T')[0], // YYYY-MM-DD format
+            date: DateTime.now().toIso8601String().split(
+              'T',
+            )[0], // YYYY-MM-DD format
           );
         } catch (e) {
           print('Error sending daily absence notifications: $e');
@@ -329,10 +359,14 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
         }
       }
 
-      _showSnackBar('Attendance submitted successfully! Present: $presentCount, Absent: $absentCount. Parents will be notified of absences.');
-      
+      _showSnackBar(
+        'Attendance submitted successfully! Present: $presentCount, Absent: $absentCount. Parents will be notified of absences.',
+      );
+
       // Navigate to teacher home page after successful submission
-      await Future.delayed(const Duration(seconds: 1)); // Small delay to show success message
+      await Future.delayed(
+        const Duration(seconds: 1),
+      ); // Small delay to show success message
       if (mounted) {
         Navigator.pushNamedAndRemoveUntil(
           context,
@@ -361,9 +395,12 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
 
   List<Student> get _filteredStudents {
     if (_searchQuery.isEmpty) return _studentsInClass;
-    return _studentsInClass.where((student) =>
-        student.name.toLowerCase().contains(_searchQuery.toLowerCase())
-    ).toList();
+    return _studentsInClass
+        .where(
+          (student) =>
+              student.name.toLowerCase().contains(_searchQuery.toLowerCase()),
+        )
+        .toList();
   }
 
   Future<void> _toggleStudentSelfAttendance() async {
@@ -371,7 +408,7 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
 
     try {
       setState(() => _isLoading = true);
-      
+
       if (!_studentSelfAttendanceEnabled) {
         // Enable student self-attendance
         final resp = await ApiService.openSelfAttendanceWindow(
@@ -421,7 +458,10 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
   Future<void> _fetchLiveOnce() async {
     try {
       if (_teacherToken == null || _currentClassroom == null) return;
-      final data = await ApiService.getLiveClassAttendance(token: _teacherToken!, classQr: _currentClassroom!);
+      final data = await ApiService.getLiveClassAttendance(
+        token: _teacherToken!,
+        classQr: _currentClassroom!,
+      );
       final List<dynamic> records = (data['records'] as List?) ?? [];
       final now = DateTime.now();
       if (!mounted) return;
@@ -464,7 +504,11 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
     return DateTime.now().isBefore(until);
   }
 
-  void _showSnackBar(String message, {bool isError = false, bool isWarning = false}) {
+  void _showSnackBar(
+    String message, {
+    bool isError = false,
+    bool isWarning = false,
+  }) {
     Color backgroundColor;
     if (isError) {
       backgroundColor = const Color(0xFFEF4444);
@@ -479,9 +523,7 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
         content: Text(message),
         backgroundColor: backgroundColor,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -494,11 +536,7 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFE0E7FF),
-              Color(0xFFDDD6FE),
-              Color(0xFFC4B5FD),
-            ],
+            colors: [Color(0xFFE0E7FF), Color(0xFFDDD6FE), Color(0xFFC4B5FD)],
           ),
         ),
         child: SafeArea(
@@ -519,17 +557,17 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
                           ),
                           child: Column(
                             children: [
-                          if (_currentClassroom == null) ...[
-                            _buildQRScannerSection(),
-                          ] else ...[
-                            _buildClassInfoSection(),
-                            const SizedBox(height: 24),
-                            _buildBulkActionsSection(),
-                            const SizedBox(height: 24),
-                            _buildStudentsListSection(),
-                            const SizedBox(height: 24),
-                            _buildSubmitSection(),
-                          ],
+                              if (_currentClassroom == null) ...[
+                                _buildQRScannerSection(),
+                              ] else ...[
+                                _buildClassInfoSection(),
+                                const SizedBox(height: 24),
+                                _buildBulkActionsSection(),
+                                const SizedBox(height: 24),
+                                _buildStudentsListSection(),
+                                const SizedBox(height: 24),
+                                _buildSubmitSection(),
+                              ],
                             ],
                           ),
                         ),
@@ -616,11 +654,7 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
-                  Icons.refresh,
-                  color: Colors.white,
-                  size: 20,
-                ),
+                child: const Icon(Icons.refresh, color: Colors.white, size: 20),
               ),
             ),
           ),
@@ -688,7 +722,10 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
             height: 300,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.3),
+                width: 2,
+              ),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
@@ -731,11 +768,7 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
               color: const Color(0xFF6366F1).withOpacity(0.1),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(
-              Icons.class_,
-              color: Color(0xFF6366F1),
-              size: 32,
-            ),
+            child: const Icon(Icons.class_, color: Color(0xFF6366F1), size: 32),
           ),
           const SizedBox(width: 20),
           Expanded(
@@ -781,11 +814,7 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
                 color: Colors.red.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(
-                Icons.close,
-                color: Colors.red,
-                size: 20,
-              ),
+              child: const Icon(Icons.close, color: Colors.red, size: 20),
             ),
           ),
         ],
@@ -858,7 +887,10 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
                 const Expanded(
                   child: Text(
                     'Allow student self-attendance',
-                    style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1F2937)),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1F2937),
+                    ),
                   ),
                 ),
                 Switch.adaptive(
@@ -871,23 +903,34 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
               ],
             ),
           ),
-          if (_studentSelfAttendanceEnabled && _selfAttendanceExpiresAt != null) ...[
+          if (_studentSelfAttendanceEnabled &&
+              _selfAttendanceExpiresAt != null) ...[
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: const Color(0xFF10B981).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFF10B981).withOpacity(0.3)),
+                border: Border.all(
+                  color: const Color(0xFF10B981).withOpacity(0.3),
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.check_circle, color: Color(0xFF10B981), size: 16),
+                  const Icon(
+                    Icons.check_circle,
+                    color: Color(0xFF10B981),
+                    size: 16,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Students can record attendance until: ${_formatTime12(_selfAttendanceExpiresAt!)}',
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF10B981), fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF10B981),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -900,12 +943,18 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
 
   Widget _buildStudentsListSection() {
     final filteredStudents = _filteredStudents;
-    final presentCount = _attendanceStatus.values.where((v) => v == true).length;
+    final presentCount = _attendanceStatus.values
+        .where((v) => v == true)
+        .length;
     final totalCount = _studentsInClass.length;
     // Compute late students based on current session arrivals
-    final List<MapEntry<String, DateTime>> presentEntries = _presentAt.entries.where((e) => _attendanceStatus[e.key] == true).toList();
-    presentEntries.sort((a,b) => a.value.compareTo(b.value));
-    DateTime? earliest = presentEntries.isNotEmpty ? presentEntries.first.value : null;
+    final List<MapEntry<String, DateTime>> presentEntries = _presentAt.entries
+        .where((e) => _attendanceStatus[e.key] == true)
+        .toList();
+    presentEntries.sort((a, b) => a.value.compareTo(b.value));
+    DateTime? earliest = presentEntries.isNotEmpty
+        ? presentEntries.first.value
+        : null;
     final lateIds = <String>{};
     if (earliest != null) {
       for (final e in presentEntries) {
@@ -914,7 +963,7 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
         }
       }
     }
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -932,11 +981,7 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
         children: [
           Row(
             children: [
-              const Icon(
-                Icons.people,
-                color: Color(0xFF6366F1),
-                size: 24,
-              ),
+              const Icon(Icons.people, color: Color(0xFF6366F1), size: 24),
               const SizedBox(width: 12),
               const Text(
                 'Students',
@@ -962,18 +1007,33 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
             Align(
               alignment: Alignment.centerLeft,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF59E0B).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.3)),
+                  border: Border.all(
+                    color: const Color(0xFFF59E0B).withOpacity(0.3),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.schedule, color: Color(0xFFF59E0B), size: 16),
+                    const Icon(
+                      Icons.schedule,
+                      color: Color(0xFFF59E0B),
+                      size: 16,
+                    ),
                     const SizedBox(width: 8),
-                    Text('Late: ${lateIds.length}', style: const TextStyle(color: Color(0xFFF59E0B), fontWeight: FontWeight.w700)),
+                    Text(
+                      'Late: ${lateIds.length}',
+                      style: const TextStyle(
+                        color: Color(0xFFF59E0B),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -982,30 +1042,56 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: _studentsInClass.where((s) => lateIds.contains(s.id)).map((s) {
-                final t = _presentAt[s.id];
-                final timeStr = t != null ? _formatTime12(t) : '';
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF59E0B).withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.3)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.person, size: 14, color: Color(0xFFF59E0B)),
-                      const SizedBox(width: 6),
-                      Text(s.name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF92400E))),
-                      if (timeStr.isNotEmpty) ...[
-                        const SizedBox(width: 6),
-                        Text(timeStr, style: const TextStyle(fontSize: 12, color: Color(0xFF92400E), fontWeight: FontWeight.w600)),
-                      ]
-                    ],
-                  ),
-                );
-              }).toList(),
+              children: _studentsInClass
+                  .where((s) => lateIds.contains(s.id))
+                  .map((s) {
+                    final t = _presentAt[s.id];
+                    final timeStr = t != null ? _formatTime12(t) : '';
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF59E0B).withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: const Color(0xFFF59E0B).withOpacity(0.3),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.person,
+                            size: 14,
+                            color: Color(0xFFF59E0B),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            s.name,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF92400E),
+                            ),
+                          ),
+                          if (timeStr.isNotEmpty) ...[
+                            const SizedBox(width: 6),
+                            Text(
+                              timeStr,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF92400E),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    );
+                  })
+                  .toList(),
             ),
             const SizedBox(height: 16),
           ],
@@ -1033,11 +1119,23 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
           // Student Status Legend
           Row(
             children: [
-              _buildStatusLegend('Not Marked', const Color(0xFF9CA3AF), Icons.radio_button_unchecked),
+              _buildStatusLegend(
+                'Not Marked',
+                const Color(0xFF9CA3AF),
+                Icons.radio_button_unchecked,
+              ),
               const SizedBox(width: 16),
-              _buildStatusLegend('Present', const Color(0xFF10B981), Icons.check_circle),
+              _buildStatusLegend(
+                'Present',
+                const Color(0xFF10B981),
+                Icons.check_circle,
+              ),
               const SizedBox(width: 16),
-              _buildStatusLegend('Absent', const Color(0xFFEF4444), Icons.cancel),
+              _buildStatusLegend(
+                'Absent',
+                const Color(0xFFEF4444),
+                Icons.cancel,
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -1073,7 +1171,6 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
     );
   }
 
-
   Widget _buildStudentScanner() {
     return Column(
       children: [
@@ -1095,10 +1192,7 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
               Expanded(
                 child: Text(
                   'Scan individual student QR codes to mark late arrivals',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ),
               CustomButton(
@@ -1109,7 +1203,9 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
                     _isScanning = !_isScanning;
                   });
                 },
-                backgroundColor: _isScanning ? Colors.red : const Color(0xFF6366F1),
+                backgroundColor: _isScanning
+                    ? Colors.red
+                    : const Color(0xFF6366F1),
                 foregroundColor: Colors.white,
                 height: 36,
               ),
@@ -1148,13 +1244,13 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
     final isPresent = attendanceStatus == true;
     final isAbsent = attendanceStatus == false;
     final recent = _isRecentlyUpdated(student.id);
-    
+
     Color backgroundColor;
     Color borderColor;
     Color iconColor;
     Color textColor;
     IconData icon;
-    
+
     if (isPresent) {
       backgroundColor = const Color(0xFFF0FDF4);
       borderColor = const Color(0xFF10B981);
@@ -1175,21 +1271,24 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
       textColor = const Color(0xFF6B7280);
       icon = Icons.radio_button_unchecked;
     }
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: recent ? const Color(0xFF22C55E) : borderColor, width: recent ? 2 : 1),
+        border: Border.all(
+          color: recent ? const Color(0xFF22C55E) : borderColor,
+          width: recent ? 2 : 1,
+        ),
         boxShadow: recent
             ? [
                 BoxShadow(
                   color: const Color(0xFF22C55E).withOpacity(0.25),
                   blurRadius: 12,
                   offset: const Offset(0, 6),
-                )
+                ),
               ]
             : [],
       ),
@@ -1258,7 +1357,10 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
               groupValue: isPresent ? 1 : (isAbsent ? -1 : 0),
               children: {
                 -1: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 6,
+                    horizontal: 8,
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: const [
@@ -1267,16 +1369,26 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
                   ),
                 ),
                 0: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 6,
+                    horizontal: 8,
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: const [
-                      Icon(Icons.radio_button_unchecked, size: 16, color: Color(0xFF9CA3AF)),
+                      Icon(
+                        Icons.radio_button_unchecked,
+                        size: 16,
+                        color: Color(0xFF9CA3AF),
+                      ),
                     ],
                   ),
                 ),
                 1: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 6,
+                    horizontal: 8,
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: const [
@@ -1303,11 +1415,17 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
   }
 
   Widget _buildSubmitSection() {
-    final presentCount = _attendanceStatus.values.where((v) => v == true).length;
-    final absentCount = _attendanceStatus.values.where((v) => v == false).length;
+    final presentCount = _attendanceStatus.values
+        .where((v) => v == true)
+        .length;
+    final absentCount = _attendanceStatus.values
+        .where((v) => v == false)
+        .length;
     final markedCount = presentCount + absentCount;
-    final attendanceRate = markedCount > 0 ? ((presentCount / markedCount) * 100).round() : 0;
-    
+    final attendanceRate = markedCount > 0
+        ? ((presentCount / markedCount) * 100).round()
+        : 0;
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -1360,8 +1478,13 @@ class _ClassAttendanceScreenState extends State<ClassAttendanceScreen>
       ),
     );
   }
-  
-  Widget _buildCircularProgressIndicator(String label, String value, double progress, Color color) {
+
+  Widget _buildCircularProgressIndicator(
+    String label,
+    String value,
+    double progress,
+    Color color,
+  ) {
     return Column(
       children: [
         SizedBox(

@@ -44,4 +44,7 @@ urlpatterns = [
     path('parent/<uuid:parent_id>/notifications/', views.parent_notifications, name='parent_notifications'),
     path('notifications/<uuid:notification_id>/mark-read/', views.mark_notification_as_read, name='mark_notification_as_read'),
     path('parent/<uuid:parent_id>/notifications/mark-all-read/', views.mark_all_notifications_as_read, name='mark_all_notifications_as_read'),
+    path('notifications/<uuid:notification_id>/', views.delete_notification, name='delete_notification'),
+    path('parent/<uuid:parent_id>/notifications/bulk-delete/', views.bulk_delete_parent_notifications, name='bulk_delete_parent_notifications'),
+    path('parent/<uuid:parent_id>/notifications/delete-all/', views.delete_all_parent_notifications, name='delete_all_parent_notifications'),
 ]
