@@ -281,7 +281,6 @@ QR Attendance provides three distinct, role-based interfaces designed for differ
 - **Django REST API**: RESTful endpoints for all operations
 - **Database Models**: Structured data for users, classes, and attendance
 - **Authentication**: JWT-based secure authentication
-- **Report Generation**: Excel and PDF export capabilities
 
 ## 🎨 Design Features
 
