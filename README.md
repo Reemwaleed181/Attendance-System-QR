@@ -223,36 +223,35 @@ QR Attendance provides three distinct, role-based interfaces designed for differ
 ### 📚 Complete UI Screen Index
 
 #### Teacher (`ui/teacher/`)
-- `Teacher_login.png`
-- `teacher_home_screen.png`
-- `teacher_classes_screen.png`
-- `teacher_classes_screen3.png`
-- `qr_scanner.png`
-- `class_attendance_screen.png`
-- `class_attendance_screen2.png`
-- `teacher_attendance_history_screen.png`
-- `teacher_attendance_history_screen2.png`
-- `teacher_attendance_history_screen3.png`
-- `teacher_reports_screen.png`
-- `teacher_reports_screen2.png`
-- `teacher_reports_screen3.png`
-- `teacher_reports_screen4.png`
+- `Teacher_login.jpg`
+- `teacher_home_screen.jpg`
+- `teacher_classes_screen.jpg`
+- `teacher_classes_screen2.jpg`
+- `teacher_classes_screen3.jpg`
+- `qr_scanner.jpg`
+- `class_attendance_screen.jpg`
+- `class_attendance_screen2.jpg`
+- `teacher_attendance_history_screen.jpg`
+- `teacher_attendance_history_screen2.jpg`
+- `teacher_reports_screen.jpg`
+- `teacher_reports_screen2.jpg`
+- `teacher_reports_screen3.jpg`
+- `teacher_reports_screen4.jpg`
 
 #### Parent (`ui/parent/`)
-- `Parent_login.png`
-- `parent_home_screen.png`
-- `parent_home_screen2.png`
-- `parent_weekly_stats_screen.png`
-- `parent_weekly_stats_screen2.png`
-- `parent_notifications_screen.png`
-- `parent_reports_screen.png`
-- `parent_reports_screen2.png`
+- `Parent_login.jpg`
+- `parent_home_screen.jpg`
+- `parent_weekly_stats_screen.jpg`
+- `parent_weekly_stats_screen2.jpg`
+- `parent_notifications_screen.jpg`
+- `parent_reports_screen.jpg`
+- `parent_reports_screen2.jpg`
 
 #### Student (`ui/student/`)
-- `Student_login.png`
-- `student_attendance_request_screen.png`
-- `student_attendance_request_screen2.png`
-- `student_attendance_request_screen3.png`
+- `Student_login.jpg`
+- `student_attendance_request_screen.jpg`
+- `student_attendance_request_screen2.jpg`
+- `student_attendance_request_screen3.jpg`
 
 ## 🛠️ Technology Stack
 
