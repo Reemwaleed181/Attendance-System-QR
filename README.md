@@ -134,18 +134,16 @@ QR Attendance provides three distinct, role-based interfaces designed for differ
       <img src="ui/teacher/teacher_home_screen.jpg" alt="Teacher Dashboard" width="200"/>
       <div><sub>Teacher Dashboard</sub></div>
     </td>
-  </tr>
-  <tr>
     <td align="center">
       <img src="ui/teacher/teacher_classes_screen2.jpg" alt="Class Management 2" width="200"/>
       <div><sub>Class Management</sub></div>
     </td>
+  </tr>
+  <tr>
     <td align="center">
       <img src="ui/teacher/qr_scanner.jpg" alt="QR Scanner" width="200"/>
       <div><sub>QR Scanner</sub></div>
     </td>
-  </tr>
-  <tr>
     <td align="center">
       <img src="ui/teacher/class_attendance_screen.jpg" alt="Class Attendance" width="200"/>
       <div><sub>Class Attendance</sub></div>
@@ -160,8 +158,6 @@ QR Attendance provides three distinct, role-based interfaces designed for differ
       <img src="ui/teacher/teacher_reports_screen.jpg" alt="Teacher Reports" width="200"/>
       <div><sub>Teacher Reports</sub></div>
     </td>
-  </tr>
-  <tr>
     <td align="center">
       <img src="ui/teacher/teacher_reports_screen3.jpg" alt="Teacher Reports 3" width="200"/>
       <div><sub>Teacher Reports 2</sub></div>
@@ -170,7 +166,6 @@ QR Attendance provides three distinct, role-based interfaces designed for differ
       <img src="ui/teacher/teacher_reports_screen4.jpg" alt="Teacher Reports 4" width="200"/>
       <div><sub>Teacher Reports 3</sub></div>
     </td>
-    <td align="center">&nbsp;</td>
   </tr>
 </table>
 
@@ -227,8 +222,10 @@ QR Attendance provides three distinct, role-based interfaces designed for differ
       <img src="ui/student/student_attendance_request_screen3.jpg" alt="Student Attendance 3" width="200"/>
       <div><sub>Gallery Upload</sub></div>
     </td>
-    <td align="center">&nbsp;</td>
-    <td align="center">&nbsp;</td>
+    <td align="center" colspan="2">
+      <div><strong>📱 One-Tap Attendance Recording</strong></div>
+      <div><sub>Simple interface for quick attendance submission</sub></div>
+    </td>
   </tr>
 </table>
 
