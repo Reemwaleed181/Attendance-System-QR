@@ -274,32 +274,25 @@ QR Attendance provides three distinct, role-based interfaces designed for differ
 
 The app uses a carefully crafted color scheme designed for educational environments:
 
-#### Primary Colors
-- **Primary Indigo**: `#3949AB` - Main brand color for navigation and primary actions
-- **Primary Light**: `#5C6BC0` - Lighter indigo for highlights
-- **Primary Dark**: `#303F9F` - Darker indigo for emphasis
-
-#### Secondary Colors
-- **Teal**: `#26A69A` - Success and parent interface accent
-- **Teal Light**: `#80CBC4` - Light teal for subtle highlights
-- **Teal Dark**: `#00897B` - Dark teal for emphasis
-
-#### Accent Colors
-- **Deep Purple**: `#5E35B1` - Teacher interface accent
-- **Purple Light**: `#7E57C2` - Teacher button highlights
-- **Purple Dark**: `#4527A0` - Dark purple for emphasis
-
-#### Status Colors
-- **Success Green**: `#10B981` - Present/Success states
-- **Warning Orange**: `#F59E0B` - Warning/Attention states
-- **Error Red**: `#EF4444` - Absent/Error states
-- **Info Blue**: `#3B82F6` - Information states
-
-#### Neutral Colors
-- **Background**: `#FAFAFA` - Main background color
-- **Surface**: `#FFFFFF` - Card and container backgrounds
-- **Text Primary**: `#212121` - Main text color
-- **Text Secondary**: `#616161` - Secondary text color
+| Category | Color Name | Hex Code | Usage | Importance |
+|----------|------------|----------|-------|------------|
+| **Primary** | Primary Indigo | `#3949AB` | Main brand color, navigation, primary actions | ⭐⭐⭐⭐⭐ |
+| **Primary** | Primary Light | `#5C6BC0` | Highlights and secondary elements | ⭐⭐⭐ |
+| **Primary** | Primary Dark | `#303F9F` | Emphasis and active states | ⭐⭐⭐⭐ |
+| **Secondary** | Teal | `#26A69A` | Parent interface accent, success states | ⭐⭐⭐⭐ |
+| **Secondary** | Teal Light | `#80CBC4` | Subtle highlights and backgrounds | ⭐⭐ |
+| **Secondary** | Teal Dark | `#00897B` | Emphasis and active teal elements | ⭐⭐⭐ |
+| **Accent** | Deep Purple | `#5E35B1` | Teacher interface accent | ⭐⭐⭐⭐ |
+| **Accent** | Purple Light | `#7E57C2` | Teacher button highlights | ⭐⭐⭐ |
+| **Accent** | Purple Dark | `#4527A0` | Dark purple emphasis | ⭐⭐⭐ |
+| **Status** | Success Green | `#10B981` | Present/Success states | ⭐⭐⭐⭐⭐ |
+| **Status** | Warning Orange | `#F59E0B` | Warning/Attention states | ⭐⭐⭐⭐ |
+| **Status** | Error Red | `#EF4444` | Absent/Error states | ⭐⭐⭐⭐⭐ |
+| **Status** | Info Blue | `#3B82F6` | Information states | ⭐⭐⭐ |
+| **Neutral** | Background | `#FAFAFA` | Main background color | ⭐⭐⭐⭐ |
+| **Neutral** | Surface | `#FFFFFF` | Card and container backgrounds | ⭐⭐⭐⭐ |
+| **Neutral** | Text Primary | `#212121` | Main text color | ⭐⭐⭐⭐⭐ |
+| **Neutral** | Text Secondary | `#616161` | Secondary text color | ⭐⭐⭐ |
 
 ### 🎨 Visual Color Palette
 
