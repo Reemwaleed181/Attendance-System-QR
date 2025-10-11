@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-img { width: 300px; height: 200px; border: 2px solid #ccc; margin: 10px; }
+        .status { color: green; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Image Loading Test</h1>
+    
+    <h2>Parent Images:</h2>
+    <img src="ui/parent/Parent_login.jpg" alt="Parent Login" class="test-img" onload="this.nextElementSibling.innerHTML='✓ Loaded'" onerror="this.nextElementSibling.innerHTML='✗ Failed'">
+    <div class="status">Loading...</div>
+    
+    <img src="ui/parent/parent_home_screen.jpg" alt="Parent Home" class="test-img" onload="this.nextElementSibling.innerHTML='✓ Loaded'" onerror="this.nextElementSibling.innerHTML='✗ Failed'">
+    <div class="status">Loading...</div>
+    
+    <h2>Student Images:</h2>
+    <img src="ui/student/Student_login.jpg" alt="Student Login" class="test-img" onload="this.nextElementSibling.innerHTML='✓ Loaded'" onerror="this.nextElementSibling.innerHTML='✗ Failed'">
+    <div class="status">Loading...</div>
+    
+    <h2>Teacher Images:</h2>
+    <img src="ui/teacher/Teacher_login.jpg" alt="Teacher Login" class="test-img" onload="this.nextElementSibling.innerHTML='✓ Loaded'" onerror="this.nextElementSibling.innerHTML='✗ Failed'">
+    <div class="status">Loading...</div>
+    
+    <script>
+        console.log('Testing image paths...');
+    </script>
+</body>
+</html>
