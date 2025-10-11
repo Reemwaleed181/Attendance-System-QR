@@ -17,7 +17,34 @@ header h1 {
   margin-bottom: 10px;
 }
 
-section {
+.splash-img {
+  width: 100%;
+  max-width: 600px;
+  border-radius: 10px;
+  margin-top: 20px;
+}
+
+nav {
+  text-align: center;
+  margin: 20px 0;
+}
+
+nav button {
+  background-color: #ff6600;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  margin: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+nav button:hover {
+  background-color: #e65c00;
+}
+
+.screenshots {
   margin: 30px 0;
 }
 
@@ -29,29 +56,12 @@ section h2 {
   margin-bottom: 15px;
 }
 
-ul {
-  list-style-type: disc;
-  margin-left: 20px;
-}
-
 img {
   max-width: 100%;
   border-radius: 8px;
   margin-bottom: 10px;
 }
 
-a {
-  color: #ff6600;
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-
-footer {
-  text-align: center;
-  margin-top: 50px;
-  padding: 10px 0;
-  border-top: 1px solid #ccc;
+.section-hidden {
+  display: none;
 }
