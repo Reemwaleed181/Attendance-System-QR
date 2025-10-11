@@ -24,12 +24,12 @@
     <title>QR Attendance System - Modern Attendance Management</title>
     
     <!-- Preload critical resources -->
-    <link rel="preload" href="style.min.css" as="style">
+    <link rel="preload" href="style.css" as="style">
     <link rel="preload" href="script.min.js" as="script">
     <link rel="preload" href="logo.jpg" as="image">
     
     <!-- Optimized CSS -->
-    <link rel="stylesheet" href="style.min.css">
+    <link rel="stylesheet" href="style.css">
     
     <!-- Font optimization -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -74,11 +74,6 @@
     </script>
 </head>
 <body>
-    <!-- Loading Screen -->
-    <div id="loading-screen" class="loading-screen">
-        <div class="loading-spinner"></div>
-        <div class="loading-text">Loading...</div>
-    </div>
 
     <!-- Back to Top Button -->
     <button id="back-to-top" class="back-to-top" aria-label="Back to top">
@@ -244,7 +239,7 @@
                 <div class="video-section">
                     <div class="video-container">
                         <div class="video-placeholder">
-                            <img src="../ui/splash.jpg" alt="Project Demo Video" class="demo-image">
+                            <img src="logo.jpg" alt="Project Demo Video" class="demo-image">
                             <div class="play-button" role="button" tabindex="0" aria-label="Play demo video">
                                 <i class="fas fa-play"></i>
                             </div>
@@ -260,7 +255,7 @@
                     <div class="ui-content">
                         <h3 class="ui-title">Choose Your Role</h3>
                         <div class="buttons-container">
-                            <button class="module-btn teacher-btn" onclick="navigateToModule('teacher.html')" aria-label="Access Teacher Module">
+                            <button class="module-btn teacher-btn" onclick="QRAttendance.navigateToModule(event, 'teacher.html')" aria-label="Access Teacher Module">
                                 <div class="btn-icon">
                                     <i class="fas fa-chalkboard-teacher"></i>
                                 </div>
@@ -273,7 +268,7 @@
                                 </div>
                             </button>
 
-                            <button class="module-btn parent-btn" onclick="navigateToModule('parent.html')" aria-label="Access Parent Module">
+                            <button class="module-btn parent-btn" onclick="QRAttendance.navigateToModule(event, 'parent.html')" aria-label="Access Parent Module">
                                 <div class="btn-icon">
                                     <i class="fas fa-users"></i>
                                 </div>
@@ -286,7 +281,7 @@
                                 </div>
                             </button>
 
-                            <button class="module-btn student-btn" onclick="navigateToModule('student.html')" aria-label="Access Student Module">
+                            <button class="module-btn student-btn" onclick="QRAttendance.navigateToModule(event, 'student.html')" aria-label="Access Student Module">
                                 <div class="btn-icon">
                                     <i class="fas fa-graduation-cap"></i>
                                 </div>
