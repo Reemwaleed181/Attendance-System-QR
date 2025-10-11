@@ -184,5 +184,54 @@ information with ease.
 <p>Student Module - Empowering students with smart attendance</p>
 </div>
 </footer>
+<!-- Image Modal/Lightbox -->
+<div id="imageModal" class="modal">
+    <span class="close-button">&times;</span>
+    <img class="modal-content" id="fullImage">
+    <div id="caption"></div>
+</div>
+
+<script>
+    // Get the modal, image, and caption elements
+    var modal = document.getElementById("imageModal");
+    var modalImg = document.getElementById("fullImage");
+    var captionText = document.getElementById("caption");
+    var closeButton = document.getElementsByClassName("close-button")[0];
+
+    // Get all images that should open in the modal
+    var images = document.querySelectorAll(".purpose-img, .feature-img");
+
+    images.forEach(function(img) {
+        img.style.cursor = "pointer"; // Add pointer cursor to indicate clickability
+        img.onclick = function(){
+            modal.style.display = "block";
+            modalImg.src = this.src;
+            captionText.innerHTML = this.alt; // Use alt text as caption
+            document.body.style.overflow = "hidden"; // Prevent background scrolling
+        }
+    });
+
+    // When the user clicks on close button (x), close the modal
+    closeButton.onclick = function() {
+        modal.style.display = "none";
+        document.body.style.overflow = "auto"; // Restore scrolling
+    }
+
+    // When the user clicks anywhere outside of the image, close it
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+            document.body.style.overflow = "auto"; // Restore scrolling
+        }
+    }
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            modal.style.display = "none";
+            document.body.style.overflow = "auto"; // Restore scrolling
+        }
+    });
+</script>
 </body>
 </html>
