@@ -31,21 +31,17 @@ class _QRScannerScreenState extends State<QRScannerScreen>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
 
     _animationController.forward();
     _loadTeacherToken();
@@ -65,17 +61,19 @@ class _QRScannerScreenState extends State<QRScannerScreen>
 
   Future<void> _processQRCode(String qrCode) async {
     if (_isLoading) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       // Check if it's a classroom QR code (various formats)
-      if (qrCode.startsWith('CLASS_') || qrCode.startsWith('CLASS:') || qrCode.contains('CLASS')) {
+      if (qrCode.startsWith('CLASS_') ||
+          qrCode.startsWith('CLASS:') ||
+          qrCode.contains('CLASS')) {
         setState(() {
           _currentClassroom = qrCode;
           _currentStudent = null;
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Classroom detected: $qrCode'),
@@ -88,21 +86,23 @@ class _QRScannerScreenState extends State<QRScannerScreen>
         );
       }
       // Check if it's a student QR code (various formats)
-      else if (qrCode.startsWith('STUDENT_') || qrCode.startsWith('STUDENT:') || qrCode.contains('STUDENT')) {
+      else if (qrCode.startsWith('STUDENT_') ||
+          qrCode.startsWith('STUDENT:') ||
+          qrCode.contains('STUDENT')) {
         if (_currentClassroom == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Please scan classroom QR code first'),
-            backgroundColor: const Color(0xFFF59E0B),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Please scan classroom QR code first'),
+              backgroundColor: const Color(0xFFF59E0B),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-          ),
-        );
+          );
           return;
         }
-        
+
         // Mark attendance
         if (_teacherToken != null) {
           final response = await ApiService.markAttendance(
@@ -110,14 +110,16 @@ class _QRScannerScreenState extends State<QRScannerScreen>
             _currentClassroom!,
             _teacherToken!,
           );
-          
+
           setState(() {
             _currentStudent = qrCode;
           });
-          
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(response['message'] ?? 'Attendance marked successfully'),
+              content: Text(
+                response['message'] ?? 'Attendance marked successfully',
+              ),
               backgroundColor: const Color(0xFF10B981),
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -162,11 +164,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFF8FAFC),
-              Color(0xFFE2E8F0),
-              Color(0xFFCBD5E1),
-            ],
+            colors: [Color(0xFFF8FAFC), Color(0xFFE2E8F0), Color(0xFFCBD5E1)],
           ),
         ),
         child: SafeArea(
@@ -193,7 +191,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                 ),
                 child: Row(
                   children: [
-          IconButton(
+                    IconButton(
                       onPressed: () => Navigator.pop(context),
                       icon: Container(
                         padding: const EdgeInsets.all(8),
@@ -252,7 +250,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                   ],
                 ),
               ),
-              
+
               // Main Content
               Expanded(
                 child: FadeTransition(
@@ -269,344 +267,397 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                          // Current Status Card
-                          if (_currentClassroom != null || _currentStudent != null)
-                            Container(
-                              padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(24),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.05),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF6366F1).withValues(alpha: 0.1),
-                                          borderRadius: BorderRadius.circular(12),
+                              // Current Status Card
+                              if (_currentClassroom != null ||
+                                  _currentStudent != null)
+                                Container(
+                                  padding: const EdgeInsets.all(24),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(24),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.05,
                                         ),
-                                        child: const Icon(
-                                          Icons.info_outline,
-                                          color: Color(0xFF6366F1),
-                                          size: 24,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      const Text(
-                                        'Current Status',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w700,
-                                          color: Color(0xFF1F2937),
-                                        ),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 8),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 20),
-                                  if (_currentClassroom != null)
-                                    Container(
-                                      padding: const EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF10B981).withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(16),
-                                        border: Border.all(
-                                          color: const Color(0xFF10B981).withValues(alpha: 0.3),
-                                        ),
-                                      ),
-                                      child: Row(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
                                         children: [
-                                          const Icon(
-                                            Icons.class_,
-                                            color: Color(0xFF10B981),
-                                            size: 24,
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                const Text(
-                                                  'Classroom',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Color(0xFF10B981),
-                                                  ),
-                                                ),
-                                                Text(
-                                                  _currentClassroom!,
-                                                  style: const TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: Color(0xFF1F2937),
-                                                  ),
-                                                ),
-                                              ],
+                                          Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: const Color(
+                                                0xFF6366F1,
+                                              ).withValues(alpha: 0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                             ),
-          ),
-        ],
-      ),
-                                    ),
-                                  if (_currentClassroom != null && _currentStudent != null)
-                                    const SizedBox(height: 12),
-                                  if (_currentStudent != null)
-                                    Container(
-                                      padding: const EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(16),
-                                        border: Border.all(
-                                          color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
-                                        ),
-                                      ),
-                                      child: Row(
-        children: [
-                                          const Icon(
-                                            Icons.person,
-                                            color: Color(0xFF3B82F6),
-                                            size: 24,
+                                            child: const Icon(
+                                              Icons.info_outline,
+                                              color: Color(0xFF6366F1),
+                                              size: 24,
+                                            ),
                                           ),
-                                          const SizedBox(width: 12),
-          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                const Text(
-                                                  'Student',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Color(0xFF3B82F6),
-                                                  ),
-                                                ),
-                                                Text(
-                                                  _currentStudent!,
-                                                  style: const TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: Color(0xFF1F2937),
-                                                  ),
-                                                ),
-                                              ],
+                                          const SizedBox(width: 16),
+                                          const Text(
+                                            'Current Status',
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w700,
+                                              color: Color(0xFF1F2937),
                                             ),
                                           ),
                                         ],
                                       ),
+                                      const SizedBox(height: 20),
+                                      if (_currentClassroom != null)
+                                        Container(
+                                          padding: const EdgeInsets.all(16),
+                                          decoration: BoxDecoration(
+                                            color: const Color(
+                                              0xFF10B981,
+                                            ).withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                            border: Border.all(
+                                              color: const Color(
+                                                0xFF10B981,
+                                              ).withValues(alpha: 0.3),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.class_,
+                                                color: Color(0xFF10B981),
+                                                size: 24,
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    const Text(
+                                                      'Classroom',
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        color: Color(
+                                                          0xFF10B981,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      _currentClassroom!,
+                                                      style: const TextStyle(
+                                                        fontSize: 16,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        color: Color(
+                                                          0xFF1F2937,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      if (_currentClassroom != null &&
+                                          _currentStudent != null)
+                                        const SizedBox(height: 12),
+                                      if (_currentStudent != null)
+                                        Container(
+                                          padding: const EdgeInsets.all(16),
+                                          decoration: BoxDecoration(
+                                            color: const Color(
+                                              0xFF3B82F6,
+                                            ).withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                            border: Border.all(
+                                              color: const Color(
+                                                0xFF3B82F6,
+                                              ).withValues(alpha: 0.3),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.person,
+                                                color: Color(0xFF3B82F6),
+                                                size: 24,
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    const Text(
+                                                      'Student',
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        color: Color(
+                                                          0xFF3B82F6,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      _currentStudent!,
+                                                      style: const TextStyle(
+                                                        fontSize: 16,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        color: Color(
+                                                          0xFF1F2937,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+
+                              if (_currentClassroom != null ||
+                                  _currentStudent != null)
+                                const SizedBox(height: 24),
+
+                              // Scanner Instructions
+                              Container(
+                                padding: const EdgeInsets.all(24),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF6366F1),
+                                      Color(0xFF8B5CF6),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(24),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(
+                                        0xFF6366F1,
+                                      ).withValues(alpha: 0.3),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 10),
                                     ),
+                                  ],
+                                ),
+                                child: Column(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(20),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.3,
+                                          ),
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: const Icon(
+                                        Icons.qr_code_scanner,
+                                        size: 48,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Text(
+                                      'Scanning Instructions',
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      '1. First scan a classroom QR code\n2. Then scan student QR codes to mark attendance',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.white,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              const SizedBox(height: 24),
+
+                              // Camera View
+                              Container(
+                                height: 300,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(24),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.05,
+                                      ),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(24),
+                                  child: Stack(
+                                    children: [
+                                      MobileScanner(
+                                        controller: cameraController,
+                                        onDetect: (capture) {
+                                          final List<Barcode> barcodes =
+                                              capture.barcodes;
+                                          for (final barcode in barcodes) {
+                                            _processQRCode(
+                                              barcode.rawValue ?? '',
+                                            );
+                                          }
+                                        },
+                                      ),
+                                      // Scanner overlay
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                            color: const Color(0xFF6366F1),
+                                            width: 3,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                        ),
+                                        margin: const EdgeInsets.all(40),
+                                      ),
+                                      // Corner indicators
+                                      Positioned(
+                                        top: 40,
+                                        left: 40,
+                                        child: Container(
+                                          width: 20,
+                                          height: 20,
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFF6366F1),
+                                            borderRadius: BorderRadius.only(
+                                              topLeft: Radius.circular(4),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 40,
+                                        right: 40,
+                                        child: Container(
+                                          width: 20,
+                                          height: 20,
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFF6366F1),
+                                            borderRadius: BorderRadius.only(
+                                              topRight: Radius.circular(4),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        bottom: 40,
+                                        left: 40,
+                                        child: Container(
+                                          width: 20,
+                                          height: 20,
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFF6366F1),
+                                            borderRadius: BorderRadius.only(
+                                              bottomLeft: Radius.circular(4),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        bottom: 40,
+                                        right: 40,
+                                        child: Container(
+                                          width: 20,
+                                          height: 20,
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFF6366F1),
+                                            borderRadius: BorderRadius.only(
+                                              bottomRight: Radius.circular(4),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 24),
+
+                              // Control Buttons
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: CustomButton(
+                                      text: 'Toggle Flash',
+                                      icon: Icons.flash_on,
+                                      onPressed: () =>
+                                          cameraController.toggleTorch(),
+                                      backgroundColor: const Color(0xFF6B7280),
+                                      foregroundColor: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: CustomButton(
+                                      text: 'Switch Camera',
+                                      icon: Icons.flip_camera_ios,
+                                      onPressed: () =>
+                                          cameraController.switchCamera(),
+                                      backgroundColor: const Color(0xFF6366F1),
+                                      foregroundColor: Colors.white,
+                                    ),
+                                  ),
                                 ],
                               ),
-                            ),
-                          
-                          if (_currentClassroom != null || _currentStudent != null)
-                            const SizedBox(height: 24),
-                          
-                          // Scanner Instructions
-                          Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                              ),
-                              borderRadius: BorderRadius.circular(24),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF6366F1).withValues(alpha: 0.3),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(20),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                      color: Colors.white.withValues(alpha: 0.3),
-                                      width: 2,
-                                    ),
-                                  ),
-                                  child: const Icon(
-                                    Icons.qr_code_scanner,
-                                    size: 48,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
-                                                                   Text(
-                                     'Scanning Instructions',
-                                     style: const TextStyle(
-                                       fontSize: 20,
-                                       fontWeight: FontWeight.w700,
-                                       color: Colors.white,
-                                     ),
-                                     textAlign: TextAlign.center,
-                                   ),
-                                const SizedBox(height: 12),
-                                                                 Text(
-                                   '1. First scan a classroom QR code\n2. Then scan student QR codes to mark attendance',
-                                   style: const TextStyle(
-                                     fontSize: 16,
-                                     fontWeight: FontWeight.w500,
-                                     color: Colors.white,
-                                   ),
-                                   textAlign: TextAlign.center,
-                                 ),
-                              ],
-                            ),
-                          ),
-                          
-                          const SizedBox(height: 24),
-                          
-                          // Camera View
-                          Container(
-                            height: 300,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(24),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(24),
-            child: Stack(
-              children: [
-                MobileScanner(
-                  controller: cameraController,
-                  onDetect: (capture) {
-                    final List<Barcode> barcodes = capture.barcodes;
-                    for (final barcode in barcodes) {
-                                        _processQRCode(barcode.rawValue ?? '');
-                    }
-                  },
-                ),
-                                  // Scanner overlay
-                  Container(
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: const Color(0xFF6366F1),
-                                        width: 3,
-                                      ),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    margin: const EdgeInsets.all(40),
-                                  ),
-                                  // Corner indicators
-                                  Positioned(
-                                    top: 40,
-                                    left: 40,
-                                    child: Container(
-                                      width: 20,
-                                      height: 20,
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFF6366F1),
-                                        borderRadius: BorderRadius.only(
-                                          topLeft: Radius.circular(4),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    top: 40,
-                                    right: 40,
-                                    child: Container(
-                                      width: 20,
-                                      height: 20,
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFF6366F1),
-                                        borderRadius: BorderRadius.only(
-                                          topRight: Radius.circular(4),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    bottom: 40,
-                                    left: 40,
-                                    child: Container(
-                                      width: 20,
-                                      height: 20,
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFF6366F1),
-                                        borderRadius: BorderRadius.only(
-                                          bottomLeft: Radius.circular(4),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    bottom: 40,
-                                    right: 40,
-                                    child: Container(
-                                      width: 20,
-                                      height: 20,
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFF6366F1),
-                                        borderRadius: BorderRadius.only(
-                                          bottomRight: Radius.circular(4),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-                          ),
-                          
-                          const SizedBox(height: 24),
-          
-                          // Control Buttons
-                          Row(
-                            children: [
-          Expanded(
-                                child: CustomButton(
-                                  text: 'Toggle Flash',
-                                  icon: Icons.flash_on,
-                                  onPressed: () => cameraController.toggleTorch(),
-                                  backgroundColor: const Color(0xFF6B7280),
-                                  foregroundColor: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                        Expanded(
-                                child: CustomButton(
-                                  text: 'Switch Camera',
-                                  icon: Icons.flip_camera_ios,
-                                  onPressed: () => cameraController.switchCamera(),
-                                  backgroundColor: const Color(0xFF6366F1),
-                                  foregroundColor: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
                             ],
                           ),
                         ),
                       ),
                     ),
-                        ),
-                      ),
-                    ),
-                ],
+                  ),
+                ),
               ),
-            ),
+            ],
+          ),
+        ),
       ),
     );
   }

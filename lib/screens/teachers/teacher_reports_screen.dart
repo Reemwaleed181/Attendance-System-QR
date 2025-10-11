@@ -6,7 +6,6 @@ import '../../widgets/custom_button.dart';
 import '../../constants/app_colors.dart';
 import '../../utils/responsive.dart';
 
-
 class TeacherReportsScreen extends StatefulWidget {
   const TeacherReportsScreen({super.key});
 
@@ -22,7 +21,7 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-  
+
   // Parent report related state
   List<Map<String, dynamic>> _studentsWithAbsences = [];
   bool _isLoadingStudents = false;
@@ -37,21 +36,17 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
 
     _animationController.forward();
     _loadTeacherToken();
@@ -74,7 +69,6 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
     }
   }
 
-
   Future<void> _selectDateRange() async {
     await showDialog(
       context: context,
@@ -91,7 +85,7 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
       ),
     );
   }
-  
+
   Future<void> _refreshReports() async {
     if (_fromDate != null && _toDate != null) {
       await _loadStudentsWithAbsences();
@@ -100,22 +94,26 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
 
   Future<void> _loadStudentsWithAbsences() async {
     if (_teacherToken == null || _fromDate == null || _toDate == null) return;
-    
+
     setState(() => _isLoadingStudents = true);
-    
+
     try {
-      final fromDateStr = '${_fromDate!.year}-${_fromDate!.month.toString().padLeft(2, '0')}-${_fromDate!.day.toString().padLeft(2, '0')}';
-      final toDateStr = '${_toDate!.year}-${_toDate!.month.toString().padLeft(2, '0')}-${_toDate!.day.toString().padLeft(2, '0')}';
-      
+      final fromDateStr =
+          '${_fromDate!.year}-${_fromDate!.month.toString().padLeft(2, '0')}-${_fromDate!.day.toString().padLeft(2, '0')}';
+      final toDateStr =
+          '${_toDate!.year}-${_toDate!.month.toString().padLeft(2, '0')}-${_toDate!.day.toString().padLeft(2, '0')}';
+
       final data = await ApiService.getStudentsWithAbsences(
         _teacherToken!,
         fromDate: fromDateStr,
         toDate: toDateStr,
         absenceThreshold: _selectedAbsenceThreshold,
       );
-      
+
       setState(() {
-        _studentsWithAbsences = List<Map<String, dynamic>>.from(data['students'] ?? []);
+        _studentsWithAbsences = List<Map<String, dynamic>>.from(
+          data['students'] ?? [],
+        );
         _isLoadingStudents = false;
       });
     } catch (e) {
@@ -138,15 +136,19 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
 
   Future<void> _sendReportsToParents() async {
     if (_teacherToken == null || _studentsWithAbsences.isEmpty) return;
-    
+
     setState(() => _isSendingReports = true);
-    
+
     try {
-      final studentIds = _studentsWithAbsences.map((student) => student['id'].toString()).toList();
-      
-      final fromDateStr = '${_fromDate!.year}-${_fromDate!.month.toString().padLeft(2, '0')}-${_fromDate!.day.toString().padLeft(2, '0')}';
-      final toDateStr = '${_toDate!.year}-${_toDate!.month.toString().padLeft(2, '0')}-${_toDate!.day.toString().padLeft(2, '0')}';
-      
+      final studentIds = _studentsWithAbsences
+          .map((student) => student['id'].toString())
+          .toList();
+
+      final fromDateStr =
+          '${_fromDate!.year}-${_fromDate!.month.toString().padLeft(2, '0')}-${_fromDate!.day.toString().padLeft(2, '0')}';
+      final toDateStr =
+          '${_toDate!.year}-${_toDate!.month.toString().padLeft(2, '0')}-${_toDate!.day.toString().padLeft(2, '0')}';
+
       await ApiService.sendAbsenceReportsToParents(
         _teacherToken!,
         studentIds: studentIds,
@@ -154,11 +156,13 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
         fromDate: fromDateStr,
         toDate: toDateStr,
       );
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Reports sent to ${_studentsWithAbsences.length} parents successfully'),
+            content: Text(
+              'Reports sent to ${_studentsWithAbsences.length} parents successfully',
+            ),
             backgroundColor: Colors.green.shade400,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -194,11 +198,7 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFF8FAFC),
-              Color(0xFFE2E8F0),
-              Color(0xFFCBD5E1),
-            ],
+            colors: [Color(0xFFF8FAFC), Color(0xFFE2E8F0), Color(0xFFCBD5E1)],
           ),
         ),
         child: SafeArea(
@@ -220,11 +220,11 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
                       color: AppColors.accent.withValues(alpha: 0.3),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
-          ),
-        ],
-      ),
+                    ),
+                  ],
+                ),
                 child: Row(
-                    children: [
+                  children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
                       icon: Container(
@@ -237,41 +237,41 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
                           Icons.arrow_back,
                           color: Colors.white,
                           size: 20,
-                          ),
                         ),
                       ),
+                    ),
                     const SizedBox(width: 16),
                     const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
                             'Parent Reports',
-                                  style: TextStyle(
+                            style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,
                               letterSpacing: -0.5,
                             ),
                           ),
-                                                     Opacity(
-                             opacity: 0.9,
-                             child: Text(
-                               'Send absence reports to parents',
-                               style: const TextStyle(
-                                 fontSize: 16,
-                                 fontWeight: FontWeight.w500,
-                                 color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                          Opacity(
+                            opacity: 0.9,
+                            child: Text(
+                              'Send absence reports to parents',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-              
+                  ],
+                ),
+              ),
+
               // Main Content
               Expanded(
                 child: FadeTransition(
@@ -292,139 +292,157 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                          // Date Range Selection Card
-                          if (_fromDate == null || _toDate == null)
-                            Container(
-
-                              padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(24),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.05),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                ],
-      ),
-      child: Column(
-        children: [
+                                // Date Range Selection Card
+                                if (_fromDate == null || _toDate == null)
                                   Container(
-                                    padding: const EdgeInsets.all(20),
+                                    padding: const EdgeInsets.all(24),
                                     decoration: BoxDecoration(
-                                      color: AppColors.accent.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(20),
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(24),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.05,
+                                          ),
+                                          blurRadius: 20,
+                                          offset: const Offset(0, 8),
+                                        ),
+                                      ],
                                     ),
-                                    child: const Icon(
-                                      Icons.date_range,
-                                      size: 48,
-                                      color: AppColors.accent,
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(20),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.accent.withValues(
+                                              alpha: 0.1,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                          ),
+                                          child: const Icon(
+                                            Icons.date_range,
+                                            size: 48,
+                                            color: AppColors.accent,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 20),
+                                        const Text(
+                                          'Select Date Range',
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w700,
+                                            color: Color(0xFF1F2937),
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        const SizedBox(height: 12),
+                                        Text(
+                                          'Choose a date range to generate attendance reports',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                            color: const Color(0xFF6B7280),
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        const SizedBox(height: 24),
+                                        CustomButton(
+                                          text: 'Select Date Range',
+                                          icon: Icons.date_range,
+                                          onPressed: _selectDateRange,
+                                          backgroundColor: AppColors.accent,
+                                          foregroundColor: Colors.white,
+                                          height: 56,
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(height: 20),
-                                  const Text(
-                                    'Select Date Range',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF1F2937),
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(height: 12),
-          Text(
-                                    'Choose a date range to generate attendance reports',
-            style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                      color: const Color(0xFF6B7280),
-            ),
-            textAlign: TextAlign.center,
-          ),
-                                  const SizedBox(height: 24),
-                                  CustomButton(
-                                    text: 'Select Date Range',
-                                    icon: Icons.date_range,
-                                    onPressed: _selectDateRange,
-                                    backgroundColor: AppColors.accent,
-                                    foregroundColor: Colors.white,
-                                    height: 56,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          
-                          if (_fromDate != null && _toDate != null) ...[
-                            // Date Range Display (click to change)
-                            MouseRegion(
-                              cursor: SystemMouseCursors.click,
-                              child: GestureDetector(
-                                onTap: _selectDateRange,
-                                child: Container(
-                                  padding: const EdgeInsets.all(20),
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [Color(0xFF10B981), Color(0xFF059669)],
-                                    ),
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(0xFF10B981).withValues(alpha: 0.3),
-                                        blurRadius: 20,
-                                        offset: const Offset(0, 10),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
+
+                                if (_fromDate != null && _toDate != null) ...[
+                                  // Date Range Display (click to change)
+                                  MouseRegion(
+                                    cursor: SystemMouseCursors.click,
+                                    child: GestureDetector(
+                                      onTap: _selectDateRange,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(20),
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withValues(alpha: 0.2),
-                                          borderRadius: BorderRadius.circular(16),
+                                          gradient: const LinearGradient(
+                                            colors: [
+                                              Color(0xFF10B981),
+                                              Color(0xFF059669),
+                                            ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(
+                                                0xFF10B981,
+                                              ).withValues(alpha: 0.3),
+                                              blurRadius: 20,
+                                              offset: const Offset(0, 10),
+                                            ),
+                                          ],
                                         ),
-                                        child: const Icon(
-                                          Icons.calendar_today,
-                                          color: Colors.white,
-                                          size: 24,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                        child: Row(
                                           children: [
-                                            const Text(
-                                              'Selected Date Range',
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
+                                            Container(
+                                              padding: const EdgeInsets.all(12),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.2,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                              ),
+                                              child: const Icon(
+                                                Icons.calendar_today,
                                                 color: Colors.white,
+                                                size: 24,
                                               ),
                                             ),
-                                            Text(
-                                              '${_fromDate!.day}/${_fromDate!.month}/${_fromDate!.year} - ${_toDate!.day}/${_toDate!.month}/${_toDate!.year}',
-                                              style: const TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.w700,
-                                                color: Colors.white,
+                                            const SizedBox(width: 16),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  const Text(
+                                                    'Selected Date Range',
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    '${_fromDate!.day}/${_fromDate!.month}/${_fromDate!.year} - ${_toDate!.day}/${_toDate!.month}/${_toDate!.year}',
+                                                    style: const TextStyle(
+                                                      fontSize: 18,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ],
                                         ),
                                       ),
-                                    ],
+                                    ),
                                   ),
-                                ),
-                              ),
-                            ),
-                            
-                            const SizedBox(height: 24),
-                            
-                            // Parent Report Content
-                            _buildParentReportSection(),
-                          ],
+
+                                  const SizedBox(height: 24),
+
+                                  // Parent Report Content
+                                  _buildParentReportSection(),
+                                ],
                               ],
                             ),
                           ),
@@ -435,12 +453,11 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
                 ),
               ),
             ],
-            ),
           ),
         ),
-      );
-    }
-    
+      ),
+    );
+  }
 
   Widget _buildParentReportSection() {
     return Column(
@@ -490,10 +507,7 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
               const SizedBox(height: 20),
               const Text(
                 'Select the number of absences after which to send reports to parents:',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xFF6B7280),
-                ),
+                style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)),
               ),
               const SizedBox(height: 16),
               Row(
@@ -542,9 +556,9 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
             ],
           ),
         ),
-        
+
         const SizedBox(height: 24),
-        
+
         // Students with Absences Card
         Container(
           padding: const EdgeInsets.all(24),
@@ -601,7 +615,10 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
                   ),
                   if (_studentsWithAbsences.isNotEmpty)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFEF4444),
                         borderRadius: BorderRadius.circular(20),
@@ -618,14 +635,12 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
                 ],
               ),
               const SizedBox(height: 20),
-              
+
               if (_isLoadingStudents)
                 const Center(
                   child: Padding(
                     padding: EdgeInsets.all(32),
-                    child: CircularProgressIndicator(
-                      color: AppColors.accent,
-                    ),
+                    child: CircularProgressIndicator(color: AppColors.accent),
                   ),
                 )
               else if (_studentsWithAbsences.isEmpty)
@@ -686,7 +701,9 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFEF4444).withValues(alpha: 0.1),
+                              color: const Color(
+                                0xFFEF4444,
+                              ).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Icon(
@@ -719,7 +736,10 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFFEF4444),
                               borderRadius: BorderRadius.circular(12),
@@ -738,11 +758,13 @@ class _TeacherReportsScreenState extends State<TeacherReportsScreen>
                     );
                   }).toList(),
                 ),
-              
+
               if (_studentsWithAbsences.isNotEmpty) ...[
                 const SizedBox(height: 20),
                 CustomButton(
-                  text: _isSendingReports ? 'Sending Reports...' : 'Send Reports to Parents',
+                  text: _isSendingReports
+                      ? 'Sending Reports...'
+                      : 'Send Reports to Parents',
                   icon: _isSendingReports ? Icons.hourglass_empty : Icons.send,
                   onPressed: _isSendingReports ? null : _sendReportsToParents,
                   backgroundColor: const Color(0xFFEF4444),
@@ -791,9 +813,7 @@ class _DateRangePickerDialogState extends State<_DateRangePickerDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Container(
         width: MediaQuery.of(context).size.width * 0.85,
         height: MediaQuery.of(context).size.height * 0.6,
@@ -855,179 +875,182 @@ class _DateRangePickerDialogState extends State<_DateRangePickerDialog> {
                 ],
               ),
             ),
-            
+
             // Scrollable content
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   children: [
-            
-            // Calendar
-            TableCalendar<dynamic>(
-              firstDay: DateTime(2020),
-              lastDay: DateTime.now(),
-              focusedDay: _focusedDay,
-              calendarFormat: _calendarFormat,
-              rangeSelectionMode: _rangeSelectionMode,
-              startingDayOfWeek: StartingDayOfWeek.monday,
-              rowHeight: 48, // Increased from 36 to 48 to prevent overflow
-              calendarStyle: CalendarStyle(
-                outsideDaysVisible: false,
-                weekendTextStyle: const TextStyle(
-                  color: Color(0xFF6B7280),
-                  fontSize: 14,
-                ),
-                defaultTextStyle: const TextStyle(
-                  color: Color(0xFF1F2937),
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14,
-                ),
-                selectedTextStyle: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
-                rangeHighlightColor: AppColors.accent.withValues(alpha: 0.3),
-                rangeStartDecoration: BoxDecoration(
-                  color: AppColors.accent,
-                  shape: BoxShape.circle,
-                ),
-                rangeEndDecoration: BoxDecoration(
-                  color: AppColors.accent,
-                  shape: BoxShape.circle,
-                ),
-                todayDecoration: BoxDecoration(
-                  color: const Color(0xFF10B981),
-                  shape: BoxShape.circle,
-                ),
-                todayTextStyle: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
-              ),
-              headerStyle: HeaderStyle(
-                formatButtonVisible: false,
-                titleCentered: true,
-                formatButtonShowsNext: false,
-                formatButtonDecoration: BoxDecoration(
-                  color: AppColors.accent,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                formatButtonTextStyle: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-                leftChevronIcon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.accent.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.chevron_left,
-                    color: AppColors.accent,
-                    size: 20,
-                  ),
-                ),
-                rightChevronIcon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.accent.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.chevron_right,
-                    color: AppColors.accent,
-                    size: 20,
-                  ),
-                ),
-                titleTextStyle: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1F2937),
-                ),
-              ),
-              rangeStartDay: _selectedFromDate,
-              rangeEndDay: _selectedToDate,
-              onDaySelected: (selectedDay, focusedDay) {
-                if (!isSameDay(_selectedFromDate, selectedDay) &&
-                    !isSameDay(_selectedToDate, selectedDay) &&
-                    _selectedFromDate != null &&
-                    _selectedToDate != null) {
-                  _selectedFromDate = null;
-                  _selectedToDate = null;
-                }
-
-                setState(() {
-                  if (_selectedFromDate == null ||
-                      (_selectedFromDate != null && _selectedToDate != null)) {
-                    _selectedFromDate = selectedDay;
-                    _selectedToDate = null;
-                  } else {
-                    if (selectedDay.isBefore(_selectedFromDate!)) {
-                      _selectedToDate = _selectedFromDate;
-                      _selectedFromDate = selectedDay;
-                    } else {
-                      _selectedToDate = selectedDay;
-                    }
-                  }
-                  _focusedDay = focusedDay;
-                });
-              },
-              onFormatChanged: (format) {
-                if (_calendarFormat != format) {
-                  setState(() {
-                    _calendarFormat = format;
-                  });
-                }
-              },
-              onPageChanged: (focusedDay) {
-                _focusedDay = focusedDay;
-              },
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Selected Date Range Display
-            if (_selectedFromDate != null && _selectedToDate != null)
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF10B981), Color(0xFF059669)],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.calendar_today,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '${_selectedFromDate!.day}/${_selectedFromDate!.month}/${_selectedFromDate!.year} - ${_selectedToDate!.day}/${_selectedToDate!.month}/${_selectedToDate!.year}',
-                        style: const TextStyle(
+                    // Calendar
+                    TableCalendar<dynamic>(
+                      firstDay: DateTime(2020),
+                      lastDay: DateTime.now(),
+                      focusedDay: _focusedDay,
+                      calendarFormat: _calendarFormat,
+                      rangeSelectionMode: _rangeSelectionMode,
+                      startingDayOfWeek: StartingDayOfWeek.monday,
+                      rowHeight:
+                          48, // Increased from 36 to 48 to prevent overflow
+                      calendarStyle: CalendarStyle(
+                        outsideDaysVisible: false,
+                        weekendTextStyle: const TextStyle(
+                          color: Color(0xFF6B7280),
+                          fontSize: 14,
+                        ),
+                        defaultTextStyle: const TextStyle(
+                          color: Color(0xFF1F2937),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                        selectedTextStyle: const TextStyle(
                           color: Colors.white,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                        rangeHighlightColor: AppColors.accent.withValues(
+                          alpha: 0.3,
+                        ),
+                        rangeStartDecoration: BoxDecoration(
+                          color: AppColors.accent,
+                          shape: BoxShape.circle,
+                        ),
+                        rangeEndDecoration: BoxDecoration(
+                          color: AppColors.accent,
+                          shape: BoxShape.circle,
+                        ),
+                        todayDecoration: BoxDecoration(
+                          color: const Color(0xFF10B981),
+                          shape: BoxShape.circle,
+                        ),
+                        todayTextStyle: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
                           fontSize: 14,
                         ),
                       ),
+                      headerStyle: HeaderStyle(
+                        formatButtonVisible: false,
+                        titleCentered: true,
+                        formatButtonShowsNext: false,
+                        formatButtonDecoration: BoxDecoration(
+                          color: AppColors.accent,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        formatButtonTextStyle: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        leftChevronIcon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.accent.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.chevron_left,
+                            color: AppColors.accent,
+                            size: 20,
+                          ),
+                        ),
+                        rightChevronIcon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.accent.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.chevron_right,
+                            color: AppColors.accent,
+                            size: 20,
+                          ),
+                        ),
+                        titleTextStyle: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1F2937),
+                        ),
+                      ),
+                      rangeStartDay: _selectedFromDate,
+                      rangeEndDay: _selectedToDate,
+                      onDaySelected: (selectedDay, focusedDay) {
+                        if (!isSameDay(_selectedFromDate, selectedDay) &&
+                            !isSameDay(_selectedToDate, selectedDay) &&
+                            _selectedFromDate != null &&
+                            _selectedToDate != null) {
+                          _selectedFromDate = null;
+                          _selectedToDate = null;
+                        }
+
+                        setState(() {
+                          if (_selectedFromDate == null ||
+                              (_selectedFromDate != null &&
+                                  _selectedToDate != null)) {
+                            _selectedFromDate = selectedDay;
+                            _selectedToDate = null;
+                          } else {
+                            if (selectedDay.isBefore(_selectedFromDate!)) {
+                              _selectedToDate = _selectedFromDate;
+                              _selectedFromDate = selectedDay;
+                            } else {
+                              _selectedToDate = selectedDay;
+                            }
+                          }
+                          _focusedDay = focusedDay;
+                        });
+                      },
+                      onFormatChanged: (format) {
+                        if (_calendarFormat != format) {
+                          setState(() {
+                            _calendarFormat = format;
+                          });
+                        }
+                      },
+                      onPageChanged: (focusedDay) {
+                        _focusedDay = focusedDay;
+                      },
                     ),
-                  ],
-                ),
-              ),
-            
-            const SizedBox(height: 16),
+
+                    const SizedBox(height: 16),
+
+                    // Selected Date Range Display
+                    if (_selectedFromDate != null && _selectedToDate != null)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF10B981), Color(0xFF059669)],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.calendar_today,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '${_selectedFromDate!.day}/${_selectedFromDate!.month}/${_selectedFromDate!.year} - ${_selectedToDate!.day}/${_selectedToDate!.month}/${_selectedToDate!.year}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
             ),
-            
+
             // Action Buttons - Fixed at bottom
             Container(
               padding: const EdgeInsets.all(20),
@@ -1065,9 +1088,13 @@ class _DateRangePickerDialogState extends State<_DateRangePickerDialog> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: _selectedFromDate != null && _selectedToDate != null
+                      onPressed:
+                          _selectedFromDate != null && _selectedToDate != null
                           ? () {
-                              widget.onDateRangeSelected(_selectedFromDate!, _selectedToDate!);
+                              widget.onDateRangeSelected(
+                                _selectedFromDate!,
+                                _selectedToDate!,
+                              );
                               Navigator.of(context).pop();
                             }
                           : null,

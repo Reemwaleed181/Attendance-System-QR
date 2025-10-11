@@ -225,10 +225,10 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                       ),
                       child: Icon(
-                          Icons.qr_code_rounded,
-                          size: 64,
-                          color: Colors.white
-                      )
+                        Icons.qr_code_rounded,
+                        size: 64,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
