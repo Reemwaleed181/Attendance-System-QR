@@ -6,184 +6,72 @@
 <title>Student Module - QR Attendance System</title>
 <link rel='stylesheet' href='style.css'>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
 </head>
 <body>
-<header class="header sticky-header">
+<header class="header">
 <div class="header-content">
 <div class="project-name">
-<h1>Student Portal</h1>
+<h1>Student Module</h1>
 </div>
 <div class="logo">
 <img src="logo.jpg" alt="Project Logo" class="logo-img">
 </div>
-<!-- Dark Mode Toggle -->
-<button class="dark-mode-toggle" aria-label="Toggle dark mode" id="darkModeToggle">
-    <i class="fas fa-moon"></i>
-</button>
 </div>
 </header>
 
-<!-- Student Dashboard Section -->
-<section class="student-dashboard">
+<section class="description">
 <div class="container">
-<div class="dashboard-header">
-<h2>Welcome, Ahmed Ali</h2>
-<p class="dashboard-subtitle">Grade 10A - Mathematics Class</p>
-</div>
-
-<!-- Current Class Info -->
-<div class="class-info-card">
-<div class="class-header">
-<div class="class-details">
-<h3>Mathematics - Grade 10A</h3>
-<p>Teacher: Dr. Sarah Johnson</p>
-<p>Time: 9:00 AM - 10:30 AM</p>
-</div>
-<div class="attendance-status">
-<div class="status-indicator present">
-<i class="fas fa-check-circle"></i>
-<span>Present</span>
-</div>
-<p class="attendance-time">Marked at 9:05 AM</p>
-</div>
-</div>
-</div>
-
-<!-- Quick Actions -->
-<div class="student-actions">
-<h3>Attendance Options</h3>
-<div class="actions-grid">
-<button class="action-btn primary" onclick="recordAttendance()">
-<i class="fas fa-hand-paper"></i>
-<span>Record Attendance</span>
-</button>
-<button class="action-btn secondary" onclick="scanQRCode()">
-<i class="fas fa-qrcode"></i>
-<span>Scan QR Code</span>
-</button>
-<button class="action-btn accent" onclick="uploadFromGallery()">
-<i class="fas fa-images"></i>
-<span>Upload from Gallery</span>
-</button>
-<button class="action-btn info" onclick="checkLocation()">
-<i class="fas fa-map-marker-alt"></i>
-<span>Verify Location</span>
-</button>
-</div>
-</div>
-
-<!-- Attendance History -->
-<div class="attendance-history">
-<h3>Recent Attendance</h3>
-<div class="history-list">
-<div class="history-item">
-<div class="history-date">
-<span class="day">Mon</span>
-<span class="date">Dec 9</span>
-</div>
-<div class="history-details">
-<h4>Mathematics</h4>
-<p>9:05 AM - Present</p>
-</div>
-<div class="history-status present">
-<i class="fas fa-check"></i>
-</div>
-</div>
-
-<div class="history-item">
-<div class="history-date">
-<span class="day">Fri</span>
-<span class="date">Dec 6</span>
-</div>
-<div class="history-details">
-<h4>Mathematics</h4>
-<p>9:12 AM - Present (Late)</p>
-</div>
-<div class="history-status late">
-<i class="fas fa-clock"></i>
-</div>
-</div>
-
-<div class="history-item">
-<div class="history-date">
-<span class="day">Wed</span>
-<span class="date">Dec 4</span>
-</div>
-<div class="history-details">
-<h4>Mathematics</h4>
-<p>9:00 AM - Present</p>
-</div>
-<div class="history-status present">
-<i class="fas fa-check"></i>
-</div>
-</div>
-</div>
-</div>
-
-<!-- Weekly Stats -->
-<div class="weekly-stats">
-<h3>This Week's Attendance</h3>
-<div class="stats-summary">
-<div class="stat-item">
-<span class="stat-label">Present</span>
-<span class="stat-value">4/5</span>
-</div>
-<div class="stat-item">
-<span class="stat-label">Late</span>
-<span class="stat-value">1</span>
-</div>
-<div class="stat-item">
-<span class="stat-label">Absent</span>
-<span class="stat-value">0</span>
-</div>
-</div>
-</div>
+<h2>Student Self-Service Portal</h2>
+<p class="description-text">
+Empower students with easy-to-use tools for attendance management. Scan QR codes, 
+view attendance records, check schedules, and stay informed about school activities 
+through our intuitive student interface. Students can quickly mark their attendance 
+using QR codes, track their attendance history, access their schedules, and manage 
+their profile information with ease.
+</p>
 </div>
 </section>
 
-<!-- Features Showcase -->
 <section class="features-showcase">
 <div class="container">
-<h2>Student Portal Features</h2>
 <div class="features-grid">
 <div class="feature-card">
 <div class="feature-image">
-<img src="ui/student/qr_scanner.jpg" alt="QR Code Scanner" class="feature-img">
+<img src="../ui/student/Student_login.jpg" alt="Student Login" class="feature-img">
 </div>
 <div class="feature-content">
-<h3>📱 QR Code Scanner</h3>
-<p>Quick and easy QR code scanning for class attendance with instant confirmation.</p>
+<h3>🔐 Student Login</h3>
+<p>Simple authentication with student credentials for secure access.</p>
 </div>
 </div>
 
 <div class="feature-card">
 <div class="feature-image">
-<img src="ui/student/attendance_history.jpg" alt="Attendance History" class="feature-img">
+<img src="../ui/student/student_attendance_request_screen.jpg" alt="Attendance Request" class="feature-img">
 </div>
 <div class="feature-content">
-<h3>📋 Attendance History</h3>
-<p>View your complete attendance record with detailed timestamps and class information.</p>
+<h3>📱 One-Tap Attendance</h3>
+<p>Main interface for recording attendance with a single button press.</p>
 </div>
 </div>
 
 <div class="feature-card">
 <div class="feature-image">
-<img src="ui/student/schedule_access.jpg" alt="Schedule Access" class="feature-img">
+<img src="../ui/student/student_attendance_request_screen2.jpg" alt="QR Code Scanning" class="feature-img">
 </div>
 <div class="feature-content">
-<h3>📅 Schedule Access</h3>
-<p>Access your class schedule, exam dates, and important school events.</p>
+<h3>🔲 QR Code Scanning</h3>
+<p>Alternative method to scan class QR codes for attendance verification.</p>
 </div>
 </div>
 
 <div class="feature-card">
 <div class="feature-image">
-<img src="ui/student/profile_management.jpg" alt="Profile Management" class="feature-img">
+<img src="../ui/student/student_attendance_request_screen3.jpg" alt="Gallery Upload" class="feature-img">
 </div>
 <div class="feature-content">
-<h3>👤 Profile Management</h3>
-<p>Manage your student profile, update information, and view academic progress.</p>
+<h3>📷 Gallery Upload</h3>
+<p>Alternative method to load QR codes from photos for attendance recording.</p>
 </div>
 </div>
 </div>
@@ -211,129 +99,5 @@
 <p>Student Module - Empowering students with smart attendance</p>
 </div>
 </footer>
-
-<script src="script.min.js"></script>
-<script>
-// Student-specific functionality
-function recordAttendance() {
-    const btn = event.target.closest('button');
-    const originalText = btn.innerHTML;
-    
-    // Show loading state
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Recording...</span>';
-    btn.disabled = true;
-    
-    // Simulate API call
-    setTimeout(() => {
-        btn.innerHTML = '<i class="fas fa-check"></i><span>Attendance Recorded!</span>';
-        btn.classList.add('success');
-        
-        // Update status indicator
-        const statusIndicator = document.querySelector('.status-indicator');
-        statusIndicator.className = 'status-indicator present';
-        statusIndicator.innerHTML = '<i class="fas fa-check-circle"></i><span>Present</span>';
-        
-        // Update attendance time
-        const attendanceTime = document.querySelector('.attendance-time');
-        attendanceTime.textContent = `Marked at ${new Date().toLocaleTimeString()}`;
-        
-        // Reset button after 3 seconds
-        setTimeout(() => {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            btn.classList.remove('success');
-        }, 3000);
-    }, 2000);
-}
-
-function scanQRCode() {
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>QR Code Scanner</h3>
-                <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="scanner-placeholder">
-                    <i class="fas fa-camera"></i>
-                    <p>Camera will open here</p>
-                    <p>Point camera at class QR code</p>
-                </div>
-                <div class="scanner-actions">
-                    <button class="btn-primary" onclick="simulateQRScan()">Simulate Scan</button>
-                    <button class="btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
-                </div>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-}
-
-function uploadFromGallery() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            alert(`QR code image selected: ${file.name}`);
-            // Process the image here
-        }
-    };
-    input.click();
-}
-
-function checkLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                alert(`Location verified!\nLatitude: ${lat.toFixed(6)}\nLongitude: ${lng.toFixed(6)}`);
-            },
-            (error) => {
-                alert('Location access denied or unavailable');
-            }
-        );
-    } else {
-        alert('Geolocation is not supported by this browser');
-    }
-}
-
-function simulateQRScan() {
-    alert('QR Code scanned successfully! Attendance recorded.');
-    document.querySelector('.modal').remove();
-}
-
-// Initialize student dashboard
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize dark mode
-    if (window.QRAttendance && window.QRAttendance.initDarkMode) {
-        window.QRAttendance.initDarkMode();
-    }
-    
-    // Add scroll reveal animations
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('revealed');
-            }
-        });
-    }, observerOptions);
-
-    const elementsToReveal = document.querySelectorAll('.class-info-card, .history-item, .feature-card');
-    elementsToReveal.forEach(el => {
-        el.classList.add('scroll-reveal');
-        observer.observe(el);
-    });
-});
-</script>
 </body>
 </html>

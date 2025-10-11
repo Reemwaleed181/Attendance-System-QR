@@ -6,222 +6,92 @@
 <title>Parent Module - QR Attendance System</title>
 <link rel='stylesheet' href='style.css'>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
 </head>
 <body>
-<header class="header sticky-header">
+<header class="header">
 <div class="header-content">
 <div class="project-name">
-<h1>Parent Portal</h1>
+<h1>Parent Module</h1>
 </div>
 <div class="logo">
 <img src="logo.jpg" alt="Project Logo" class="logo-img">
 </div>
-<!-- Dark Mode Toggle -->
-<button class="dark-mode-toggle" aria-label="Toggle dark mode" id="darkModeToggle">
-    <i class="fas fa-moon"></i>
-</button>
 </div>
 </header>
 
-<!-- Parent Dashboard Section -->
-<section class="parent-dashboard">
+<section class="description">
 <div class="container">
-<div class="dashboard-header">
-<h2>Children Dashboard</h2>
-<p class="dashboard-subtitle">Monitor your children's attendance and academic progress</p>
-</div>
-
-<!-- Children Overview -->
-<div class="children-grid">
-<div class="child-card">
-<div class="child-header">
-<div class="child-avatar">
-<i class="fas fa-user-graduate"></i>
-</div>
-<div class="child-info">
-<h3>Ahmed Ali</h3>
-<p>Grade 10A - Mathematics</p>
-</div>
-<div class="attendance-status present">
-<i class="fas fa-check-circle"></i>
-<span>Present</span>
-</div>
-</div>
-<div class="child-stats">
-<div class="stat">
-<span class="stat-label">Today</span>
-<span class="stat-value present">Present</span>
-</div>
-<div class="stat">
-<span class="stat-label">This Week</span>
-<span class="stat-value">4/5 days</span>
-</div>
-<div class="stat">
-<span class="stat-label">Monthly Avg</span>
-<span class="stat-value">92%</span>
-</div>
-</div>
-<div class="child-actions">
-<button class="btn-primary" onclick="viewChildDetails('ahmed-ali')">View Details</button>
-<button class="btn-secondary" onclick="contactTeacher('ahmed-ali')">Contact Teacher</button>
-</div>
-</div>
-
-<div class="child-card">
-<div class="child-header">
-<div class="child-avatar">
-<i class="fas fa-user-graduate"></i>
-</div>
-<div class="child-info">
-<h3>Sara Ibrahim</h3>
-<p>Grade 9B - Science</p>
-</div>
-<div class="attendance-status absent">
-<i class="fas fa-times-circle"></i>
-<span>Absent</span>
-</div>
-</div>
-<div class="child-stats">
-<div class="stat">
-<span class="stat-label">Today</span>
-<span class="stat-value absent">Absent</span>
-</div>
-<div class="stat">
-<span class="stat-label">This Week</span>
-<span class="stat-value">3/5 days</span>
-</div>
-<div class="stat">
-<span class="stat-label">Monthly Avg</span>
-<span class="stat-value">78%</span>
-</div>
-</div>
-<div class="child-actions">
-<button class="btn-primary" onclick="viewChildDetails('sara-ibrahim')">View Details</button>
-<button class="btn-secondary" onclick="contactTeacher('sara-ibrahim')">Contact Teacher</button>
-</div>
-</div>
-</div>
-
-<!-- Weekly Statistics -->
-<div class="weekly-stats">
-<h3>Weekly Statistics</h3>
-<div class="stats-chart">
-<div class="chart-placeholder">
-<div class="chart-bars">
-<div class="bar" style="height: 80%"><span>Mon</span></div>
-<div class="bar" style="height: 95%"><span>Tue</span></div>
-<div class="bar" style="height: 70%"><span>Wed</span></div>
-<div class="bar" style="height: 90%"><span>Thu</span></div>
-<div class="bar" style="height: 85%"><span>Fri</span></div>
-</div>
-</div>
-</div>
-</div>
-
-<!-- Recent Notifications -->
-<div class="notifications-section">
-<h3>Recent Notifications</h3>
-<div class="notifications-list">
-<div class="notification-item urgent">
-<div class="notification-icon">
-<i class="fas fa-exclamation-triangle"></i>
-</div>
-<div class="notification-content">
-<h4>Absence Alert</h4>
-<p>Sara Ibrahim was marked absent in Science class today.</p>
-<span class="notification-time">2 hours ago</span>
-</div>
-</div>
-
-<div class="notification-item info">
-<div class="notification-icon">
-<i class="fas fa-info-circle"></i>
-</div>
-<div class="notification-content">
-<h4>Attendance Report</h4>
-<p>Weekly attendance report for Ahmed Ali is available.</p>
-<span class="notification-time">1 day ago</span>
-</div>
-</div>
-
-<div class="notification-item success">
-<div class="notification-icon">
-<i class="fas fa-check-circle"></i>
-</div>
-<div class="notification-content">
-<h4>Perfect Attendance</h4>
-<p>Ahmed Ali has perfect attendance this week!</p>
-<span class="notification-time">2 days ago</span>
-</div>
-</div>
-</div>
-</div>
+<h2>Parent Portal & Student Tracking</h2>
+<p class="description-text">
+Stay connected with your child's education through our comprehensive parent portal. 
+Monitor attendance, track progress, receive notifications, and maintain active 
+communication with teachers and school administration. Parents can view real-time 
+attendance updates, download detailed reports, communicate directly with teachers, 
+and stay informed about their child's academic journey.
+</p>
 </div>
 </section>
 
-<!-- Features Showcase -->
 <section class="features-showcase">
 <div class="container">
-<h2>Parent Portal Features</h2>
 <div class="features-grid">
 <div class="feature-card">
 <div class="feature-image">
-<img src="ui/parent/attendance_monitoring.jpg" alt="Attendance Monitoring" class="feature-img">
+<img src="../ui/parent/Parent_login.jpg" alt="Parent Login" class="feature-img">
 </div>
 <div class="feature-content">
-<h3>📊 Attendance Monitoring</h3>
-<p>Real-time tracking of your child's attendance with detailed reports and analytics.</p>
+<h3>🔐 Parent Login</h3>
+<p>Secure authentication system for parents to access their child's information.</p>
 </div>
 </div>
 
 <div class="feature-card">
 <div class="feature-image">
-<img src="ui/parent/student_progress.jpg" alt="Student Progress" class="feature-img">
+<img src="../ui/parent/parent_home_screen.jpg" alt="Parent Home Screen" class="feature-img">
 </div>
 <div class="feature-content">
-<h3>📈 Student Progress</h3>
-<p>Monitor academic performance, attendance trends, and overall student development.</p>
+<h3>🏠 Parent Home Dashboard</h3>
+<p>Overview of all children with attendance status and quick access to features.</p>
 </div>
 </div>
 
 <div class="feature-card">
 <div class="feature-image">
-<img src="ui/parent/notifications.jpg" alt="Notifications" class="feature-img">
+<img src="../ui/parent/parent_weekly_stats_screen.jpg" alt="Weekly Statistics" class="feature-img">
 </div>
 <div class="feature-content">
-<h3>🔔 Smart Notifications</h3>
-<p>Receive instant alerts about attendance, school events, and important announcements.</p>
+<h3>📊 Weekly Statistics</h3>
+<p>Visual charts showing attendance trends and patterns for your children.</p>
 </div>
 </div>
 
 <div class="feature-card">
 <div class="feature-image">
-<img src="ui/parent/communication.jpg" alt="Communication" class="feature-img">
+<img src="../ui/parent/parent_notifications_screen.jpg" alt="Notifications" class="feature-img">
 </div>
 <div class="feature-content">
-<h3>💬 Direct Communication</h3>
-<p>Connect directly with teachers and school administration through our messaging system.</p>
+<h3>🔔 Real-time Notifications</h3>
+<p>Instant alerts for attendance updates and absence reports from teachers.</p>
 </div>
 </div>
 
 <div class="feature-card">
 <div class="feature-image">
-<img src="ui/parent/schedule_viewing.jpg" alt="Schedule Viewing" class="feature-img">
+<img src="../ui/parent/parent_reports_screen.jpg" alt="Detailed Reports" class="feature-img">
 </div>
 <div class="feature-content">
-<h3>📅 Schedule Viewing</h3>
-<p>Access your child's class schedule, exam dates, and important school events.</p>
+<h3>📄 Detailed Reports</h3>
+<p>Comprehensive absence reports sent by teachers regarding student attendance.</p>
 </div>
 </div>
 
 <div class="feature-card">
 <div class="feature-image">
-<img src="ui/parent/reports_download.jpg" alt="Reports Download" class="feature-img">
+<img src="../ui/parent/parent_weekly_stats_screen2.jpg" alt="Advanced Statistics" class="feature-img">
 </div>
 <div class="feature-content">
-<h3>📄 Reports Download</h3>
-<p>Download detailed attendance reports and academic progress summaries.</p>
+<h3>📈 Advanced Analytics</h3>
+<p>In-depth attendance analysis with detailed breakdowns and insights.</p>
 </div>
 </div>
 </div>
@@ -249,82 +119,5 @@
 <p>Parent Module - Keeping families connected to education</p>
 </div>
 </footer>
-
-<script src="script.min.js"></script>
-<script>
-// Parent-specific functionality
-function viewChildDetails(childId) {
-    alert(`Viewing detailed information for ${childId}`);
-}
-
-function contactTeacher(childId) {
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Contact Teacher</h3>
-                <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form class="contact-form">
-                    <div class="form-group">
-                        <label>Subject</label>
-                        <input type="text" placeholder="Regarding attendance..." required>
-                    </div>
-                    <div class="form-group">
-                        <label>Message</label>
-                        <textarea rows="4" placeholder="Type your message here..." required></textarea>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn-primary">Send Message</button>
-                        <button type="button" class="btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-}
-
-// Initialize parent dashboard
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize dark mode
-    if (window.QRAttendance && window.QRAttendance.initDarkMode) {
-        window.QRAttendance.initDarkMode();
-    }
-    
-    // Add scroll reveal animations
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('revealed');
-            }
-        });
-    }, observerOptions);
-
-    const elementsToReveal = document.querySelectorAll('.child-card, .notification-item, .feature-card');
-    elementsToReveal.forEach(el => {
-        el.classList.add('scroll-reveal');
-        observer.observe(el);
-    });
-
-    // Simulate real-time notifications
-    setInterval(() => {
-        const notifications = document.querySelectorAll('.notification-item');
-        notifications.forEach(notification => {
-            if (Math.random() > 0.7) {
-                notification.classList.add('new');
-                setTimeout(() => notification.classList.remove('new'), 2000);
-            }
-        });
-    }, 10000);
-});
-</script>
 </body>
 </html>
