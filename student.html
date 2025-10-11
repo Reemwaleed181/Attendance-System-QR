@@ -200,6 +200,8 @@ information with ease.
 
     // Get all images that should open in the modal
     var images = document.querySelectorAll(".purpose-img, .feature-img");
+    // Get all feature cards that should open in the modal
+    var featureCards = document.querySelectorAll(".feature-card");
 
     images.forEach(function(img) {
         img.style.cursor = "pointer"; // Add pointer cursor to indicate clickability
@@ -208,6 +210,20 @@ information with ease.
             modalImg.src = this.src;
             captionText.innerHTML = this.alt; // Use alt text as caption
             document.body.style.overflow = "hidden"; // Prevent background scrolling
+        }
+    });
+
+    // Make feature cards clickable
+    featureCards.forEach(function(card) {
+        var img = card.querySelector(".feature-img");
+        if (img) {
+            card.style.cursor = "pointer"; // Add pointer cursor to indicate clickability
+            card.onclick = function(){
+                modal.style.display = "block";
+                modalImg.src = img.src;
+                captionText.innerHTML = img.alt; // Use alt text as caption
+                document.body.style.overflow = "hidden"; // Prevent background scrolling
+            }
         }
     });
 
