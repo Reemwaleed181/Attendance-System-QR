@@ -10,25 +10,19 @@
   <header>
     <h1>Attendance System QR</h1>
     <p>Smart attendance system using QR codes. Built with Flutter & Django.</p>
-    <img src="ui/splash.jpg" alt="Splash Image" style="width:100%; max-width:600px; margin-top:20px; border-radius:10px;">
+    <img src="ui/splash.jpg" alt="Splash Image" class="splash-img">
   </header>
 
-  <section class="screenshots">
-    <h2>Parent Screens</h2>
-    <img src="ui/parent/parent_home_screen.jpg" alt="Parent Home">
-    <img src="ui/parent/Parent_login.jpg" alt="Parent Login">
-    <img src="ui/parent/parent_notifications_screen.jpg" alt="Parent Notifications">
-    <img src="ui/parent/parent_reports_screen.jpg" alt="Parent Reports">
-    <img src="ui/parent/parent_reports_screen2.jpg" alt="Parent Reports 2">
-    <img src="ui/parent/parent_weekly_stats_screen.jpg" alt="Parent Weekly Stats">
-    <img src="ui/parent/parent_weekly_stats_screen2.jpg" alt="Parent Weekly Stats 2">
+  <nav>
+    <button onclick="showSection('teacher')">Teacher</button>
+    <button onclick="showSection('student')">Student</button>
+    <button onclick="showSection('parent')">Parent</button>
+    <button onclick="window.open('https://github.com/Reemwaleed181/Attendance-System-QR', '_blank')">GitHub</button>
+    <button onclick="window.open('https://link-to-proposal.com', '_blank')">Proposal</button>
+    <button onclick="alert('Email: reem.waleed.ahmed@gmail.com')">Contact Me</button>
+  </nav>
 
-    <h2>Student Screens</h2>
-    <img src="ui/student/student_attendance_request_screen.jpg" alt="Student Attendance 1">
-    <img src="ui/student/student_attendance_request_screen2.jpg" alt="Student Attendance 2">
-    <img src="ui/student/student_attendance_request_screen3.jpg" alt="Student Attendance 3">
-    <img src="ui/student/Student_login.jpg" alt="Student Login">
-
+  <section id="teacher" class="screenshots section-hidden">
     <h2>Teacher Screens</h2>
     <img src="ui/teacher/class_attendance_screen.jpg" alt="Class Attendance 1">
     <img src="ui/teacher/class_attendance_screen2.jpg" alt="Class Attendance 2">
@@ -46,23 +40,33 @@
     <img src="ui/teacher/teacher_reports_screen4.jpg" alt="Teacher Reports 4">
   </section>
 
-  <section class="features">
-    <h2>Features</h2>
-    <ul>
-      <li>QR code attendance scanning</li>
-      <li>Real-time updates for teachers and parents</li>
-      <li>Multi-platform support with Flutter</li>
-      <li>Django backend for data management</li>
-    </ul>
+  <section id="student" class="screenshots section-hidden">
+    <h2>Student Screens</h2>
+    <img src="ui/student/student_attendance_request_screen.jpg" alt="Student Attendance 1">
+    <img src="ui/student/student_attendance_request_screen2.jpg" alt="Student Attendance 2">
+    <img src="ui/student/student_attendance_request_screen3.jpg" alt="Student Attendance 3">
+    <img src="ui/student/Student_login.jpg" alt="Student Login">
   </section>
 
-  <section class="github">
-    <h2>GitHub Repository</h2>
-    <p><a href="https://github.com/Reemwaleed181/Attendance-System-QR" target="_blank">View Full Project on GitHub</a></p>
+  <section id="parent" class="screenshots section-hidden">
+    <h2>Parent Screens</h2>
+    <img src="ui/parent/parent_home_screen.jpg" alt="Parent Home">
+    <img src="ui/parent/Parent_login.jpg" alt="Parent Login">
+    <img src="ui/parent/parent_notifications_screen.jpg" alt="Parent Notifications">
+    <img src="ui/parent/parent_reports_screen.jpg" alt="Parent Reports">
+    <img src="ui/parent/parent_reports_screen2.jpg" alt="Parent Reports 2">
+    <img src="ui/parent/parent_weekly_stats_screen.jpg" alt="Parent Weekly Stats">
+    <img src="ui/parent/parent_weekly_stats_screen2.jpg" alt="Parent Weekly Stats 2">
   </section>
 
-  <footer>
-    <p>© 2025 Reem Waleed</p>
-  </footer>
+  <script>
+    function showSection(sectionId) {
+      const sections = ['teacher', 'student', 'parent'];
+      sections.forEach(id => {
+        document.getElementById(id).classList.add('section-hidden');
+      });
+      document.getElementById(sectionId).classList.remove('section-hidden');
+    }
+  </script>
 </body>
 </html>
