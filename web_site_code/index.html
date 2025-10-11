@@ -22,10 +22,38 @@
     <meta name="twitter:image" content="../ui/logo.jpg">
     
     <title>QR Attendance System - Modern Attendance Management</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" type="image/x-icon" href="../ui/logo.jpg">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="style.min.css" as="style">
+    <link rel="preload" href="script.min.js" as="script">
+    <link rel="preload" href="logo.jpg" as="image">
+    
+    <!-- Optimized CSS -->
+    <link rel="stylesheet" href="style.min.css">
+    
+    <!-- Font optimization -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    
+    <!-- Icon font optimization -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="logo.jpg">
+    
+    <!-- Performance meta tags -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- Cache control -->
+    <meta http-equiv="Cache-Control" content="public, max-age=31536000">
+    
+    <!-- DNS prefetch for external resources -->
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
     
     <!-- Structured Data -->
     <script type="application/ld+json">
@@ -65,7 +93,7 @@
                     <h1>QR Attendance System</h1>
                 </div>
                 <div class="logo">
-                    <img src="../ui/logo.jpg" alt="QR Attendance System Logo" class="logo-img">
+                    <img src="logo.jpg" alt="QR Attendance System Logo" class="logo-img">
                 </div>
                 <!-- Mobile Menu Button -->
                 <button class="mobile-menu-btn" aria-label="Toggle mobile menu" aria-expanded="false">
@@ -82,7 +110,7 @@
                 <a href="#contact" class="mobile-nav-link">Contact</a>
             </div>
         </nav>
-    </header>
+</header>
 
     <!-- Hero Section -->
     <section class="hero-section" id="hero">
@@ -277,74 +305,6 @@
         </div>
     </section>
 
-    <!-- Pricing Section -->
-    <section class="pricing-section" id="pricing" role="region" aria-labelledby="pricing-heading">
-        <div class="container">
-            <h2 id="pricing-heading" class="section-title">Pricing Plans</h2>
-            <div class="pricing-grid">
-                <div class="pricing-card" data-aos="fade-up">
-                    <div class="pricing-header">
-                        <h3>Basic</h3>
-                        <div class="price">
-                            <span class="currency">$</span>
-                            <span class="amount">0</span>
-                            <span class="period">/month</span>
-                        </div>
-                    </div>
-                    <div class="pricing-features">
-                        <ul>
-                            <li><i class="fas fa-check"></i> Up to 100 students</li>
-                            <li><i class="fas fa-check"></i> Basic QR generation</li>
-                            <li><i class="fas fa-check"></i> Standard reports</li>
-                            <li><i class="fas fa-check"></i> Email support</li>
-                        </ul>
-                    </div>
-                    <button class="pricing-btn">Get Started</button>
-                </div>
-                <div class="pricing-card featured" data-aos="fade-up" data-aos-delay="100">
-                    <div class="pricing-badge">Most Popular</div>
-                    <div class="pricing-header">
-                        <h3>Professional</h3>
-                        <div class="price">
-                            <span class="currency">$</span>
-                            <span class="amount">29</span>
-                            <span class="period">/month</span>
-                        </div>
-                    </div>
-                    <div class="pricing-features">
-                        <ul>
-                            <li><i class="fas fa-check"></i> Up to 500 students</li>
-                            <li><i class="fas fa-check"></i> Advanced QR features</li>
-                            <li><i class="fas fa-check"></i> Detailed analytics</li>
-                            <li><i class="fas fa-check"></i> Priority support</li>
-                            <li><i class="fas fa-check"></i> Custom integrations</li>
-                        </ul>
-                    </div>
-                    <button class="pricing-btn">Choose Plan</button>
-                </div>
-                <div class="pricing-card" data-aos="fade-up" data-aos-delay="200">
-                    <div class="pricing-header">
-                        <h3>Enterprise</h3>
-                        <div class="price">
-                            <span class="currency">$</span>
-                            <span class="amount">99</span>
-                            <span class="period">/month</span>
-                        </div>
-                    </div>
-                    <div class="pricing-features">
-                        <ul>
-                            <li><i class="fas fa-check"></i> Unlimited students</li>
-                            <li><i class="fas fa-check"></i> All features included</li>
-                            <li><i class="fas fa-check"></i> Custom development</li>
-                            <li><i class="fas fa-check"></i> 24/7 support</li>
-                            <li><i class="fas fa-check"></i> On-premise option</li>
-                        </ul>
-                    </div>
-                    <button class="pricing-btn">Contact Sales</button>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <!-- FAQ Section -->
     <section class="faq-section" id="faq" role="region" aria-labelledby="faq-heading">
@@ -389,7 +349,7 @@
                 </div>
             </div>
         </div>
-    </section>
+</section>
 
     <!-- Testimonials Section -->
     <section class="testimonials-section" id="testimonials" role="region" aria-labelledby="testimonials-heading">
@@ -461,7 +421,7 @@
                 </div>
             </div>
         </div>
-    </section>
+</section>
 
     <!-- Footer Section -->
     <footer class="footer-section" id="contact" role="contentinfo">
@@ -488,15 +448,15 @@
                         <div class="contact-details">
                             <div class="contact-item">
                                 <i class="fas fa-envelope"></i>
-                                <span>contact@qrattendance.com</span>
+                                <span>reem.waleed.ahmed@gmail.com</span>
                             </div>
                             <div class="contact-item">
-                                <i class="fas fa-phone"></i>
-                                <span>+1 (555) 123-4567</span>
+                                <i class="fab fa-github"></i>
+                                <span>github.com/Reemwaleed181</span>
                             </div>
                             <div class="contact-item">
-                                <i class="fas fa-globe"></i>
-                                <span>www.qrattendance.com</span>
+                                <i class="fas fa-code"></i>
+                                <span>github.com/Reemwaleed181/Attendance-System-QR</span>
                             </div>
                         </div>
                     </div>
@@ -514,10 +474,40 @@
                 </div>
             </div>
         </div>
-    </footer>
+</footer>
 
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
-    <script src="script.js"></script>
+    <!-- Optimized Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js" defer></script>
+    <script src="script.min.js" defer></script>
+    
+    <!-- Performance monitoring -->
+    <script>
+        // Performance monitoring
+        window.addEventListener('load', function() {
+            const perfData = performance.getEntriesByType('navigation')[0];
+            const loadTime = perfData.loadEventEnd - perfData.loadEventStart;
+            console.log(`Page loaded in ${loadTime}ms`);
+            
+            // Send to analytics if available
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'page_load_time', {
+                    'custom_parameter': loadTime
+                });
+            }
+        });
+        
+        // Service Worker registration for caching
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(function(err) {
+                        console.log('ServiceWorker registration failed');
+                    });
+            });
+        }
+    </script>
 </body>
 </html>
