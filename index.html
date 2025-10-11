@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="QR Attendance System - Modern QR code-based attendance management for educational institutions">
+    <meta name="keywords" content="QR code, attendance, school, education, management, tracking">
+    <meta name="author" content="QR Attendance System">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="QR Attendance System">
+    <meta property="og:description" content="Modern QR code-based attendance management for educational institutions">
+    <meta property="og:image" content="../ui/logo.jpg">
+    <meta property="og:url" content="https://qrattendance.com">
+    <meta property="og:type" content="website">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="QR Attendance System">
+    <meta name="twitter:description" content="Modern QR code-based attendance management for educational institutions">
+    <meta name="twitter:image" content="../ui/logo.jpg">
+    
+    <title>QR Attendance System - Modern Attendance Management</title>
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="style.min.css" as="style">
+    <link rel="preload" href="script.min.js" as="script">
+    <link rel="preload" href="logo.jpg" as="image">
+    
+    <!-- Optimized CSS -->
+    <link rel="stylesheet" href="style.min.css">
+    
+    <!-- Font optimization -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    
+    <!-- Icon font optimization -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="logo.jpg">
+    
+    <!-- Performance meta tags -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- Cache control -->
+    <meta http-equiv="Cache-Control" content="public, max-age=31536000">
+    
+    <!-- DNS prefetch for external resources -->
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "QR Attendance System",
+        "description": "Modern QR code-based attendance management for educational institutions",
+        "url": "https://qrattendance.com",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Web, Mobile",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading...</div>
+    </div>
+
+    <!-- Back to Top Button -->
+    <button id="back-to-top" class="back-to-top" aria-label="Back to top">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
+    <!-- Sticky Header -->
+    <header class="header sticky-header" role="banner">
+        <nav class="nav-container" role="navigation" aria-label="Main navigation">
+            <div class="nav-content">
+                <div class="project-name">
+                    <h1>QR Attendance System</h1>
+                </div>
+                <div class="logo">
+                    <img src="logo.jpg" alt="QR Attendance System Logo" class="logo-img">
+                </div>
+                <!-- Mobile Menu Button -->
+                <button class="mobile-menu-btn" aria-label="Toggle mobile menu" aria-expanded="false">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            <!-- Mobile Menu -->
+            <div class="mobile-menu" aria-hidden="true">
+                <a href="#description" class="mobile-nav-link">About</a>
+                <a href="#features" class="mobile-nav-link">Features</a>
+                <a href="#modules" class="mobile-nav-link">Modules</a>
+                <a href="#contact" class="mobile-nav-link">Contact</a>
+            </div>
+        </nav>
+</header>
+
+    <!-- Hero Section -->
+    <section class="hero-section" id="hero">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="main-title">Attendance-System-QR</h1>
+                <h2 class="hero-title">QR Attendance</h2>
+                
+                <div class="hero-icon">
+                    <div class="qr-icon">
+                        <div class="qr-code">
+                            <div class="qr-pattern"></div>
+                        </div>
+                        <div class="icon-figures">
+                            <div class="figure figure-book">📚</div>
+                            <div class="figure figure-blue">👤</div>
+                            <div class="figure figure-pink">👤</div>
+                            <div class="shape shape-cloud1">☁️</div>
+                            <div class="shape shape-cloud2">💬</div>
+                            <div class="shape shape-cloud3">⭐</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tech-badges">
+                    <div class="badge">Flutter 3.9+</div>
+                    <div class="badge">Dart 3.9+</div>
+                    <div class="badge badge-green">Platform Android | iOS | Web</div>
+                    <div class="badge badge-green">License MIT</div>
+                </div>
+                
+                <div class="overview-section">
+                    <h3 class="overview-title">✨ Overview</h3>
+                    <p class="overview-text">
+                        QR Attendance is a comprehensive, modern Flutter application for managing attendance using QR codes. 
+                        Designed for <strong>schools and colleges</strong>, it provides a complete attendance management solution 
+                        with separate interfaces for teachers, parents, and students. Built with cutting-edge UI/UX principles 
+                        and powered by QR code technology, it offers an intuitive, efficient, and visually polished solution 
+                        for educational institutions.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Description Section -->
+    <section class="description" id="description" role="region" aria-labelledby="description-heading">
+        <div class="container">
+            <h2 id="description-heading" class="section-title">About Our Project</h2>
+            <div class="description-content">
+                <div class="description-text">
+                    <p>The QR Attendance System is a comprehensive solution designed to modernize attendance tracking in educational institutions. Our system eliminates manual processes, reduces errors, and provides real-time insights for teachers, parents, and administrators.</p>
+                </div>
+                <div class="features-highlight">
+                    <div class="feature-item">
+                        <i class="fas fa-qrcode feature-icon"></i>
+                        <h3>QR Code Technology</h3>
+                        <p>Generate and scan QR codes for instant attendance marking</p>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-chart-line feature-icon"></i>
+                        <h3>Real-time Analytics</h3>
+                        <p>Track attendance patterns and generate detailed reports</p>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-mobile-alt feature-icon"></i>
+                        <h3>Mobile Responsive</h3>
+                        <p>Access the system from any device, anywhere</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section" id="features" role="region" aria-labelledby="features-heading">
+        <div class="container">
+            <h2 id="features-heading" class="section-title">Key Features</h2>
+            <div class="features-grid">
+                <div class="feature-card" data-aos="fade-up">
+                    <div class="feature-icon">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <h3>QR Code Generation</h3>
+                    <p>Create unique QR codes for each class session with customizable settings</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Multi-User Support</h3>
+                    <p>Separate interfaces for teachers, parents, and students</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3>Analytics Dashboard</h3>
+                    <p>Comprehensive reports and insights for better decision making</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h3>Smart Notifications</h3>
+                    <p>Instant alerts for attendance, events, and important updates</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Secure & Reliable</h3>
+                    <p>Enterprise-grade security with data encryption and backup</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="500">
+                    <div class="feature-icon">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <h3>Cloud-Based</h3>
+                    <p>Access your data from anywhere with cloud synchronization</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content Section -->
+    <section class="main-content" id="modules" role="region" aria-labelledby="modules-heading">
+        <div class="container">
+            <h2 id="modules-heading" class="section-title">Access Your Module</h2>
+            <div class="content-grid">
+                <div class="video-section">
+                    <div class="video-container">
+                        <div class="video-placeholder">
+                            <img src="../ui/splash.jpg" alt="Project Demo Video" class="demo-image">
+                            <div class="play-button" role="button" tabindex="0" aria-label="Play demo video">
+                                <i class="fas fa-play"></i>
+                            </div>
+                            <div class="video-overlay">
+                                <h3>Watch Our Demo</h3>
+                                <p>See how our system works in action</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ui-section">
+                    <div class="ui-content">
+                        <h3 class="ui-title">Choose Your Role</h3>
+                        <div class="buttons-container">
+                            <button class="module-btn teacher-btn" onclick="navigateToModule('teacher.html')" aria-label="Access Teacher Module">
+                                <div class="btn-icon">
+                                    <i class="fas fa-chalkboard-teacher"></i>
+                                </div>
+                                <div class="btn-text">
+                                    <h4>Teacher</h4>
+                                    <p>Manage classes, generate QR codes, view reports</p>
+                                </div>
+                                <div class="btn-arrow">
+                                    <i class="fas fa-arrow-right"></i>
+                                </div>
+                            </button>
+
+                            <button class="module-btn parent-btn" onclick="navigateToModule('parent.html')" aria-label="Access Parent Module">
+                                <div class="btn-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="btn-text">
+                                    <h4>Parent</h4>
+                                    <p>Track your child's attendance and progress</p>
+                                </div>
+                                <div class="btn-arrow">
+                                    <i class="fas fa-arrow-right"></i>
+                                </div>
+                            </button>
+
+                            <button class="module-btn student-btn" onclick="navigateToModule('student.html')" aria-label="Access Student Module">
+                                <div class="btn-icon">
+                                    <i class="fas fa-graduation-cap"></i>
+                                </div>
+                                <div class="btn-text">
+                                    <h4>Student</h4>
+                                    <p>Scan QR codes and view your attendance</p>
+                                </div>
+                                <div class="btn-arrow">
+                                    <i class="fas fa-arrow-right"></i>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- FAQ Section -->
+    <section class="faq-section" id="faq" role="region" aria-labelledby="faq-heading">
+        <div class="container">
+            <h2 id="faq-heading" class="section-title">Frequently Asked Questions</h2>
+            <div class="faq-container">
+                <div class="faq-item" data-aos="fade-up">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>How does the QR code attendance system work?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Teachers generate unique QR codes for each class session. Students scan these codes using their mobile devices to mark their attendance automatically. The system records the timestamp and location for accurate tracking.</p>
+                    </div>
+                </div>
+                <div class="faq-item" data-aos="fade-up" data-aos-delay="100">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>Is the system secure and privacy-compliant?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Yes, our system uses enterprise-grade encryption and complies with FERPA and COPPA regulations. All data is encrypted in transit and at rest, with regular security audits and updates.</p>
+                    </div>
+                </div>
+                <div class="faq-item" data-aos="fade-up" data-aos-delay="200">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>Can parents track their child's attendance in real-time?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Absolutely! Parents receive instant notifications when their child's attendance is recorded and can access detailed reports through the parent portal.</p>
+                    </div>
+                </div>
+                <div class="faq-item" data-aos="fade-up" data-aos-delay="300">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>What devices are supported?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Our system works on all modern devices including smartphones, tablets, and computers. It's compatible with iOS, Android, and web browsers.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+</section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials-section" id="testimonials" role="region" aria-labelledby="testimonials-heading">
+        <div class="container">
+            <h2 id="testimonials-heading" class="section-title">What Our Users Say</h2>
+            <div class="testimonials-grid">
+                <div class="testimonial-card" data-aos="fade-up">
+                    <div class="testimonial-content">
+                        <div class="stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p>"This system has revolutionized our attendance tracking. It's fast, accurate, and saves us hours of administrative work every week."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="author-info">
+                            <h4>Sarah Johnson</h4>
+                            <span>Principal, Lincoln Elementary</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="testimonial-content">
+                        <div class="stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p>"As a parent, I love being able to track my daughter's attendance in real-time. The notifications keep me informed and give me peace of mind."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="author-info">
+                            <h4>Michael Chen</h4>
+                            <span>Parent</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="testimonial-content">
+                        <div class="stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p>"The analytics dashboard provides incredible insights into attendance patterns. It's helped us identify and address issues proactively."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="author-info">
+                            <h4>Dr. Emily Rodriguez</h4>
+                            <span>Superintendent, Metro School District</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+</section>
+
+    <!-- Footer Section -->
+    <footer class="footer-section" id="contact" role="contentinfo">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section-left">
+                    <div class="github-link">
+                        <a href="https://github.com/Reemwaleed181/Attendance-System-QR" target="_blank" rel="noopener noreferrer" aria-label="Visit our GitHub repository">
+                            <i class="fab fa-github"></i>
+                            <span>GitHub Repository</span>
+                        </a>
+                    </div>
+                    <div class="proposal-link">
+                        <a href="#" aria-label="View project proposal">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Project Proposal</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="footer-section-right">
+                    <div class="contact-info">
+                        <h3>Contact Information</h3>
+                        <div class="contact-details">
+                            <div class="contact-item">
+                                <i class="fas fa-envelope"></i>
+                                <span>reem.waleed.ahmed@gmail.com</span>
+                            </div>
+                            <div class="contact-item">
+                                <i class="fab fa-github"></i>
+                                <span>github.com/Reemwaleed181</span>
+                            </div>
+                            <div class="contact-item">
+                                <i class="fas fa-code"></i>
+                                <span>github.com/Reemwaleed181/Attendance-System-QR</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div class="footer-links">
+                    <a href="#privacy" aria-label="Privacy Policy">Privacy Policy</a>
+                    <a href="#terms" aria-label="Terms of Service">Terms of Service</a>
+                    <a href="#support" aria-label="Support">Support</a>
+                </div>
+                <div class="footer-copyright">
+                    <p>&copy; 2024 QR Attendance System. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+</footer>
+
+    <!-- Optimized Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js" defer></script>
+    <script src="script.min.js" defer></script>
+    
+    <!-- Performance monitoring -->
+    <script>
+        // Performance monitoring
+        window.addEventListener('load', function() {
+            const perfData = performance.getEntriesByType('navigation')[0];
+            const loadTime = perfData.loadEventEnd - perfData.loadEventStart;
+            console.log(`Page loaded in ${loadTime}ms`);
+            
+            // Send to analytics if available
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'page_load_time', {
+                    'custom_parameter': loadTime
+                });
+            }
+        });
+        
+        // Service Worker registration for caching
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(function(err) {
+                        console.log('ServiceWorker registration failed');
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
