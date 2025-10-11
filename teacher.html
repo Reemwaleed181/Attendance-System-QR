@@ -6,37 +6,195 @@
 <title>Teacher Module - QR Attendance System</title>
 <link rel='stylesheet' href='style.css'>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
 </head>
 <body>
-<header class="header">
+<header class="header sticky-header">
 <div class="header-content">
 <div class="project-name">
-<h1>Teacher Module</h1>
+<h1>Teacher Dashboard</h1>
 </div>
 <div class="logo">
 <img src="logo.jpg" alt="Project Logo" class="logo-img">
 </div>
+<!-- Dark Mode Toggle -->
+<button class="dark-mode-toggle" aria-label="Toggle dark mode" id="darkModeToggle">
+    <i class="fas fa-moon"></i>
+</button>
 </div>
 </header>
 
-<section class="description">
+<!-- Teacher Dashboard Section -->
+<section class="teacher-dashboard">
 <div class="container">
-<h2>Teacher Dashboard & Management</h2>
-<p class="description-text">
-Empower teachers with comprehensive tools to manage classes, generate QR codes, track attendance, 
-and analyze student performance. Our teacher module provides an intuitive interface for efficient 
-classroom management. Teachers can create unique QR codes for each class session, monitor attendance 
-in real-time, generate detailed reports, and manage student profiles with ease.
-</p>
+<div class="dashboard-header">
+<h2>Classroom Management Dashboard</h2>
+<p class="dashboard-subtitle">Complete attendance control and class management system</p>
+</div>
+
+<!-- Quick Stats -->
+<div class="stats-grid">
+<div class="stat-card">
+<div class="stat-icon">
+<i class="fas fa-users"></i>
+</div>
+<div class="stat-content">
+<h3>Total Students</h3>
+<p class="stat-number">247</p>
+<p class="stat-label">Across 8 classes</p>
+</div>
+</div>
+
+<div class="stat-card">
+<div class="stat-icon">
+<i class="fas fa-check-circle"></i>
+</div>
+<div class="stat-content">
+<h3>Today's Attendance</h3>
+<p class="stat-number">89%</p>
+<p class="stat-label">221/247 present</p>
+</div>
+</div>
+
+<div class="stat-card">
+<div class="stat-icon">
+<i class="fas fa-clock"></i>
+</div>
+<div class="stat-content">
+<h3>Active Sessions</h3>
+<p class="stat-number">3</p>
+<p class="stat-label">Classes in progress</p>
+</div>
+</div>
+
+<div class="stat-card">
+<div class="stat-icon">
+<i class="fas fa-chart-line"></i>
+</div>
+<div class="stat-content">
+<h3>Weekly Average</h3>
+<p class="stat-number">92%</p>
+<p class="stat-label">Attendance rate</p>
+</div>
+</div>
+</div>
+
+<!-- Quick Actions -->
+<div class="quick-actions">
+<h3>Quick Actions</h3>
+<div class="actions-grid">
+<button class="action-btn primary" onclick="generateQRCode()">
+<i class="fas fa-qrcode"></i>
+<span>Generate QR Code</span>
+</button>
+<button class="action-btn secondary" onclick="scanStudentQR()">
+<i class="fas fa-camera"></i>
+<span>Scan Student QR</span>
+</button>
+<button class="action-btn accent" onclick="toggleAttendanceWindow()">
+<i class="fas fa-toggle-on"></i>
+<span>Toggle Attendance Window</span>
+</button>
+<button class="action-btn info" onclick="viewReports()">
+<i class="fas fa-chart-bar"></i>
+<span>View Reports</span>
+</button>
+</div>
+</div>
 </div>
 </section>
 
+<!-- Class Management Section -->
+<section class="class-management">
+<div class="container">
+<h2>Class Management</h2>
+<div class="classes-grid">
+<div class="class-card">
+<div class="class-header">
+<h3>Mathematics - Grade 10A</h3>
+<span class="class-status active">Active</span>
+</div>
+<div class="class-stats">
+<div class="stat">
+<span class="stat-label">Students</span>
+<span class="stat-value">32</span>
+</div>
+<div class="stat">
+<span class="stat-label">Present</span>
+<span class="stat-value">28</span>
+</div>
+<div class="stat">
+<span class="stat-label">Absent</span>
+<span class="stat-value">4</span>
+</div>
+</div>
+<div class="class-actions">
+<button class="btn-primary" onclick="manageClass('math-10a')">Manage Class</button>
+<button class="btn-secondary" onclick="viewAttendance('math-10a')">View Attendance</button>
+</div>
+</div>
+
+<div class="class-card">
+<div class="class-header">
+<h3>Science - Grade 9B</h3>
+<span class="class-status">Inactive</span>
+</div>
+<div class="class-stats">
+<div class="stat">
+<span class="stat-label">Students</span>
+<span class="stat-value">28</span>
+</div>
+<div class="stat">
+<span class="stat-label">Present</span>
+<span class="stat-value">-</span>
+</div>
+<div class="stat">
+<span class="stat-label">Absent</span>
+<span class="stat-value">-</span>
+</div>
+</div>
+<div class="class-actions">
+<button class="btn-primary" onclick="manageClass('science-9b')">Start Session</button>
+<button class="btn-secondary" onclick="viewHistory('science-9b')">View History</button>
+</div>
+</div>
+
+<div class="class-card">
+<div class="class-header">
+<h3>English - Grade 11C</h3>
+<span class="class-status active">Active</span>
+</div>
+<div class="class-stats">
+<div class="stat">
+<span class="stat-label">Students</span>
+<span class="stat-value">35</span>
+</div>
+<div class="stat">
+<span class="stat-label">Present</span>
+<span class="stat-value">33</span>
+</div>
+<div class="stat">
+<span class="stat-label">Absent</span>
+<span class="stat-value">2</span>
+</div>
+</div>
+<div class="class-actions">
+<button class="btn-primary" onclick="manageClass('english-11c')">Manage Class</button>
+<button class="btn-secondary" onclick="viewAttendance('english-11c')">View Attendance</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Features Showcase -->
 <section class="features-showcase">
 <div class="container">
+<h2>Key Features</h2>
 <div class="features-grid">
 <div class="feature-card">
 <div class="feature-image">
-<img src="../ui/teacher/teacher_dashboard.jpg" alt="Teacher Dashboard" class="feature-img">
+<img src="ui/teacher/teacher_dashboard.jpg" alt="Teacher Dashboard" class="feature-img">
 </div>
 <div class="feature-content">
 <h3>📊 Dashboard Overview</h3>
@@ -46,7 +204,7 @@ in real-time, generate detailed reports, and manage student profiles with ease.
 
 <div class="feature-card">
 <div class="feature-image">
-<img src="../ui/teacher/qr_generation.jpg" alt="QR Code Generation" class="feature-img">
+<img src="ui/teacher/qr_generation.jpg" alt="QR Code Generation" class="feature-img">
 </div>
 <div class="feature-content">
 <h3>🔲 QR Code Generation</h3>
@@ -56,7 +214,7 @@ in real-time, generate detailed reports, and manage student profiles with ease.
 
 <div class="feature-card">
 <div class="feature-image">
-<img src="../ui/teacher/attendance_tracking.jpg" alt="Attendance Tracking" class="feature-img">
+<img src="ui/teacher/attendance_tracking.jpg" alt="Attendance Tracking" class="feature-img">
 </div>
 <div class="feature-content">
 <h3>📋 Attendance Tracking</h3>
@@ -66,7 +224,7 @@ in real-time, generate detailed reports, and manage student profiles with ease.
 
 <div class="feature-card">
 <div class="feature-image">
-<img src="../ui/teacher/class_management.jpg" alt="Class Management" class="feature-img">
+<img src="ui/teacher/class_management.jpg" alt="Class Management" class="feature-img">
 </div>
 <div class="feature-content">
 <h3>👥 Class Management</h3>
@@ -76,7 +234,7 @@ in real-time, generate detailed reports, and manage student profiles with ease.
 
 <div class="feature-card">
 <div class="feature-image">
-<img src="../ui/teacher/reports_analytics.jpg" alt="Reports & Analytics" class="feature-img">
+<img src="ui/teacher/reports_analytics.jpg" alt="Reports & Analytics" class="feature-img">
 </div>
 <div class="feature-content">
 <h3>📈 Reports & Analytics</h3>
@@ -86,7 +244,7 @@ in real-time, generate detailed reports, and manage student profiles with ease.
 
 <div class="feature-card">
 <div class="feature-image">
-<img src="../ui/teacher/student_profiles.jpg" alt="Student Profiles" class="feature-img">
+<img src="ui/teacher/student_profiles.jpg" alt="Student Profiles" class="feature-img">
 </div>
 <div class="feature-content">
 <h3>👤 Student Profiles</h3>
@@ -118,5 +276,106 @@ in real-time, generate detailed reports, and manage student profiles with ease.
 <p>Teacher Module - Empowering educators with smart technology</p>
 </div>
 </footer>
+
+<script src="script.min.js"></script>
+<script>
+// Teacher-specific functionality
+function generateQRCode() {
+    // Simulate QR code generation
+    const qrModal = document.createElement('div');
+    qrModal.className = 'modal';
+    qrModal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>QR Code Generated</h3>
+                <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="qr-display">
+                    <div class="qr-placeholder">QR CODE HERE</div>
+                    <p>Class: Mathematics - Grade 10A</p>
+                    <p>Session: ${new Date().toLocaleString()}</p>
+                </div>
+                <div class="qr-actions">
+                    <button class="btn-primary" onclick="shareQR()">Share QR Code</button>
+                    <button class="btn-secondary" onclick="downloadQR()">Download</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(qrModal);
+}
+
+function scanStudentQR() {
+    alert('QR Scanner activated! Point camera at student QR code.');
+}
+
+function toggleAttendanceWindow() {
+    const btn = event.target.closest('button');
+    const isActive = btn.classList.contains('active');
+    
+    if (isActive) {
+        btn.classList.remove('active');
+        btn.innerHTML = '<i class="fas fa-toggle-off"></i><span>Enable Attendance Window</span>';
+        alert('Attendance window disabled. Students cannot self-record attendance.');
+    } else {
+        btn.classList.add('active');
+        btn.innerHTML = '<i class="fas fa-toggle-on"></i><span>Disable Attendance Window</span>';
+        alert('Attendance window enabled. Students can now self-record attendance.');
+    }
+}
+
+function viewReports() {
+    alert('Opening reports dashboard...');
+}
+
+function manageClass(classId) {
+    alert(`Managing class: ${classId}`);
+}
+
+function viewAttendance(classId) {
+    alert(`Viewing attendance for: ${classId}`);
+}
+
+function viewHistory(classId) {
+    alert(`Viewing history for: ${classId}`);
+}
+
+function shareQR() {
+    alert('QR Code shared successfully!');
+}
+
+function downloadQR() {
+    alert('QR Code downloaded!');
+}
+
+// Initialize teacher dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize dark mode
+    if (window.QRAttendance && window.QRAttendance.initDarkMode) {
+        window.QRAttendance.initDarkMode();
+    }
+    
+    // Add scroll reveal animations
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('revealed');
+            }
+        });
+    }, observerOptions);
+
+    const elementsToReveal = document.querySelectorAll('.stat-card, .class-card, .feature-card');
+    elementsToReveal.forEach(el => {
+        el.classList.add('scroll-reveal');
+        observer.observe(el);
+    });
+});
+</script>
 </body>
 </html>
