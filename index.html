@@ -1,116 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Smart QR Attendance System</title>
-  <style>
-    body {
-      font-family: "Poppins", Arial, sans-serif;
-      background: linear-gradient(135deg, #007bff 0%, #00b4d8 100%);
-      color: #fff;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-    }
-
-    header {
-      padding: 60px 20px 30px;
-    }
-
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 10px;
-    }
-
-    h2 {
-      font-size: 1.3rem;
-      font-weight: 400;
-      color: #dff6ff;
-    }
-
-    .content {
-      background: #ffffff;
-      color: #333;
-      margin: 40px auto;
-      border-radius: 12px;
-      max-width: 800px;
-      padding: 30px 20px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    }
-
-    p {
-      line-height: 1.7;
-      font-size: 1rem;
-    }
-
-    .buttons {
-      margin-top: 25px;
-    }
-
-    a.button {
-      display: inline-block;
-      background-color: #007bff;
-      color: white;
-      text-decoration: none;
-      padding: 12px 25px;
-      margin: 10px;
-      border-radius: 6px;
-      transition: 0.3s;
-      font-weight: 500;
-    }
-
-    a.button:hover {
-      background-color: #0056b3;
-    }
-
-    video.demo {
-      width: 90%;
-      max-width: 500px;
-      margin: 25px auto;
-      border-radius: 10px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
-    }
-
-    footer {
-      font-size: 14px;
-      margin: 30px 0;
-      color: #dff6ff;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attendance System QR</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
-    <h1>Smart QR Attendance System</h1>
-    <h2>AI-powered attendance management using QR codes </h2>
+    <h1>Attendance System QR</h1>
+    <p>Smart attendance system using QR codes. Built with Flutter & Django.</p>
+    <img src="ui/splash.jpg" alt="Splash Image" style="width:100%; max-width:600px; margin-top:20px; border-radius:10px;">
   </header>
 
-  <div class="content">
-    <p>
-      The <strong>Smart QR Attendance System</strong> is a cross-platform mobile solution built using
-      <b>Flutter</b> and <b>Django</b> that simplifies attendance tracking in schools and universities.
-      Students scan a unique QR code while the system verifies their GPS location to ensure presence accuracy.
-    </p>
+  <section class="screenshots">
+    <h2>Parent Screens</h2>
+    <img src="ui/parent/parent_home_screen.jpg" alt="Parent Home">
+    <img src="ui/parent/Parent_login.jpg" alt="Parent Login">
+    <img src="ui/parent/parent_notifications_screen.jpg" alt="Parent Notifications">
+    <img src="ui/parent/parent_reports_screen.jpg" alt="Parent Reports">
+    <img src="ui/parent/parent_reports_screen2.jpg" alt="Parent Reports 2">
+    <img src="ui/parent/parent_weekly_stats_screen.jpg" alt="Parent Weekly Stats">
+    <img src="ui/parent/parent_weekly_stats_screen2.jpg" alt="Parent Weekly Stats 2">
 
-    <p>
-      Administrators can monitor attendance data, generate daily reports, and gain insights into student engagement — all from one dashboard.
-    </p>
+    <h2>Student Screens</h2>
+    <img src="ui/student/student_attendance_request_screen.jpg" alt="Student Attendance 1">
+    <img src="ui/student/student_attendance_request_screen2.jpg" alt="Student Attendance 2">
+    <img src="ui/student/student_attendance_request_screen3.jpg" alt="Student Attendance 3">
+    <img src="ui/student/Student_login.jpg" alt="Student Login">
 
-    <!-- VIDEO DEMO -->
-    <video class="demo" controls>
-      <source src="https://raw.githubusercontent.com/Reemwaleed181/Attendance-System-QR/main/demo.mp4" type="video/mp4">
-      Your browser does not support the video tag.
-    </video>
+    <h2>Teacher Screens</h2>
+    <img src="ui/teacher/class_attendance_screen.jpg" alt="Class Attendance 1">
+    <img src="ui/teacher/class_attendance_screen2.jpg" alt="Class Attendance 2">
+    <img src="ui/teacher/qr_scanner.jpg" alt="QR Scanner">
+    <img src="ui/teacher/teacher_attendance_history_screen.jpg" alt="Attendance History 1">
+    <img src="ui/teacher/teacher_attendance_history_screen2.jpg" alt="Attendance History 2">
+    <img src="ui/teacher/teacher_classes_screen.jpg" alt="Teacher Classes 1">
+    <img src="ui/teacher/teacher_classes_screen2.jpg" alt="Teacher Classes 2">
+    <img src="ui/teacher/teacher_classes_screen3.jpg" alt="Teacher Classes 3">
+    <img src="ui/teacher/teacher_home_screen.jpg" alt="Teacher Home">
+    <img src="ui/teacher/Teacher_login.jpg" alt="Teacher Login">
+    <img src="ui/teacher/teacher_reports_screen.jpg" alt="Teacher Reports 1">
+    <img src="ui/teacher/teacher_reports_screen2.jpg" alt="Teacher Reports 2">
+    <img src="ui/teacher/teacher_reports_screen3.jpg" alt="Teacher Reports 3">
+    <img src="ui/teacher/teacher_reports_screen4.jpg" alt="Teacher Reports 4">
+  </section>
 
-    <div class="buttons">
-      <a class="button" href="https://github.com/Reemwaleed181/Attendance-System-QR" target="_blank">View on GitHub</a>
-      <a class="button" href="https://raw.githubusercontent.com/Reemwaleed181/Attendance-System-QR/main/Smart_QR_Attendance_Proposal.pdf" target="_blank">Download Proposal</a>
-      <a class="button" href="mailto:reem.waleed.ahmed@gmail.com">Contact Me</a>
-    </div>
-  </div>
+  <section class="features">
+    <h2>Features</h2>
+    <ul>
+      <li>QR code attendance scanning</li>
+      <li>Real-time updates for teachers and parents</li>
+      <li>Multi-platform support with Flutter</li>
+      <li>Django backend for data management</li>
+    </ul>
+  </section>
+
+  <section class="github">
+    <h2>GitHub Repository</h2>
+    <p><a href="https://github.com/Reemwaleed181/Attendance-System-QR" target="_blank">View Full Project on GitHub</a></p>
+  </section>
 
   <footer>
-    Developed by <b>Reem Waleed Ahmed</b> | AI & Computer Science Graduate (2025)
+    <p>© 2025 Reem Waleed</p>
   </footer>
 </body>
 </html>
