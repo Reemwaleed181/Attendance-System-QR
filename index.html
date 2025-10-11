@@ -22,10 +22,38 @@
     <meta name="twitter:image" content="../ui/logo.jpg">
     
     <title>QR Attendance System - Modern Attendance Management</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="style.min.css" as="style">
+    <link rel="preload" href="script.min.js" as="script">
+    <link rel="preload" href="../ui/logo.jpg" as="image">
+    
+    <!-- Optimized CSS -->
+    <link rel="stylesheet" href="style.min.css">
+    
+    <!-- Font optimization -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    
+    <!-- Icon font optimization -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+    
+    <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../ui/logo.jpg">
+    
+    <!-- Performance meta tags -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- Cache control -->
+    <meta http-equiv="Cache-Control" content="public, max-age=31536000">
+    
+    <!-- DNS prefetch for external resources -->
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
     
     <!-- Structured Data -->
     <script type="application/ld+json">
@@ -82,7 +110,7 @@
                 <a href="#contact" class="mobile-nav-link">Contact</a>
             </div>
         </nav>
-    </header>
+</header>
 
     <!-- Hero Section -->
     <section class="hero-section" id="hero">
@@ -389,7 +417,7 @@
                 </div>
             </div>
         </div>
-    </section>
+</section>
 
     <!-- Testimonials Section -->
     <section class="testimonials-section" id="testimonials" role="region" aria-labelledby="testimonials-heading">
@@ -461,7 +489,7 @@
                 </div>
             </div>
         </div>
-    </section>
+</section>
 
     <!-- Footer Section -->
     <footer class="footer-section" id="contact" role="contentinfo">
@@ -514,10 +542,40 @@
                 </div>
             </div>
         </div>
-    </footer>
+</footer>
 
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
-    <script src="script.js"></script>
+    <!-- Optimized Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js" defer></script>
+    <script src="script.min.js" defer></script>
+    
+    <!-- Performance monitoring -->
+    <script>
+        // Performance monitoring
+        window.addEventListener('load', function() {
+            const perfData = performance.getEntriesByType('navigation')[0];
+            const loadTime = perfData.loadEventEnd - perfData.loadEventStart;
+            console.log(`Page loaded in ${loadTime}ms`);
+            
+            // Send to analytics if available
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'page_load_time', {
+                    'custom_parameter': loadTime
+                });
+            }
+        });
+        
+        // Service Worker registration for caching
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(function(err) {
+                        console.log('ServiceWorker registration failed');
+                    });
+            });
+        }
+    </script>
 </body>
 </html>
